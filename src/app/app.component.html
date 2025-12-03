@@ -1,0 +1,29 @@
+<ion-app>
+  <ion-split-pane contentId="main-content">
+    <ion-menu contentId="main-content" type="overlay">
+      <ion-content>
+        <div class="menu-header" style="padding:16px;">
+          <div *ngIf="currentUser; else guest">
+            <div style="font-weight:600">{{ currentUser.nome || currentUser.email }}</div>
+            <div style="font-size:0.9em; color:var(--ion-color-medium)">{{ currentUser.email }}</div>
+          </div>
+          <ng-template #guest>
+            <div style="font-weight:600">Guest</div>
+            <div style="font-size:0.9em; color:var(--ion-color-medium)">guest</div>
+          </ng-template>
+        </div>
+
+        <ion-list id="inbox-list">
+          <ion-list-header>{{ t('inbox') }}</ion-list-header>
+          <ion-menu-toggle auto-hide="false">
+            <ion-item routerDirection="root" routerLink="/folder/inbox" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="mail-outline" md="mail-sharp"></ion-icon>
+              <ion-label>{{ t('inbox') }}</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
+    <ion-router-outlet id="main-content"></ion-router-outlet>
+  </ion-split-pane>
+</ion-app>

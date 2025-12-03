@@ -1,0 +1,23 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ t('inbox') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleLang()">{{ langCode }}</ion-button>
+      <ion-button (click)="logout()">{{ t('logout') }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="folder-list">
+    <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
+    <div *ngIf="items.length; else empty">
+      <ion-list>
+        <ion-item *ngFor="let it of items">{{ getDisplayText(it) }}</ion-item>
+      </ion-list>
+    </div>
+    <ng-template #empty>
+      <div class="empty">{{ t('no_items_found') }}</div>
+    </ng-template>
+  </div>
+</ion-content>

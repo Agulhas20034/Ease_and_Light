@@ -1,0 +1,96 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goToLogin()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ t('create_account') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="tService.toggleLang()">{{ tService.getLang().toUpperCase() }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="register-container">
+    <div class="form-inner">
+      <h1>{{ t('create_account') }}</h1>
+
+      <ion-list>
+        <ion-item>
+          <ion-label position="floating">{{ t('email') }}</ion-label>
+          <ion-input
+            type="email"
+            [(ngModel)]="email"
+            placeholder="{{ t('email') }}"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('name') }}</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="nome"
+            placeholder="{{ t('name') }}"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('password') }}</ion-label>
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            (ionChange)="onPasswordChange()"
+            placeholder="{{ t('password') }}"
+          ></ion-input>
+          <ion-button slot="end" fill="clear" (click)="togglePasswordVisibility()">
+            <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <div *ngIf="password" class="password-feedback">
+          <div
+            *ngFor="let feedback of passwordFeedback"
+            class="feedback-item"
+            [ngClass]="{ error: !passwordIsValid }"
+          >
+            <ion-icon [name]="passwordIsValid ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+            {{ t(feedback) }}
+          </div>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('password') }}</ion-label>
+          <ion-input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            [(ngModel)]="confirmPassword"
+            placeholder="{{ t('password') }}"
+          ></ion-input>
+          <ion-button slot="end" fill="clear" (click)="toggleConfirmPasswordVisibility()">
+            <ion-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <div *ngIf="confirmPassword" class="password-match">
+          <ion-icon
+            [name]="password === confirmPassword ? 'checkmark-circle' : 'close-circle'"
+            [color]="password === confirmPassword ? 'success' : 'danger'"
+          ></ion-icon>
+          {{ password === confirmPassword ? t('passwords_match') : t('passwords_not_match') }}
+        </div>
+      </ion-list>
+
+      <ion-button expand="block" color="primary" (click)="register()" [disabled]="loading">
+        <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+        {{ loading ? (t('register') + '...') : t('register') }}
+      </ion-button>
+
+      <div class="divider">{{ t('already_have_account') }}</div>
+
+      <ion-button expand="block" fill="outline" (click)="goToLogin()">
+        {{ t('login') }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

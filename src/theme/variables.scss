@@ -1,0 +1,25 @@
+ $ion-color-primary: #C96F4A;
+ $ion-color-primary-contrast: #ffffff;
+ $ion-color-primary-shade: #b55f3f;
+ $ion-color-secondary: #EFD9CF;
+ $ion-color-tertiary: #F7EEEA;
+
+:root {
+  --ion-color-primary: #C96F4A;
+  --ion-color-primary-rgb: 201,111,74;
+  --ion-color-secondary: #EFD9CF;
+  --ion-color-tertiary: #F7EEEA;
+  --brand-button-bg: #EFD9CF;
+  --brand-button-color: #7a3b2a;
+  --ion-text-color: var(--brand-button-color);
+  --app-text-color: var(--brand-button-color);
+  --app-bg-light: initial;
+  --app-bg-dark: #121212;
+}
+
+.brand-btn {
+  --background: var(--brand-button-bg);
+  --color: var(--brand-button-color);
+  border-radius: 10px;
+  font-weight: 600;
+}
