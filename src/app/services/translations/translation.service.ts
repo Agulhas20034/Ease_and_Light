@@ -28,7 +28,15 @@ export class TranslationService {
     pw_upper: { pt: 'Deve conter uma letra maiúscula', en: 'Password must contain at least one uppercase letter' },
     pw_lower: { pt: 'Deve conter uma letra minúscula', en: 'Password must contain at least one lowercase letter' },
     pw_number: { pt: 'Deve conter um número', en: 'Password must contain at least one number' },
-    pw_special: { pt: 'Deve conter um carácter especial', en: 'Password must contain at least one special character' }
+    pw_special: { pt: 'Deve conter um carácter especial', en: 'Password must contain at least one special character' },
+    status: { pt: 'Estado', en: 'Status' },
+    accuracy: { pt: 'Precisão', en: 'Accuracy' },
+    coords: { pt: 'Coordenadas', en: 'Coordinates' },
+    refresh_location: { pt: 'Atualizar Localização', en: 'Refresh Location' },
+    location_cached: { pt: 'Localização em cache. Buscando atualização...', en: 'Cached location. Fetching fresher fix...' },
+    location_live: { pt: 'Localização ao vivo', en: 'Live location' },
+    permission_denied: { pt: 'Permissão negada. Permita o acesso à localização e tente novamente.', en: 'Permission denied. Allow location access and retry.' },
+    geolocation_not_supported: { pt: 'Geolocalização não suportada', en: 'Geolocation not supported' }
   };
 
   getLang() {

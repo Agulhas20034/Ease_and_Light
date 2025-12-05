@@ -37,7 +37,9 @@ export class SupabaseService {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
       auth: {
         storage: storageAdapter,
-        detectSessionInUrl: false
+        detectSessionInUrl: false,
+        persistSession: true,
+        autoRefreshToken: false  // Disable auto-refresh to avoid lock manager timeout errors
       }
     });
   }
