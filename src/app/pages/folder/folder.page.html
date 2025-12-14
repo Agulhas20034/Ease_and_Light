@@ -1,6 +1,9 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ t('inbox') }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ t('map') }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="toggleLang()">{{ langCode }}</ion-button>
       <ion-button (click)="logout()">{{ t('logout') }}</ion-button>
