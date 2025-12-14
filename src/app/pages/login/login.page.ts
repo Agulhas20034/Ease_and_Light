@@ -45,7 +45,21 @@ export class LoginPage {
     this.loading = true;
     try {
       const user = await this.supabase.loginUser(this.email, this.password);
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      
+      let profileType = 'User';
+      if (user.id_tipo) {
+        try {
+          const profileData = await this.supabase.fetchProfileType(user.id_tipo);
+          if (profileData && profileData.descr) {
+            profileType = profileData.descr;
+          }
+        } catch (e) {
+          console.warn('Could not fetch profile type:', e);
+        }
+      }
+      
+      const userWithProfile = { ...user, profileType, id_tipo: user.id_tipo };
+      localStorage.setItem('currentUser', JSON.stringify(userWithProfile));
       this.showToast('Login successful!', 'success');
       this.router.navigate(['/folder/inbox']);
     } catch (error: any) {

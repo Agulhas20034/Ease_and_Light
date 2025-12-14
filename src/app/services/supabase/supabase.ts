@@ -57,6 +57,16 @@ export class SupabaseService {
 
   
   async registerUser(email: string, password: string, nome: string = '') {
+    const { data: existing, error: checkError } = await this.supabase.from('users')
+      .select('id_utilizador')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (checkError) throw checkError;
+    
+    if (existing) {
+      throw new Error('An account with this email already exists');
+    }
    
     const hashedPassword = await bcryptjs.hash(password, 10);
     
@@ -65,7 +75,7 @@ export class SupabaseService {
       password: hashedPassword,
       nome,
       id_tipo: 5, 
-      id_establecimento: null
+      id_estabelecimento: null
     }]);
     
     if (error) throw error;
@@ -85,7 +95,7 @@ export class SupabaseService {
     const isValid = await bcryptjs.compare(password, data.password);
     if (!isValid) throw new Error('Invalid password');
     
-    return { id_utilizador: data.id_utilizador, email: data.email, nome: data.nome };
+    return { id_utilizador: data.id_utilizador, email: data.email, nome: data.nome, id_tipo: data.id_tipo };
   }
 
   validatePassword(password: string): { isValid: boolean; feedback: string[] } {
@@ -111,5 +121,19 @@ export class SupabaseService {
       isValid: feedback.length === 0,
       feedback
     };
+  }
+
+  async fetchProfileType(id_tipo: number) {
+    try {
+      const { data, error } = await this.supabase.from('tipo_perfil')
+        .select('*')
+        .eq('id_tipo', id_tipo)
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error('Error fetching profile type:', err);
+      return null;
+    }
   }
 }

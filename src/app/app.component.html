@@ -6,6 +6,7 @@
           <div *ngIf="currentUser; else guest">
             <div style="font-weight:600">{{ currentUser.nome || currentUser.email }}</div>
             <div style="font-size:0.9em; color:var(--ion-color-medium)">{{ currentUser.email }}</div>
+            <div style="font-size:0.85em; color:var(--ion-color-medium); margin-top:4px;">{{ currentUser.profileType }}</div>
           </div>
           <ng-template #guest>
             <div style="font-weight:600">Guest</div>
@@ -14,11 +15,35 @@
         </div>
 
         <ion-list id="inbox-list">
-          <ion-list-header>{{ t('inbox') }}</ion-list-header>
           <ion-menu-toggle auto-hide="false">
             <ion-item routerDirection="root" routerLink="/folder/inbox" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="mail-outline" md="mail-sharp"></ion-icon>
-              <ion-label>{{ t('inbox') }}</ion-label>
+              <ion-icon aria-hidden="true" slot="start" ios="map-outline" md="map-sharp"></ion-icon>
+              <ion-label>{{ t('map') }}</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+        </ion-list>
+
+        <ion-list id="profile-menu" *ngIf="currentUser">
+          <ion-list-header>Profile Options</ion-list-header>
+          
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Cliente')">
+            <ion-item routerDirection="root" routerLink="/folder/client-dashboard" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="person-outline" md="person-sharp"></ion-icon>
+              <ion-label>Client Dashboard</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Admin')">
+            <ion-item routerDirection="root" routerLink="/folder/admin-panel" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="settings-outline" md="settings-sharp"></ion-icon>
+              <ion-label>Admin Panel</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Gestor')">
+            <ion-item routerDirection="root" routerLink="/folder/manager-dashboard" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="briefcase-outline" md="briefcase-sharp"></ion-icon>
+              <ion-label>Manager Dashboard</ion-label>
             </ion-item>
           </ion-menu-toggle>
         </ion-list>
