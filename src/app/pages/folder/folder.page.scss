@@ -11,9 +11,10 @@
   font-size: 0.9rem;
 }
 
+/* Ensure map container has a defined height so Leaflet can render tiles */
 #map {
   width: 100%;
-  height: 600px; 
+  height: 600px; /* change if you want full-screen or responsive height */
 }
 
 .leaflet-container {

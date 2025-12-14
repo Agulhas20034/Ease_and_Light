@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>{{ t('map') }}</ion-title>
+    <ion-title>{{ t('inbox') }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="toggleLang()">{{ langCode }}</ion-button>
       <ion-button (click)="logout()">{{ t('logout') }}</ion-button>
@@ -12,15 +12,12 @@
 </ion-header>
 
 <ion-content>
-  <div class="folder-list">
-    <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
-    <div *ngIf="items.length; else empty">
-      <ion-list>
-        <ion-item *ngFor="let it of items">{{ getDisplayText(it) }}</ion-item>
-      </ion-list>
-    </div>
-    <ng-template #empty>
-      <div class="empty">{{ t('no_items_found') }}</div>
-    </ng-template>
-  </div>
+  <div *ngIf="locationError" class="error">{{ locationError }}</div>
+  <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
+  <div #mapContainer id="map" style="width: 100%; height: 100%;"></div>
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button color="primary" (click)="retryLocation()" title="{{ t('refresh_location') }}">
+      <ion-icon name="refresh"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

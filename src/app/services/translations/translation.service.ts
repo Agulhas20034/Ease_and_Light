@@ -37,7 +37,6 @@ export class TranslationService {
     location_live: { pt: 'Localização ao vivo', en: 'Live location' },
     permission_denied: { pt: 'Permissão negada. Permita o acesso à localização e tente novamente.', en: 'Permission denied. Allow location access and retry.' },
     geolocation_not_supported: { pt: 'Geolocalização não suportada', en: 'Geolocation not supported' }
-    ,map: { pt: 'Mapa', en: 'Map' }
   };
 
   getLang() {
