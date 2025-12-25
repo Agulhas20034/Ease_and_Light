@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { SupabaseService } from '../../services/supabase/supabase';
+import { LocationService } from '../../services/location/location.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslationService } from '../../services/translations/translation.service';
 import * as L from 'leaflet';
@@ -38,7 +39,8 @@ export class FolderPage implements OnInit {
     private supabase: SupabaseService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
-    public tService: TranslationService
+    public tService: TranslationService,
+    private locationService: LocationService
   ) {}
 
   get langCode() {
@@ -88,14 +90,7 @@ export class FolderPage implements OnInit {
 
     this.loadUserLocationOnMap();
   }
-
   private async loadUserLocationOnMap() {
-    if (!navigator.geolocation) {
-      this.locationError = 'Geolocation not supported';
-      this.locationStatus = 'Geolocation not supported';
-      return;
-    }
-
     try {
       const cached = localStorage.getItem('lastKnownLocation');
       if (cached) {
@@ -103,7 +98,7 @@ export class FolderPage implements OnInit {
         const { lat, lng, acc, timestamp } = data;
         const ageMs = Date.now() - (timestamp || 0);
         const ageMins = ageMs / 60000;
-        if (ageMins < 5) {
+        if (ageMins < 5 && acc != null && acc <= 1000) {
           this.lastLat = lat;
           this.lastLng = lng;
           this.accuracy = acc;
@@ -116,118 +111,24 @@ export class FolderPage implements OnInit {
       }
     } catch (e) {}
 
-    let gotGoodFix = false;
-    const ACCURACY_THRESHOLD = 100;
-    const MAX_SAMPLING_MS = 30000;
-    const MIN_SAMPLES = 3;
-    const samples: Array<{ lat: number; lng: number; acc: number; ts: number }> = [];
-    const samplingStart = Date.now();
-
-    const evaluateSamples = (force = false) => {
-      if (samples.length === 0) return null;
-      let best = samples[0];
-      for (const s of samples) {
-        if (s.acc != null && s.acc < best.acc) best = s;
-      }
-      if (best.acc <= ACCURACY_THRESHOLD) {
-        return best;
-      }
-      if (force && samples.length >= MIN_SAMPLES) return best;
-      return null;
-    };
-
-    const handlePosition = (position: GeolocationPosition) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const acc = position.coords.accuracy;
-      console.log('Geolocation success:', { lat, lng, accuracy: acc });
-      this.lastLat = lat;
-      this.lastLng = lng;
-      this.accuracy = acc;
+    try {
+      const loc = await this.locationService.getBestLocation();
       this.locationError = null;
-      try {
-        localStorage.setItem('lastKnownLocation', JSON.stringify({ lat, lng, acc, timestamp: Date.now() }));
-      } catch (e) {}
-
-      if (acc == null || acc <= 0) {
-        this.locationStatus = `Live location (accuracy unknown)`;
-      } else if (acc > ACCURACY_THRESHOLD) {
-        this.locationStatus = `Low accuracy (${Math.round(acc)} m). Trying to obtain better GPS fix...`;
-      } else {
-        this.locationStatus = `Live location (accuracy ${Math.round(acc)} m)`;
-      }
-
-      if (acc != null && !isNaN(acc)) {
-        samples.push({ lat, lng, acc, ts: Date.now() });
-      }
-
-      const bestNow = evaluateSamples();
-      if (bestNow && !gotGoodFix) {
-        gotGoodFix = true;
-        if (this.map) this.map.setView([bestNow.lat, bestNow.lng], 15);
-        this.locationStatus = `Live location (accuracy ${Math.round(bestNow.acc)} m)`;
-      }
+      this.lastLat = loc.lat;
+      this.lastLng = loc.lng;
+      this.accuracy = loc.acc;
+      this.locationStatus = `Location (${loc.source}) - accuracy ${loc.acc != null ? Math.round(loc.acc) + ' m' : 'unknown'}`;
+      try { localStorage.setItem('lastKnownLocation', JSON.stringify({ lat: loc.lat, lng: loc.lng, acc: loc.acc, timestamp: Date.now() })); } catch (e) {}
 
       if (this.map) {
-        if (!this.userMarker) {
-          this.userMarker = L.marker([lat, lng]).addTo(this.map).bindPopup('Your Location');
-        } else {
-          this.userMarker.setLatLng([lat, lng]);
-        }
-
-        if (!gotGoodFix && acc <= ACCURACY_THRESHOLD) {
-          gotGoodFix = true;
-          this.map.setView([lat, lng], 15);
-        }
+        if (!this.userMarker) this.userMarker = L.marker([loc.lat, loc.lng]).addTo(this.map).bindPopup('Your Location');
+        else this.userMarker.setLatLng([loc.lat, loc.lng]);
+        this.map.setView([loc.lat, loc.lng], 15);
       }
-    };
-
-    const handleError = (error: GeolocationPositionError, attempt = 1) => {
-      console.warn(`Geolocation error (attempt ${attempt}):`, error);
-      if (error.code === error.PERMISSION_DENIED) {
-        this.locationError = 'Permission denied. Allow location access and retry.';
-        this.locationStatus = 'Permission denied';
-        return;
-      }
-
-      if (error.code === error.TIMEOUT) {
-        console.log('getCurrentPosition timed out; watch will continue');
-        return;
-      }
-
-      this.locationError = `Error: ${error.message}`;
-      this.locationStatus = `Error: ${error.message}`;
-    };
-
-    const fastOptions: PositionOptions = { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 };
-    navigator.geolocation.getCurrentPosition(handlePosition, (err) => handleError(err, 1), fastOptions);
-
-    try {
-      this.watchId = navigator.geolocation.watchPosition(
-        handlePosition,
-        (err) => handleError(err, 2),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-      );
     } catch (e) {
-      console.warn('watchPosition unavailable', e);
+      console.warn('Could not obtain location:', e);
+      this.locationStatus = 'Unable to obtain accurate location. Enable device GPS or test on a mobile device.';
     }
-
-    try {
-      if (this.sampleTimer) clearTimeout(this.sampleTimer);
-      this.sampleTimer = setTimeout(() => {
-        const forcedBest = evaluateSamples(true);
-        if (forcedBest && !gotGoodFix) {
-          this.locationStatus = `Using best available location (accuracy ${Math.round(forcedBest.acc)} m). Enable GPS for better accuracy.`;
-          if (this.map) this.map.setView([forcedBest.lat, forcedBest.lng], 15);
-          this.lastLat = forcedBest.lat;
-          this.lastLng = forcedBest.lng;
-          this.accuracy = forcedBest.acc;
-        } else if (!forcedBest) {
-          this.locationStatus = 'Unable to obtain accurate GPS fix. Please enable device GPS and try again.';
-        }
-      }, MAX_SAMPLING_MS + 1000);
-    } catch (e) {}
-
   }
 
   retryLocation() {
