@@ -1,11 +1,42 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('register_backpack') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ t.translate('register_backpack') }}</ion-card-title>
+      <ion-card-subtitle>{{ t.translate('register_backpack_sub') }}</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item button (click)="openOwnerPopover($event)">
+        <ion-label>
+          <h3>{{ selectedOwner?.nome || (selectedOwner?.email ? (selectedOwner.email) : t.translate('select_owner')) }}</h3>
+        </ion-label>
+        <ion-note slot="end">{{ t.translate('select_owner') }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('weight') }}</ion-label>
+        <ion-input type="number" [(ngModel)]="weight" placeholder="{{ t.translate('weight_placeholder') }}"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('color') }}</ion-label>
+        <ion-input [(ngModel)]="color" placeholder="{{ t.translate('color_placeholder') }}"></ion-input>
+      </ion-item>
+
+      <ion-row style="margin-top:12px;">
+        <ion-col>
+          <ion-button expand="block" color="primary" (click)="submit()">{{ t.translate('save') }}</ion-button>
+        </ion-col>
+        <ion-col>
+          <ion-button expand="block" color="medium" (click)="(selectedOwner=null)">{{ t.translate('cancel') }}</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

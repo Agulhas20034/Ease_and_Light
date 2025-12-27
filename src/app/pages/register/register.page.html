@@ -37,22 +37,22 @@
         </ion-item>
 
         <ion-item>
-          <ion-label position="floating">{{ t('telefone') }}</ion-label>
-          <ion-input type="tel" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="telefone" placeholder="{{ t('telefone') }}"></ion-input>
+          <ion-label position="floating">{{ t('phone') }}</ion-label>
+          <ion-input type="tel" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="telefone" placeholder="{{ t('phone') }}"></ion-input>
         </ion-item>
-        <div *ngIf="telefone && !isTelefoneValid()" class="validation-error">{{ t('telefone_invalid') }}</div>
+        <div *ngIf="telefone && !isTelefoneValid()" class="validation-error">{{ t('phone_invalid') }}</div>
 
         <ion-item>
-          <ion-label position="floating">{{ t('nacionalidade') || 'Nacionalidade' }}</ion-label>
-          <ion-input type="text" [(ngModel)]="nacionalidade" placeholder="{{ t('nacionalidade') || 'Nacionalidade' }}"></ion-input>
+          <ion-label position="floating">{{ t('nationality') || 'Nationality' }}</ion-label>
+          <ion-input type="text" [(ngModel)]="nacionalidade" placeholder="{{ t('nationality') || 'Nationality' }}"></ion-input>
         </ion-item>
 
         <ion-item>
-          <ion-label position="floating">{{ t('tipo') }}</ion-label>
+          <ion-label position="floating">{{ t('type') }}</ion-label>
           <ion-select [(ngModel)]="tipoPerfil">
-            <ion-select-option [value]="5">{{ t('tipo_peregrino') }}</ion-select-option>
-            <ion-select-option [value]="4">{{ t('tipo_dono_estabelecimento') }}</ion-select-option>
-            <ion-select-option [value]="2">{{ t('tipo_dono_empresa_transportes') }}</ion-select-option>
+            <ion-select-option [value]="5">{{ t('type_peregrino') }}</ion-select-option>
+            <ion-select-option [value]="4">{{ t('type_dono_estabelecimento') }}</ion-select-option>
+            <ion-select-option [value]="2">{{ t('type_dono_empresa_transportes') }}</ion-select-option>
           </ion-select>
         </ion-item>
 
@@ -107,8 +107,8 @@
         <div *ngIf="nif && !isNifValid()" class="validation-error">{{ t('nif_invalid') }}</div>
 
         <ion-item>
-          <ion-label position="floating">{{ t('passaporte') || 'Passaporte' }}</ion-label>
-          <ion-input type="text" [(ngModel)]="passaporte" placeholder="{{ t('passaporte') || 'Passaporte' }}"></ion-input>
+          <ion-label position="floating">{{ t('passport') || 'Passaporte' }}</ion-label>
+          <ion-input type="text" [(ngModel)]="passaporte" placeholder="{{ t('passport') || 'Passaporte' }}"></ion-input>
         </ion-item>
       </ion-list>
 

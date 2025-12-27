@@ -1,11 +1,26 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('list_backpacks') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="loadMochilas()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-list *ngIf="!loading && mochilas.length">
+    <ion-item *ngFor="let m of mochilas">
+      <ion-label>
+        <h3>{{ t.translate('backpack_owner') }}: {{ m.ownerEmail || m.id_user || m.id_utilizador }}</h3>
+        <p>{{ t.translate('backpack_weight') }}: {{ m.peso }} kg — {{ t.translate('backpack_color') }}: {{ m.cor || '-' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!loading && !mochilas.length" style="text-align:center; margin-top:24px; color:var(--ion-color-medium)">
+    {{ t.translate('no_backpacks') }}
+  </div>
+
+  <ion-loading *ngIf="loading" isOpen message="{{ t.translate('loading') }}"></ion-loading>
 </ion-content>
