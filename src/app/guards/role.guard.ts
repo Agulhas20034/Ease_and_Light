@@ -22,7 +22,7 @@ export class RoleGuard implements CanActivate {
 
       const role = (user.profileType || user.id_tipo || '').toString();
       if (!role) return this.router.parseUrl('/folder/inbox');
-      if (role === 'Admin' || role === 'admin') return true;
+      if (role === 'Administrador') return true;
 
       if (!required) {
         return this.router.parseUrl('/folder/inbox');

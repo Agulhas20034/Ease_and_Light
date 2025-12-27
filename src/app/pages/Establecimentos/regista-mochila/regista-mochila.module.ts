@@ -7,6 +7,7 @@ import { IonicModule } from '@ionic/angular';
 import { RegistaMochilaPageRoutingModule } from './regista-mochila-routing.module';
 
 import { RegistaMochilaPage } from './regista-mochila.page';
+import { OwnerPopoverComponent } from '../owner-popover.component';
 
 @NgModule({
   imports: [
@@ -15,6 +16,6 @@ import { RegistaMochilaPage } from './regista-mochila.page';
     IonicModule,
     RegistaMochilaPageRoutingModule
   ],
-  declarations: [RegistaMochilaPage]
+  declarations: [RegistaMochilaPage, OwnerPopoverComponent]
 })
 export class RegistaMochilaPageModule {}

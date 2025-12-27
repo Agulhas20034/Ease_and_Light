@@ -291,6 +291,11 @@ export class SupabaseService {
   async getAllUsers() { return this.fetchAll('users'); }
   async getUser(id: number) { return this.fetchByPk('users', 'id_utilizador', id); }
   async createUser(rec: any) { return this.insertOne('users', rec); }
+  async getUsersByTipo(id_tipo: any) {
+    const { data, error } = await this.supabase.from('users').select('*').eq('id_tipo', id_tipo);
+    if (error) throw error;
+    return data;
+  }
   async updateUser(id: number, updates: any) {
     if (updates.telefone) {
       const taken = await this.isTelefoneTakenByOther(updates.telefone, id);

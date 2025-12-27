@@ -26,74 +26,74 @@
           <ion-list-header>{{ t('profile_options') }}</ion-list-header>
 
           <!-- Links Peregrino -->
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/cria-percurso" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="map-outline" md="map-sharp"></ion-icon>
               <ion-label>{{ t('create_route') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/gere-percurso" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="list-outline" md="list-sharp"></ion-icon>
               <ion-label>{{ t('manage_routes') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/cria-grupo" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="people-outline" md="people-sharp"></ion-icon>
               <ion-label>{{ t('create_group') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/gere-grupo" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="list-circle-outline" md="list-circle-sharp"></ion-icon>
               <ion-label>{{ t('manage_groups') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-mochilas" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="bag-outline" md="bag-sharp"></ion-icon>
               <ion-label>{{ t('my_backpacks') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
           <!-- Links dono de estabelecimento -->
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/regista-mochila" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="bag-add-outline" md="bag-add-sharp"></ion-icon>
               <ion-label>{{ t('register_backpack') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Empregado Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador') || isProfileType('Empregado Estabelecimento')">
             <ion-item routerDirection="root" routerLink="/cria-recolha-cliente" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="trending-up-outline" md="trending-up-sharp"></ion-icon>
               <ion-label>{{ t('create_collection_client') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Empregado Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador') || isProfileType('Empregado Estabelecimento')">
             <ion-item routerDirection="root" routerLink="/cria-recolha-estafeta" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="bicycle-outline" md="bicycle-sharp"></ion-icon>
               <ion-label>{{ t('create_collection_courier') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Empregado Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador') || isProfileType('Empregado Estabelecimento')">
             <ion-item routerDirection="root" routerLink="/cria-entrega-cliente" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="star-outline" md="star-sharp"></ion-icon>
               <ion-label>{{ t('create_delivery_client') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Empregado Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador') || isProfileType('Empregado Estabelecimento')">
             <ion-item routerDirection="root" routerLink="/cria-entrega-estafeta" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="flash-outline" md="flash-sharp"></ion-icon>
               <ion-label>{{ t('create_delivery_courier') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-empregados" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="people-outline" md="people-sharp"></ion-icon>
               <ion-label>{{ t('employees_list') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-localizacoes" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="locate-outline" md="locate-sharp"></ion-icon>
               <ion-label>{{ t('locations_list') }}</ion-label>
@@ -101,13 +101,13 @@
           </ion-menu-toggle>
 
           <!-- Links Transportadora -->
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-funcionarios" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="people-outline" md="people-sharp"></ion-icon>
               <ion-label>{{ t('employees') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-pedidos" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="list-outline" md="list-sharp"></ion-icon>
               <ion-label>{{ t('orders') }}</ion-label>
@@ -115,7 +115,7 @@
           </ion-menu-toggle>
 
           <!-- Links Admin -->
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Admin')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/cria-contas" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="settings-outline" md="settings-sharp"></ion-icon>
               <ion-label>{{ t('create_accounts') }}</ion-label>
