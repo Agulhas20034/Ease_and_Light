@@ -1,0 +1,99 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goToLogin()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ t('create_accounts') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="tService.toggleLang()">{{ tService.getLang().toUpperCase() }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="register-container">
+    <div class="form-inner">
+      <h1>{{ t('create_new_account') }}</h1>
+
+      <ion-list>
+        <ion-item>
+          <ion-label position="floating">{{ t('email') }}</ion-label>
+          <ion-input type="email" [(ngModel)]="email" placeholder="{{ t('email') }}"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('name') }}</ion-label>
+          <ion-input type="text" [(ngModel)]="nome" placeholder="{{ t('name') }}"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('phone') }}</ion-label>
+          <ion-input type="tel" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="telefone" placeholder="{{ t('phone') }}"></ion-input>
+        </ion-item>
+        <div *ngIf="telefone && !isTelefoneValid()" class="validation-error">{{ t('phone_invalid') }}</div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('nationality') }}</ion-label>
+          <ion-input type="text" [(ngModel)]="nacionalidade" placeholder="{{ t('nationality') }}"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('type') }}</ion-label>
+          <ion-select [(ngModel)]="tipoPerfil">
+            <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo">{{ tp.descr }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('password') }}</ion-label>
+          <ion-input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" (ionChange)="onPasswordChange()" placeholder="{{ t('password') }}"></ion-input>
+          <ion-button slot="end" fill="clear" (click)="togglePasswordVisibility()">
+            <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <div *ngIf="password" class="password-feedback">
+          <div *ngFor="let feedback of passwordFeedback" class="feedback-item" [ngClass]="{ error: !passwordIsValid }">
+            <ion-icon [name]="passwordIsValid ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+            {{ t(feedback) }}
+          </div>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('confirm_password') }}</ion-label>
+          <ion-input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="{{ t('confirm_password') }}"></ion-input>
+          <ion-button slot="end" fill="clear" (click)="toggleConfirmPasswordVisibility()">
+            <ion-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <div *ngIf="confirmPassword" class="password-match">
+          <ion-icon [name]="password === confirmPassword ? 'checkmark-circle' : 'close-circle'" [color]="password === confirmPassword ? 'success' : 'danger'"></ion-icon>
+          {{ password === confirmPassword ? t('passwords_match') : t('passwords_not_match') }}
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('nif') }}</ion-label>
+          <ion-input type="text" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="nif" placeholder="{{ t('nif') }}"></ion-input>
+        </ion-item>
+        <div *ngIf="nif && !isNifValid()" class="validation-error">{{ t('nif_invalid') }}</div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('passport') }}</ion-label>
+          <ion-input type="text" [(ngModel)]="passaporte" placeholder="{{ t('passport') }}"></ion-input>
+        </ion-item>
+      </ion-list>
+
+      <ion-button expand="block" color="primary" (click)="createAccount()" [disabled]="loading">
+        <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+        {{ loading ? (t('create_new_account') + '...') : t('create_new_account') }}
+      </ion-button>
+
+      <div class="divider">&nbsp;</div>
+
+    </div>
+  </div>
+</ion-content>
+

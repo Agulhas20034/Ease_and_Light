@@ -1,0 +1,40 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('companies_list') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ t.translate('companies_list') }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-list *ngIf="!loading && companies.length > 0">
+    <ion-item *ngFor="let c of companies">
+      <ion-label>
+        <h2>{{ c.nome || c.name || c.nome_empresa || c.razao_social }}</h2>
+        <p *ngIf="c.telefone">{{ c.telefone }}</p>
+      </ion-label>
+      <ion-button fill="clear" slot="end" (click)="edit(c)">{{ t.translate('edit') }}</ion-button>
+      <ion-button fill="clear" slot="end" (click)="manageEmployees(c)">{{ t.translate('employees') }}</ion-button>
+      <ion-button fill="clear" color="danger" slot="end" (click)="confirmToggleCompany(c)">{{ c.estado === 1 ? t.translate('deactivate_company') : t.translate('activate_account') }}</ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!loading && companies.length === 0" class="ion-padding">
+    {{ t.translate('no_companies') }}
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadCompanies()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="create()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

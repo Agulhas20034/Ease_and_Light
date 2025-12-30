@@ -1,0 +1,40 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('manage_accounts') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/cria-contas" routerDirection="forward">
+        {{ t.translate('create_accounts') }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="loadUsers()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-list *ngIf="!loading">
+    <ion-item *ngFor="let u of users">
+      <ion-label>
+        <h2>{{ u.nome || u.email }}</h2>
+        <p>{{ u.email }}</p>
+        <p>{{ t.translate('status') }}: {{ (u.estado && u.estado === 1) ? t.translate('active') : t.translate('inactive') }}</p>
+      </ion-label>
+      <ion-button slot="end" fill="outline" (click)="edit(u)">{{ t.translate('edit') }}</ion-button>
+      <ion-button slot="end" color="medium" (click)="toggleActive(u)">
+        {{ (u.estado && u.estado === 1) ? t.translate('deactivate_account') : t.translate('activate_account') }}
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+
+</ion-content>
+
+<!-- Floating create button positioned bottom-center -->
+<ion-fab vertical="bottom" horizontal="center" slot="fixed">
+  <ion-fab-button routerLink="/cria-contas" routerDirection="forward" color="primary">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

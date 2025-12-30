@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('edit_employee') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ t.translate('edit_employee') }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('name') }}</ion-label>
+      <ion-input [(ngModel)]="nome" type="text"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('email') }}</ion-label>
+      <ion-input [(ngModel)]="email" type="email" disabled></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('phone') }}</ion-label>
+      <ion-input [(ngModel)]="telefone" type="text"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('nif') }}</ion-label>
+      <ion-input [(ngModel)]="nif" type="text"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('password') }}</ion-label>
+      <ion-input [(ngModel)]="passNew" type="password"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('confirm_password') }}</ion-label>
+      <ion-input [(ngModel)]="passConfirm" type="password"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <ion-footer class="ion-padding">
+    <ion-button expand="block" (click)="save()" [disabled]="loading">{{ t.translate('save') }}</ion-button>
+  </ion-footer>
+
+</ion-content>

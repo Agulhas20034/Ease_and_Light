@@ -1,0 +1,78 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('edit_account') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('name') }}</ion-label>
+      <ion-input [(ngModel)]="nome"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('email') }}</ion-label>
+      <ion-input [(ngModel)]="email" readonly></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('phone') }}</ion-label>
+      <ion-input [(ngModel)]="telefone"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('nationality') }}</ion-label>
+      <ion-input [(ngModel)]="nacionalidade"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('type') }}</ion-label>
+      <ion-select [(ngModel)]="id_tipo" interface="popover">
+        <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo">{{ tp.descr }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('nif') }}</ion-label>
+      <ion-input [(ngModel)]="nif"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('passport') }}</ion-label>
+      <ion-input [(ngModel)]="passaporte"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('password') }}</ion-label>
+      <ion-input [(ngModel)]="newPassword" (ionInput)="onPasswordChange()" type="password" autocomplete="new-password"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('confirm_password') }}</ion-label>
+      <ion-input [(ngModel)]="confirmPassword" type="password" autocomplete="new-password"></ion-input>
+    </ion-item>
+
+    <ion-item *ngIf="passwordFeedback?.length">
+      <ion-label>
+        <ul style="margin:0; padding-left:16px;">
+          <li *ngFor="let f of passwordFeedback">{{ t.translate(f) || f }}</li>
+        </ul>
+      </ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>{{ t.translate('status') }}: </ion-label>
+      <ion-note slot="end">{{ (estado === 1) ? t.translate('active') : t.translate('inactive') }}</ion-note>
+    </ion-item>
+  </ion-list>
+
+  <ion-footer>
+    <ion-toolbar>
+      <ion-buttons slot="end">
+        <ion-button color="primary" (click)="save()">{{ t.translate('save') }}</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-footer>
+
+</ion-content>
