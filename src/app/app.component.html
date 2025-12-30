@@ -102,9 +102,9 @@
 
           <!-- Links Transportadora -->
           <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
-            <ion-item routerDirection="root" routerLink="/lista-funcionarios" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="people-outline" md="people-sharp"></ion-icon>
-              <ion-label>{{ t('employees') }}</ion-label>
+            <ion-item routerDirection="root" routerLink="/gere-empresas" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="business-outline" md="business-sharp"></ion-icon>
+              <ion-label>{{ t('manage_companies') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
           <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
@@ -116,9 +116,9 @@
 
           <!-- Links Admin -->
           <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Administrador')">
-            <ion-item routerDirection="root" routerLink="/cria-contas" lines="none" detail="false" routerLinkActive="selected">
+            <ion-item routerDirection="root" routerLink="/gere-contas" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="settings-outline" md="settings-sharp"></ion-icon>
-              <ion-label>{{ t('create_accounts') }}</ion-label>
+              <ion-label>{{ t('manage_accounts') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
 

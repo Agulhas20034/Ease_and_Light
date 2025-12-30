@@ -1,11 +1,38 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('employees_list') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
+      <ion-title size="large">{{ t.translate('employees_list') }}</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-list *ngIf="!loading && employees.length > 0">
+    <ion-item *ngFor="let u of employees">
+      <ion-label>
+        <h2>{{ u.nome || u.name || u.email }}</h2>
+        <p>{{ u.email }}</p>
+        <p><small>{{ u.estado === 1 ? t.translate('active') : t.translate('inactive') }}</small></p>
+      </ion-label>
+      <ion-button fill="clear" slot="end" (click)="edit(u)">{{ t.translate('edit') }}</ion-button>
+      <ion-button fill="clear" color="danger" slot="end" (click)="confirmToggle(u)">{{ u.estado === 1 ? t.translate('deactivate_account') : t.translate('activate_account') }}</ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!loading && employees.length === 0" class="ion-padding">
+    {{ t.translate('no_items_found') }}
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadEmployees()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button (click)="add()"><ion-icon name="add"></ion-icon></ion-fab-button>
+  </ion-fab>
+
 </ion-content>
