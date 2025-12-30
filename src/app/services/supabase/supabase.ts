@@ -67,11 +67,12 @@ export class SupabaseService {
 
   
   async loginUser(email: string, password: string) {
-    const user = await this.getUserByEmail(email);
+    const user: any = await this.getUserByEmail(email);
     if (!user) throw new Error('User not found');
-    const isValid = await bcryptjs.compare(password, user.password);
+    const isValid = await bcryptjs.compare(password, user.password || '');
     if (!isValid) throw new Error('Invalid password');
-    return { id_utilizador: user.id_utilizador, email: user.email, nome: user.nome, id_tipo: user.id_tipo };
+    // devolver campos úteis para o frontend; não incluir a password
+    return { id_utilizador: user.id_utilizador, email: user.email, nome: user.nome, id_tipo: user.id_tipo, estado: user.estado };
   }
 
   validatePassword(password: string): { isValid: boolean; feedback: string[] } {
@@ -316,6 +317,11 @@ export class SupabaseService {
     const { data, error } = await this.supabase.from('users').select('*').eq('email', email).maybeSingle();
     if (error) throw error;
     return data;
+  }
+
+  async updateUserPassword(id: number, newPassword: string) {
+    const hashed = await bcryptjs.hash(newPassword, 10);
+    return this.updateByPk('users', 'id_utilizador', { id, updates: { password: hashed } });
   }
 
   //Confirmadores de telefone/nif/passaporte únicos para registo e update

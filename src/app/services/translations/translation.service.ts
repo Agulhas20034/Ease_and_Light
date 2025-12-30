@@ -102,6 +102,30 @@ export class TranslationService {
     locations_list: { pt: 'Lista de Localizações', en: 'Locations' },
     create_location: { pt: 'Criar Localização', en: 'Create Location' },
     edit_location: { pt: 'Editar Localização', en: 'Edit Location' }
+    ,
+    /* Admin / common actions */
+    edit: { pt: 'Editar', en: 'Edit' },
+    edit_account: { pt: 'Editar Conta', en: 'Edit Account' },
+    deactivate_account: { pt: 'Desativar Conta', en: 'Deactivate Account' },
+    activate_account: { pt: 'Ativar Conta', en: 'Activate Account' },
+    account_activated: { pt: 'Conta ativada', en: 'Account activated' },
+    account_deactivated: { pt: 'Conta desativada', en: 'Account deactivated' },
+    deactivate_company: { pt: 'Desativar Empresa', en: 'Deactivate Company' },
+    company_activated: { pt: 'Empresa ativada', en: 'Company activated' },
+    company_deactivated: { pt: 'Empresa desativada', en: 'Company deactivated' },
+    manage_companies: { pt: 'Gerir Empresas', en: 'Manage Companies' },
+    manage_accounts: { pt: 'Gerir Contas', en: 'Manage Accounts' },
+    toggle_error: { pt: 'Erro ao alterar estado', en: 'Error toggling state' },
+    companies_list: { pt: 'Lista de Empresas', en: 'Companies' },
+    no_companies: { pt: 'Nenhuma empresa encontrada', en: 'No companies found' },
+    confirm_delete: { pt: 'Tem a certeza?', en: 'Are you sure?' },
+    loading_failed: { pt: 'Falha ao carregar', en: 'Failed to load' },
+    edit_saved: { pt: 'Alterações guardadas', en: 'Changes saved' },
+    company_created: { pt: 'Empresa criada', en: 'Company created' },
+    company_updated: { pt: 'Empresa atualizada', en: 'Company updated' },
+    provide_all_fields: { pt: 'Preencha todos os campos', en: 'Please fill in all fields' },
+    account_inactive: { pt: 'Conta inativa', en: 'Account is not active' },
+    login_successful: { pt: 'Sessão iniciada com sucesso', en: 'Login successful' },
   };
 
   constructor() {}

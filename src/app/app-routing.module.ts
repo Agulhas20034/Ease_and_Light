@@ -57,6 +57,24 @@ const routes: Routes = [
     data: { requiredRole: 'Dono Empresa Transportes', titleKey: 'assign_requests' }
   },
   {
+    path: 'gere-empresas',
+    loadChildren: () => import('./pages/EmpresaTransportes/gere-empresas/gere-empresas.module').then(m => m.GereEmpresasPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Dono Empresa Transportes', titleKey: 'companies_list' }
+  },
+  {
+    path: 'cria-empresa',
+    loadChildren: () => import('./pages/EmpresaTransportes/cria-empresa/cria-empresa.module').then(m => m.CriaEmpresaPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Dono Empresa Transportes', titleKey: 'create_company' }
+  },
+  {
+    path: 'edita-empresa',
+    loadChildren: () => import('./pages/EmpresaTransportes/edita-empresa/edita-empresa.module').then(m => m.EditaEmpresaPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Dono Empresa Transportes', titleKey: 'edit_company' }
+  },
+  {
     path: 'cria-percurso',
     loadChildren: () => import('./pages/Peregrino/cria-percurso/cria-percurso.module').then( m => m.CriaPercursoPageModule),
     canActivate: [RoleGuard],
@@ -162,7 +180,19 @@ const routes: Routes = [
     path: 'cria-contas',
     loadChildren: () => import('./pages/Admin/cria-contas/cria-contas.module').then( m => m.CriaContasPageModule),
     canActivate: [RoleGuard],
-    data: { requiredRole: 'Admin', titleKey: 'create_accounts' }
+    data: { requiredRole: 'Administrador', titleKey: 'create_accounts' }
+  },
+  {
+    path: 'gere-contas',
+    loadChildren: () => import('./pages/Admin/gere-contas/gere-contas.module').then( m => m.GereContasPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Administrador', titleKey: 'manage_accounts' }
+  },
+  {
+    path: 'edita-conta',
+    loadChildren: () => import('./pages/Admin/edita-conta/edita-conta.module').then(m => m.EditaContaPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Administrador', titleKey: 'edit_account' }
   },
   
 
