@@ -37,6 +37,26 @@
         </ion-item>
 
         <ion-item>
+          <ion-label position="floating">{{ t('phone') }}</ion-label>
+          <ion-input type="tel" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="telefone" placeholder="{{ t('phone') }}"></ion-input>
+        </ion-item>
+        <div *ngIf="telefone && !isTelefoneValid()" class="validation-error">{{ t('phone_invalid') }}</div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('nationality') || 'Nationality' }}</ion-label>
+          <ion-input type="text" [(ngModel)]="nacionalidade" placeholder="{{ t('nationality') || 'Nationality' }}"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('type') }}</ion-label>
+          <ion-select [(ngModel)]="tipoPerfil">
+            <ion-select-option [value]="5">{{ t('type_peregrino') }}</ion-select-option>
+            <ion-select-option [value]="4">{{ t('type_dono_estabelecimento') }}</ion-select-option>
+            <ion-select-option [value]="2">{{ t('type_dono_empresa_transportes') }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
           <ion-label position="floating">{{ t('password') }}</ion-label>
           <ion-input
             [type]="showPassword ? 'text' : 'password'"
@@ -61,11 +81,11 @@
         </div>
 
         <ion-item>
-          <ion-label position="floating">{{ t('password') }}</ion-label>
+          <ion-label position="floating">{{ t('confirm_password') }}</ion-label>
           <ion-input
             [type]="showConfirmPassword ? 'text' : 'password'"
             [(ngModel)]="confirmPassword"
-            placeholder="{{ t('password') }}"
+            placeholder="{{ t('confirm_password') }}"
           ></ion-input>
           <ion-button slot="end" fill="clear" (click)="toggleConfirmPasswordVisibility()">
             <ion-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'"></ion-icon>
@@ -79,6 +99,17 @@
           ></ion-icon>
           {{ password === confirmPassword ? t('passwords_match') : t('passwords_not_match') }}
         </div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('nif') }}</ion-label>
+          <ion-input type="text" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="nif" placeholder="{{ t('nif') }}"></ion-input>
+        </ion-item>
+        <div *ngIf="nif && !isNifValid()" class="validation-error">{{ t('nif_invalid') }}</div>
+
+        <ion-item>
+          <ion-label position="floating">{{ t('passport') || 'Passaporte' }}</ion-label>
+          <ion-input type="text" [(ngModel)]="passaporte" placeholder="{{ t('passport') || 'Passaporte' }}"></ion-input>
+        </ion-item>
       </ion-list>
 
       <ion-button expand="block" color="primary" (click)="register()" [disabled]="loading">
