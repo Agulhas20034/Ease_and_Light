@@ -60,7 +60,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.pageTitle = translated !== data['title'] ? translated : data['title'];
         return;
       }
-      const url = this.router.url || '';
+      let url = this.router.url || '';
+      // strip query and fragment so titles don't include ?id=123 or #anchor
+      url = String(url).split('?')[0].split('#')[0];
       const parts = url.split('/').filter(p => !!p);
       if (parts.length) {
         const raw = parts[parts.length - 1];

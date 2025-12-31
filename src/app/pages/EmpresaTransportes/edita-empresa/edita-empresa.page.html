@@ -6,30 +6,28 @@
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('edit_company') }}</ion-title>
-    </ion-toolbar>
+    
   </ion-header>
 
   <ion-list>
     <ion-item>
       <ion-label position="stacked">{{ t.translate('company_name') }}</ion-label>
-      <ion-input [(ngModel)]="nome" type="text"></ion-input>
+      <ion-input [(ngModel)]="name" type="text"></ion-input>
     </ion-item>
     <ion-item>
     </ion-item>
     <ion-item>
       <ion-label position="stacked">{{ t.translate('company_phone') }}</ion-label>
-      <ion-input [(ngModel)]="telefone" type="text"></ion-input>
+      <ion-input [(ngModel)]="phone" type="text"></ion-input>
     </ion-item>
     <ion-item>
-      <ion-label position="stacked">NIF</ion-label>
+      <ion-label position="stacked">{{ t.translate('tax_id') }}</ion-label>
       <ion-input [(ngModel)]="nif" type="text"></ion-input>
     </ion-item>
   </ion-list>
 
   <ion-footer class="ion-padding">
-    <ion-button expand="block" (click)="save()" [disabled]="!nome || loading">{{ t.translate('save') }}</ion-button>
+    <ion-button expand="block" (click)="save()" [disabled]="!name || loading">{{ t.translate('save') }}</ion-button>
   </ion-footer>
 
 </ion-content>

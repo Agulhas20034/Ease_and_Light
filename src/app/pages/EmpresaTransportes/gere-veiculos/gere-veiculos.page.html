@@ -1,0 +1,35 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ companyName ? companyName : t.translate('vehicles_list') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+ 
+  <ion-list *ngIf="vehicles && vehicles.length > 0">
+    <ion-card *ngFor="let v of vehicles" class="vehicle-card">
+      <ion-item button (click)="toggleExpand(v)">
+        <ion-label>
+          <h2 class="vehicle-title">{{ v.matricula || v.nome || v.modelo }}</h2>
+          <p class="vehicle-meta">{{ t.translate('type') }}: {{ v.tipo_descr || v.tipo || v.tipo_veiculo || '-' }}</p>
+        </ion-label>
+        <ion-note slot="end">{{ t.translate('status') }}: {{ v.estado === 1 ? t.translate('vehicle_active') : (v.estado === 2 ? t.translate('vehicle_inactive') : t.translate('vehicle_discontinued')) }}</ion-note>
+      </ion-item>
+
+      <div *ngIf="v._expanded" class="vehicle-actions">
+        <ion-button fill="clear" (click)="edit(v)">{{ t.translate('edit') }}</ion-button>
+        <ion-button *ngIf="v.estado !== 3" fill="clear" (click)="confirmToggleVehicle(v)">{{ v.estado === 1 ? t.translate('deactivate') : t.translate('activate_account') }}</ion-button>
+        <ion-button *ngIf="v.estado !== 3" fill="clear" (click)="confirmDescontinueVehicle(v)">{{ t.translate('vehicle_discontinued') }}</ion-button>
+      </div>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!loading && (!vehicles || vehicles.length === 0)" class="empty-list">
+    {{ t.translate('no_vehicles') }}
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button (click)="create()">+</ion-fab-button>
+  </ion-fab>
+
+</ion-content>

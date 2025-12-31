@@ -12,8 +12,8 @@ import { TranslationService } from '../../../services/translations/translation.s
 })
 export class EditaEmpresaPage implements OnInit {
   id: any = null;
-  nome = '';
-  telefone = '';
+  name = '';
+  phone = '';
   nif = '';
   loading = false;
 
@@ -39,8 +39,8 @@ export class EditaEmpresaPage implements OnInit {
     try {
       const data: any = await this.supabase.getEmpresaTransportes(Number(this.id));
       const c = data || (data?.data && data.data[0]) || {};
-      this.nome = c.nome || c.name || '';
-      this.telefone = c.telefone || c.phone || '';
+      this.name = c.nome || c.name || '';
+      this.phone = c.telefone || c.phone || '';
       this.nif = c.nif || '';
     } catch (e) {
       console.error('Failed to load company', e);
@@ -52,8 +52,8 @@ export class EditaEmpresaPage implements OnInit {
     this.loading = true;
     try {
       // validar telefone e nif
-      if (this.telefone) {
-        const cleaned = (this.telefone || '').replace(/\D/g, '');
+      if (this.phone) {
+        const cleaned = (this.phone || '').replace(/\D/g, '');
         if (cleaned.length < 9) {
           this.showToast(this.t.translate('phone_invalid'), 'warning');
           this.loading = false;
@@ -70,8 +70,8 @@ export class EditaEmpresaPage implements OnInit {
       }
 
       const updates: any = {};
-      if (this.nome) updates.nome = this.nome;
-      if (this.telefone) updates.telefone = this.telefone;
+      if (this.name) updates.nome = this.name;
+      if (this.phone) updates.telefone = this.phone;
       if (this.nif) updates.nif = this.nif;
       await this.supabase.updateEmpresaTransportes(Number(this.id), updates);
       const t = await this.toastCtrl.create({ message: this.t.translate('company_updated'), duration: 1500, color: 'success' });
