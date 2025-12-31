@@ -1,0 +1,25 @@
+/* Estilos para lista de veículos e cartões expandidos */
+.vehicle-card {
+	margin: 0.5rem;
+}
+.vehicle-title {
+	font-weight: 600;
+}
+.vehicle-meta {
+	font-size: 0.9rem;
+	color: var(--ion-color-medium);
+}
+.vehicle-actions {
+	display: flex;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem 1rem 1rem;
+}
+.empty-list {
+	text-align: center;
+	margin-top: 2rem;
+	color: var(--ion-color-medium);
+}
+/* Centrar o FAB no fundo */
+ion-fab[horizontal="center"] {
+	--transform: translateX(0);
+}

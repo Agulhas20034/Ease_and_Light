@@ -1,0 +1,82 @@
+:host {
+  display: block;
+}
+
+.company-card {
+  margin: 8px 12px;
+}
+
+.company-header {
+  cursor: pointer;
+}
+
+.company-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.company-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.company-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.company-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Garantir tamanho e cor consistentes do título da empresa em todas as larguras
+   Evita que o título aumente de tamanho ou mude de cor em telas pequenas. */
+.company-title {
+  font-size: 1rem !important;
+  font-weight: 600;
+  color: var(--ion-text-color, #000) !important;
+  line-height: 1.2;
+}
+
+.company-id {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+}
+
+.company-right {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+/* On narrow screens stack the header content to avoid cramped layout */
+@media (max-width: 480px) {
+  .company-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .company-right { text-align: left; margin-top: 6px; }
+  .company-actions { flex-direction: column; }
+  .company-title {
+    /* reaplicar valores para evitar regras responsivas do Ionic */
+    font-size: 1rem !important;
+    color: var(--ion-text-color, #000) !important;
+  }
+}
+
+/* Center the create button at bottom */
+ion-fab.fab-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+ion-fab.fab-center ion-fab-button {
+  width: 56px;
+  height: 56px;
+}

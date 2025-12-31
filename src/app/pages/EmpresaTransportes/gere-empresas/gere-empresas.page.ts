@@ -26,6 +26,43 @@ export class GereEmpresasPage implements OnInit {
     this.loadCompanies();
   }
 
+  /**
+   * Enriquecer cada empresa com o email do utilizador associado (quando a empresa
+   * não tem um campo de email próprio). Procura na tabela de relação
+   * `users_empresa_transportes` e no `users` para obter o primeiro email encontrado.
+   */
+  private async enrichCompaniesWithOwnerEmail(companies: any[]) {
+    try {
+      // carregar todas as relações e utilizadores (pode ser otimizado para grandes conjuntos)
+      const rels: any = await this.supabase.fetchAll('users_empresa_transportes');
+      const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
+      const users: any = await this.supabase.fetchAll('users');
+      const userRows = Array.isArray(users) ? users : (users?.data || []);
+
+      const usersById: Record<string, any> = {};
+      for (const u of userRows) {
+        if (u && u.id_utilizador) usersById[String(u.id_utilizador)] = u;
+      }
+
+      // para cada empresa, se não tiver email, procurar o primeiro utilizador ligado
+      for (const comp of companies) {
+        if (!comp) continue;
+        if (comp.email) continue; // já tem email
+        const id = comp.id_empresa || comp['id'] || comp.idEmpresa;
+        if (!id) continue;
+        const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(id));
+        if (assigned && assigned.length > 0) {
+          // pegar o primeiro utilizador associado e usar o seu email
+          const first = assigned[0];
+          const user = usersById[String(first.id_utilizador)];
+          if (user && user.email) comp.email = user.email;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to enrich companies with owner email', e);
+    }
+  }
+
   ionViewWillEnter() {
     this.loadCompanies();
   }
@@ -39,7 +76,17 @@ export class GereEmpresasPage implements OnInit {
       const role = (user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '');
       if (role === 'Administrador') {
         const data: any = await this.supabase.getAllEmpresaTransportes();
-        this.companies = Array.isArray(data) ? data : (data?.data || []);
+        const rawCompanies = Array.isArray(data) ? data : (data?.data || []);
+        // normalizar campos e marcar como não expandido
+        this.companies = rawCompanies.map((c: any) => ({
+          ...(c || {}),
+          nome: c.nome,
+          nif: c.nif,
+          email: c.email,
+          _expanded: false
+        }));
+        // tentar enriquecer com email do utilizador associado quando a empresa não tem email
+        await this.enrichCompaniesWithOwnerEmail(this.companies);
       } else if (user && user.id_utilizador) {
         // buscar linhas de relação e mapear para os registos das empresas
         const rels: any = await this.supabase.getUserEmpresas(Number(user.id_utilizador));
@@ -54,7 +101,16 @@ export class GereEmpresasPage implements OnInit {
             console.warn('Failed to load company', id, e);
           }
         }
-        this.companies = companies;
+        // normalizar campos e marcar cada empresa como não expandida por defeito
+        this.companies = companies.map((c: any) => ({
+          ...(c || {}),
+          nome: c.nome || c.name || c.nome_empresa || c.razao_social || '',
+          nif: c.nif || c.nif_empresa || c.nifEmpresa || null,
+          email: c.email || c.email_empresa || c.emailEmpresa || null,
+          _expanded: false
+        }));
+        // enriquecer com email do utilizador associado se não existir email na empresa
+        await this.enrichCompaniesWithOwnerEmail(this.companies);
       } else {
         this.companies = [];
       }
@@ -73,6 +129,30 @@ export class GereEmpresasPage implements OnInit {
 
   edit(c: any) {
     this.router.navigate(['/edita-empresa'], { queryParams: { id: c.id_empresa || c['id'] || c.idEmpresa } });
+  }
+  
+  /**
+   * Alterna o estado expandido do cartão da empresa.
+   * Ao expandir, os botões de ação aparecem abaixo dos dados da empresa.
+   */
+  toggleExpand(c: any) {
+    c._expanded = !c._expanded;
+  }
+
+  /**
+   * Redireciona para a gestão de veículos da empresa.
+   */
+  goToVehicles(c: any) {
+    const id = c.id_empresa;
+    this.router.navigate(['/gere-veiculos'], { queryParams: { id } });
+  }
+
+  /**
+   * Redireciona para a gestão de pedidos da empresa.
+   */
+  goToOrders(c: any) {
+    const id = c.id_empresa || c['id'] || c.idEmpresa;
+    this.router.navigate(['/gere-pedidos'], { queryParams: { id } });
   }
   manageEmployees(c: any) {
     const id = c.id_empresa || c['id'] || c.idEmpresa;

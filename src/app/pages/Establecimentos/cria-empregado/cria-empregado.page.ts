@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslationService } from '../../../services/translations/translation.service';
 
 @Component({
   selector: 'app-cria-empregado',
@@ -8,7 +9,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class CriaEmpregadoPage implements OnInit {
 
-  constructor() { }
+  constructor(public t: TranslationService) { }
 
   ngOnInit() {
   }

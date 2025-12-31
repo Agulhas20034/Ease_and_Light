@@ -1,0 +1,47 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('edit') }} {{ t.translate('vehicles_list') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  
+
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('registration') || 'Registration' }}</ion-label>
+      <ion-input [(ngModel)]="matricula" disabled></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('vin') || 'VIN' }}</ion-label>
+      <ion-input [(ngModel)]="vin_veiculo" maxlength="17"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('type') || 'Tipo' }}</ion-label>
+      <ion-select [(ngModel)]="id_tipo">
+        <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo">{{ tp.displayName }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('brand') || 'Brand' }}</ion-label>
+      <ion-input [(ngModel)]="marca"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('model') || 'Model' }}</ion-label>
+      <ion-input [(ngModel)]="modelo"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('color') || 'Color' }}</ion-label>
+      <ion-input [(ngModel)]="cor"></ion-input>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-button expand="full" (click)="save()" [disabled]="loading">{{ t.translate('save') }}</ion-button>
+    </ion-item>
+  </ion-list>
+</ion-content>

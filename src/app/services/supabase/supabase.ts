@@ -386,6 +386,11 @@ export class SupabaseService {
   // veiculos
   async getAllVeiculos() { return this.fetchAll('veiculos'); }
   async getVeiculo(matricula: string) { return this.fetchByPk('veiculos', 'matricula', matricula); }
+  async getVeiculosByEmpresa(empresaId: number) {
+    const { data, error } = await this.supabase.from('veiculos').select('*').eq('id_empresa', empresaId);
+    if (error) throw error;
+    return data;
+  }
   async createVeiculo(rec: any) { return this.insertOne('veiculos', rec); }
   async updateVeiculo(matricula: string, updates: any) { return this.updateByPk('veiculos', 'matricula', { id: matricula, updates }); }
   async deleteVeiculo(matricula: string) { return this.deleteByPk('veiculos', 'matricula', matricula); }
