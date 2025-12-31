@@ -5,22 +5,35 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('companies_list') }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  
 
   <ion-list *ngIf="!loading && companies.length > 0">
-    <ion-item *ngFor="let c of companies">
-      <ion-label>
-        <h2>{{ c.nome || c.name || c.nome_empresa || c.razao_social }}</h2>
-        <p *ngIf="c.telefone">{{ c.telefone }}</p>
-      </ion-label>
-      <ion-button fill="clear" slot="end" (click)="edit(c)">{{ t.translate('edit') }}</ion-button>
-      <ion-button fill="clear" slot="end" (click)="manageEmployees(c)">{{ t.translate('employees') }}</ion-button>
-      <ion-button fill="clear" color="danger" slot="end" (click)="confirmToggleCompany(c)">{{ c.estado === 1 ? t.translate('deactivate_company') : t.translate('activate_account') }}</ion-button>
-    </ion-item>
+    <ion-card *ngFor="let c of companies" class="company-card">
+      <ion-card-header class="company-header" (click)="toggleExpand(c)">
+        <div class="company-meta">
+          <div class="company-main">
+            <ion-card-title class="company-title">{{ c.nome}}</ion-card-title>
+            <ion-note class="company-id" *ngIf="(c.nif)">
+              {{ t.translate('tax_id') }}: {{ c.nif}}
+            </ion-note>
+            <ion-note class="company-mail" *ngIf="(c.email)">
+              {{ t.translate('email') }}: {{ c.email}}
+            </ion-note>
+          </div>
+          <div class="company-right">
+            <ion-card-subtitle *ngIf="c.telefone">{{ c.telefone }}</ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content *ngIf="c._expanded" (click)="$event.stopPropagation()" class="company-actions">
+        <ion-button fill="clear" (click)="edit(c)">{{ t.translate('edit') }}</ion-button>
+        <ion-button fill="clear" (click)="manageEmployees(c)">{{ t.translate('employees') }}</ion-button>
+        <ion-button fill="clear" (click)="goToVehicles(c)">{{ t.translate('manage_vehicles') }}</ion-button>
+        <ion-button fill="clear" (click)="goToOrders(c)">{{ t.translate('manage_orders') }}</ion-button>
+        <ion-button fill="clear" color="danger" (click)="confirmToggleCompany(c)">{{ c.estado === 1 ? t.translate('deactivate_company') : t.translate('activate_account') }}</ion-button>
+      </ion-card-content>
+    </ion-card>
   </ion-list>
 
   <div *ngIf="!loading && companies.length === 0" class="ion-padding">
@@ -31,7 +44,7 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed" class="fab-center">
     <ion-fab-button (click)="create()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>

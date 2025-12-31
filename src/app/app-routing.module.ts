@@ -193,7 +193,23 @@ const routes: Routes = [
     loadChildren: () => import('./pages/Admin/edita-conta/edita-conta.module').then(m => m.EditaContaPageModule),
     canActivate: [RoleGuard],
     data: { requiredRole: 'Administrador', titleKey: 'edit_account' }
+  },  {
+    path: 'gere-veiculos',
+    loadChildren: () => import('./pages/EmpresaTransportes/gere-veiculos/gere-veiculos.module').then( m => m.GereVeiculosPageModule)
   },
+  {
+    path: 'cria-veiculo',
+    loadChildren: () => import('./pages/EmpresaTransportes/cria-veiculo/cria-veiculo.module').then( m => m.CriaVeiculoPageModule)
+  },
+  {
+    path: 'edita-veiculo',
+    loadChildren: () => import('./pages/EmpresaTransportes/edita-veiculo/edita-veiculo.module').then( m => m.EditaVeiculoPageModule)
+  },
+  {
+    path: 'gere-pedidos',
+    loadChildren: () => import('./pages/EmpresaTransportes/gere-pedidos/gere-pedidos.module').then( m => m.GerePedidosPageModule)
+  },
+
   
 
 ];
