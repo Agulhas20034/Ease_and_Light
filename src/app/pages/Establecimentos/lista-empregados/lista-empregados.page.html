@@ -5,9 +5,39 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('employees_list') }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-list *ngIf="!loading && users.length > 0">
+    <ion-card *ngFor="let u of users" class="user-card">
+      <ion-card-header class="user-header">
+        <div class="user-main">
+          <ion-card-title class="user-title">{{ u.nome || u.email }}</ion-card-title>
+          <ion-note *ngIf="u.nif">{{ t.translate('tax_id') }}: {{ u.nif }}</ion-note>
+          <ion-note *ngIf="u.email">{{ t.translate('email') }}: {{ u.email }}</ion-note>
+        </div>
+        <div class="user-right">
+          <ion-badge [color]="u.estado === 1 ? 'success' : 'medium'">{{ u.estado === 1 ? t.translate('vehicle_active') : t.translate('vehicle_inactive') }}</ion-badge>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content class="user-actions">
+        <ion-button fill="clear" (click)="editUser(u)">{{ t.translate('edit') }}</ion-button>
+        <ion-button fill="clear" color="danger" (click)="toggleUser(u)">{{ u.estado === 1 ? t.translate('deactivate') : t.translate('activate_account') }}</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!loading && users.length === 0" class="no-users-container">
+    <div class="no-users-top">
+      <p class="no-users-message">{{ t.translate('no_employees') }}</p>
+    </div>
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadUsers()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed" class="fab-center">
+    <ion-fab-button (click)="createUser()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
