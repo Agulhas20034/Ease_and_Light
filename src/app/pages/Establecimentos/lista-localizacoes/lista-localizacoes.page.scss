@@ -1,0 +1,86 @@
+:host {
+	display: block;
+}
+
+.location-card {
+	margin: 8px 12px;
+}
+
+.location-header {
+	cursor: pointer;
+}
+
+.location-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding-top: 8px;
+}
+
+.location-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+
+.location-main {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.location-title {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: 1rem !important;
+	font-weight: 600;
+	color: var(--ion-text-color, #000) !important;
+	line-height: 1.2;
+}
+
+.location-id, .location-postal {
+	display: block;
+	font-size: 0.85rem;
+	color: var(--ion-color-medium);
+}
+
+.location-right {
+	flex: 0 0 auto;
+	text-align: right;
+}
+
+@media (max-width: 480px) {
+	.location-meta {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.location-right { text-align: left; margin-top: 6px; }
+	.location-actions { flex-direction: column; }
+}
+
+ion-fab.fab-center { position: fixed !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important; z-index: 9999; }
+ion-fab.fab-center ion-fab-button { width: 56px; height: 56px; }
+
+/* Estado vazio: mensagem centrada topo e botão criar em baixo */
+.no-locations-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: center;
+	min-height: calc(100vh - 120px);
+	padding: 24px;
+}
+.no-locations-top {
+	margin-top: 24px;
+	text-align: center;
+}
+.no-locations-message {
+	font-size: 1.1rem;
+	color: var(--ion-color-medium);
+}
+.no-locations-bottom {
+	width: 100%;
+	max-width: 420px;
+	margin-bottom: 24px;
+}

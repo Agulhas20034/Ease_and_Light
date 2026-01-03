@@ -5,9 +5,47 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('locations_list') }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-list *ngIf="!loading && locais.length > 0">
+    <ion-card *ngFor="let l of locais" class="location-card">
+      <ion-card-header class="location-header" (click)="toggleExpand(l)">
+        <div class="location-meta">
+          <div class="location-main">
+            <ion-card-title class="location-title">{{ l.nome_rua || l.nome || l.name }}</ion-card-title>
+            <ion-note class="location-id" *ngIf="l.nif">{{ t.translate('tax_id') }}: {{ l.nif }}</ion-note>
+            <ion-note class="location-mail" *ngIf="l.email">{{ t.translate('email') }}: {{ l.email }}</ion-note>
+            <ion-note class="location-postal" *ngIf="l.cod_postal">{{ t.translate('postal_code') }}: {{ l.cod_postal }}</ion-note>
+          </div>
+          <div class="location-right">
+            <ion-card-subtitle *ngIf="l.telefone">{{ l.telefone }}</ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content *ngIf="l._expanded" (click)="$event.stopPropagation()" class="location-actions">
+        <ng-container *ngIf="l.estado !== 3">
+          <ion-button fill="clear" (click)="edit(l)">{{ t.translate('edit') }}</ion-button>
+          <ion-button fill="clear" (click)="manageEmployees(l)">{{ t.translate('employees') }}</ion-button>
+          <ion-button fill="clear" color="danger" (click)="confirmToggleLocation(l)">{{ l.estado === 1 ? t.translate('deactivate') : t.translate('activate_account') }}</ion-button>
+          <ion-button fill="clear" color="medium" (click)="confirmPermanentClose(l)">{{ t.translate('deactivate') }} {{ t.translate('permanent') }}</ion-button>
+        </ng-container>
+        <div *ngIf="l.link"><a target="_blank" href="{{ l.link }}">{{ t.translate('link_google') }}</a></div>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!loading && locais.length === 0" class="no-locations-container">
+    <div class="no-locations-top">
+      <p class="no-locations-message">{{ t.translate('no_locations') }}</p>
+    </div>
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadLocations()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed" class="fab-center">
+    <ion-fab-button (click)="create()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

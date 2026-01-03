@@ -274,6 +274,44 @@ export class SupabaseService {
   async updateTipoEstabelecimento(id: number, updates: any) { return this.updateByPk('tipo_estabelecimento', 'id_tipo', { id, updates }); }
   async deleteTipoEstabelecimento(id: number) { return this.deleteByPk('tipo_estabelecimento', 'id_tipo', id); }
 
+  // localizacoes
+  async getAllLocalizacoes() { return this.fetchAll('estabelecimento'); }
+  async getLocalizacao(id: number) { return this.fetchByPk('estabelecimento', 'id_estabelecimento', id); }
+  async createLocalizacao(rec: any) { return this.insertOne('estabelecimento', rec); }
+  async updateLocalizacao(id: number, updates: any) { return this.updateByPk('estabelecimento', 'id_estabelecimento', { id, updates }); }
+  async deleteLocalizacao(id: number) { return this.deleteByPk('estabelecimento', 'id_estabelecimento', id); }
+
+  // obter localizacoes por estabelecimento
+  async getLocalizacoesByEstabelecimento(estabId: number) {
+    const { data, error } = await this.supabase.from('estabelecimento').select('*').eq('id_estabelecimento', estabId);
+    if (error) throw error;
+    return data;
+  }
+
+  // Atualizar localizacoes por id_estabelecimento (pode afetar várias linhas, normalmente 1)
+  async updateLocalizacaoByEstabelecimento(estabId: number, updates: any) {
+    const { data, error } = await this.supabase.from('estabelecimento').update(updates).eq('id_estabelecimento', estabId);
+    if (error) throw error;
+    return data;
+  }
+
+  // Verificadores de NIF exclusivos para a tabela localizacoes
+  async isLocalizacaoNifTaken(nif: string) {
+    if (!nif) return false;
+    const cleaned = String(nif).trim();
+    const { data, error } = await this.supabase.from('estabelecimento').select('id_estabelecimento').eq('nif', cleaned).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
+  async isLocalizacaoNifTakenByOther(nif: string, locId: number) {
+    if (!nif) return false;
+    const cleaned = String(nif).trim();
+    const { data, error } = await this.supabase.from('estabelecimento').select('id_estabelecimento').eq('nif', cleaned).neq('id_estabelecimento', locId).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
   // tipo_perfil
   async getAllTipoPerfil() { return this.fetchAll('tipo_perfil'); }
   async getTipoPerfil(id: number) { return this.fetchByPk('tipo_perfil', 'id_tipo', id); }
@@ -296,6 +334,25 @@ export class SupabaseService {
     const { data, error } = await this.supabase.from('users').select('*').eq('id_tipo', id_tipo);
     if (error) throw error;
     return data;
+  }
+  async getUsersByEstabelecimento(id_estabelecimento: number) {
+    // Busca os vínculos users_estabelecimento para obter os ids de user
+    const { data: links, error: linkErr } = await this.supabase
+      .from('users_estabelecimento')
+      .select('id_utilizador')
+      .eq('id_estabelecimento', id_estabelecimento);
+    if (linkErr) {
+      console.error('Erro ao obter links users_estabelecimento', linkErr);
+      return { data: null, error: linkErr };
+    }
+    const userIds = (links || []).map((l: any) => l.id_utilizador).filter(Boolean);
+    if (userIds.length === 0) return { data: [], error: null };
+    // Busca os registos de users correspondentes 
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('*')
+      .in('id_utilizador', userIds);
+    return { data, error };
   }
   async updateUser(id: number, updates: any) {
     if (updates.telefone) {

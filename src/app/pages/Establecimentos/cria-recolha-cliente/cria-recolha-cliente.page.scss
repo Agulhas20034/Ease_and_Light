@@ -1,0 +1,20 @@
+/* Estilo simples seguindo o padrão das outras páginas: espaçamento limpo e inputs cheios */
+ion-list {
+  padding: 12px;
+}
+
+ion-item ion-input,
+ion-item ion-select,
+ion-item ion-datetime {
+  width: 100%;
+}
+
+ion-item[lines="none"] {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.small-note {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}

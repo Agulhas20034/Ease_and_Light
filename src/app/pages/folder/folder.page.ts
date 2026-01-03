@@ -28,6 +28,7 @@ export class FolderPage implements OnInit {
   public locationError: string | null = null;
   private map: L.Map | null = null;
   private userMarker: L.Marker | null = null;
+  private locationMarkers: L.Marker[] = [];
   private watchId: number | null = null;
   private sampleTimer: any = null;
   public lastLat: number | null = null;
@@ -89,6 +90,28 @@ export class FolderPage implements OnInit {
     }, 200);
 
     this.loadUserLocationOnMap();
+    // carregar e desenhar marcadores de todas as localizações
+    this.loadAllLocationMarkers();
+  }
+
+  private async loadAllLocationMarkers() {
+    try {
+      const data: any = await this.supabase.getAllLocalizacoes();
+      const rows = Array.isArray(data) ? data : (data?.data || []);
+      for (const r of rows) {
+        const lat = Number(r.lat || r.latitude || r.latitud || 0);
+        const lon = Number(r.lon || r.longitude || r.longitud || r.lon || 0);
+        if (!this.map || !lat || !lon || isNaN(lat) || isNaN(lon)) continue;
+        const title = (r.nome || r.nome_rua || r.nome_estabelecimento || r.descr || r.descricao || r.name || `Estab ${r.id_estabelecimento || ''}`);
+        const marker = L.marker([lat, lon]).addTo(this.map!);
+        // popup com detalhes 
+        const popupHtml = `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal : ''}</div>`;
+        marker.bindPopup(popupHtml);
+        this.locationMarkers.push(marker);
+      }
+    } catch (e) {
+      console.warn('Failed to load location markers', e);
+    }
   }
   private async loadUserLocationOnMap() {
     try {

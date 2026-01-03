@@ -1,0 +1,5 @@
+/* Styles for the client delivery list */
+.location-card { margin: 8px; }
+.card-actions { margin-top: 12px; display:flex; gap:8px; }
+.no-locations-container { text-align:center; padding: 40px 12px; }
+.no-locations-message { color: var(--ion-color-medium); }

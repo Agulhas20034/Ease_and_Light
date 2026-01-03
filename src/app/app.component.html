@@ -88,12 +88,6 @@
             </ion-item>
           </ion-menu-toggle>
           <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
-            <ion-item routerDirection="root" routerLink="/lista-empregados" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="people-outline" md="people-sharp"></ion-icon>
-              <ion-label>{{ t('employees_list') }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
             <ion-item routerDirection="root" routerLink="/lista-localizacoes" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="locate-outline" md="locate-sharp"></ion-icon>
               <ion-label>{{ t('locations_list') }}</ion-label>
@@ -105,12 +99,6 @@
             <ion-item routerDirection="root" routerLink="/gere-empresas" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="business-outline" md="business-sharp"></ion-icon>
               <ion-label>{{ t('manage_companies') }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
-            <ion-item routerDirection="root" routerLink="/lista-pedidos" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="list-outline" md="list-sharp"></ion-icon>
-              <ion-label>{{ t('orders') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
 

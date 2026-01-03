@@ -1,11 +1,36 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('create_collection_courier') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+  <ion-list *ngIf="!loading && entregas.length > 0">
+    <ion-card *ngFor="let e of entregas" class="location-card">
+      <ion-card-header>
+        <ion-card-title>{{ e.id_mochila ? ('Mochila: ' + (e.nome_mochila || e.id_mochila || e.id)) : ('#' + (e.id_entrega_recolha || e.id || '')) }}</ion-card-title>
+        <ion-note *ngIf="e.data_hora_recolha">{{ e.data_hora_recolha }}</ion-note>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div *ngIf="e.id_utilizador">{{ t.translate('backpack_owner') }}: {{ e.user_email || e.user_nome || e.id_utilizador }}</div>
+        <div *ngIf="e.id_estabelecimento_r">{{ t.translate('locations_list_pickup') }}: {{ e.estab_nome_r || e.id_estabelecimento_r }}</div>
+        <div *ngIf="e.id_estabelecimento_e">{{ t.translate('locations_list_delivery') }}: {{ e.estab_nome_e || e.id_estabelecimento_e }}</div>
+        <div *ngIf="e.id_empresa">{{ t.translate('companies_list') }}: {{ e.company_name || e.id_empresa }}</div>
+
+        <div class="card-actions">
+          <ion-button color="primary" (click)="startEntrega(e)">{{ t.translate('create_delivery_courier') }}</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!loading && entregas.length === 0" class="no-locations-container">
+    <p class="no-locations-message">{{ t.translate('no_locations') }}</p>
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadEntregas()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
 </ion-content>

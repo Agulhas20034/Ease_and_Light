@@ -5,9 +5,66 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('edit_location') }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('type') }}</ion-label>
+      <ion-select [(ngModel)]="tipo" interface="popover" placeholder="{{ t.translate('select_type') }}">
+        <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo">{{ tp.descr || tp.descricao || tp.description || tp.descricao_tipo || tp.nome || tp.tipo || tp.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('open_time') }}</ion-label>
+      <ion-input [(ngModel)]="hora_abertura" type="time"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('close_time') }}</ion-label>
+      <ion-input [(ngModel)]="hora_fecho" type="time"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('email') }}</ion-label>
+      <ion-input [(ngModel)]="email" type="email"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('phone') }}</ion-label>
+      <ion-input [(ngModel)]="telefone" type="tel"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('link_google') }}</ion-label>
+      <ion-input [(ngModel)]="link" type="url"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('name') }}</ion-label>
+      <ion-input [(ngModel)]="nome"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Lat</ion-label>
+      <ion-input [(ngModel)]="lat" type="number"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Lon</ion-label>
+      <ion-input [(ngModel)]="lon" type="number"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('postal_code') }}</ion-label>
+      <ion-input [(ngModel)]="cod_postal" placeholder="1234-567"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('nif') }}</ion-label>
+      <ion-input [(ngModel)]="nif" maxlength="9" inputmode="numeric"></ion-input>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-button expand="block" (click)="save()" [disabled]="loading">{{ t.translate('save') }}</ion-button>
+    </ion-item>
+  </ion-list>
 </ion-content>
