@@ -101,12 +101,6 @@
               <ion-label>{{ t('manage_companies') }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Empresa Transportes') || isProfileType('Administrador')">
-            <ion-item routerDirection="root" routerLink="/lista-pedidos" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="list-outline" md="list-sharp"></ion-icon>
-              <ion-label>{{ t('orders') }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
 
           <!-- Links Admin -->
           <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Administrador')">

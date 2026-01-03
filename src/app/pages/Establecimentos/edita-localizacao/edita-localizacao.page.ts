@@ -19,7 +19,8 @@ export class EditaLocalizacaoPage implements OnInit {
   email = '';
   telefone = '';
   link = '';
-  nome_rua = '';
+  nome = '';
+  originalNif = '';
   lat: any = null;
   lon: any = null;
   cod_postal = '';
@@ -65,7 +66,8 @@ export class EditaLocalizacaoPage implements OnInit {
       this.email = rec.email || '';
       this.telefone = rec.telefone || '';
       this.link = rec.link || '';
-      this.nome_rua = rec.nome_rua || '';
+      this.nome = rec.nome || rec.nome_rua || '';
+      this.originalNif = rec.nif || '';
       this.lat = rec.lat || null;
       this.lon = rec.lon || null;
       this.cod_postal = rec.cod_postal || '';
@@ -86,12 +88,16 @@ export class EditaLocalizacaoPage implements OnInit {
           this.loading = false;
           return;
         }
-        const locIdNum = this.locId ? Number(this.locId) : NaN;
-        const taken = this.locId ? await this.supabase.isLocalizacaoNifTakenByOther(nifClean, locIdNum) : await this.supabase.isLocalizacaoNifTaken(nifClean);
-        if (taken) {
-          this.showToast(this.t.translate('nif_taken'), 'warning');
-          this.loading = false;
-          return;
+        const originalClean = (this.originalNif || '').replace(/\D/g, '');
+        // Se o NIF não mudou em relação ao original, não validar unicidade
+        if (nifClean !== originalClean) {
+          const locIdNum = this.locId ? Number(this.locId) : NaN;
+          const taken = this.locId ? await this.supabase.isLocalizacaoNifTakenByOther(nifClean, locIdNum) : await this.supabase.isLocalizacaoNifTaken(nifClean);
+          if (taken) {
+            this.showToast(this.t.translate('nif_taken'), 'warning');
+            this.loading = false;
+            return;
+          }
         }
       }
 
@@ -110,7 +116,7 @@ export class EditaLocalizacaoPage implements OnInit {
         email: this.email,
         telefone: this.telefone,
         link: this.link,
-        nome_rua: this.nome_rua,
+        nome: this.nome,
         lat: this.lat,
         lon: this.lon,
         cod_postal: this.cod_postal,

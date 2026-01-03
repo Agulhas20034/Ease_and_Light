@@ -18,7 +18,7 @@ export class CriaLocalizacaoPage implements OnInit {
   email = '';
   telefone = '';
   link = '';
-  nome_rua = '';
+  nome = '';
   lat: any = null;
   lon: any = null;
   cod_postal = '';
@@ -84,7 +84,7 @@ export class CriaLocalizacaoPage implements OnInit {
         email: this.email,
         telefone: this.telefone,
         link: this.link,
-        nome_rua: this.nome_rua,
+        nome: this.nome,
         lat: this.lat,
         lon: this.lon,
         cod_postal: this.cod_postal,

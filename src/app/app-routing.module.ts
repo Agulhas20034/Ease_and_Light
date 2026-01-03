@@ -45,12 +45,6 @@ const routes: Routes = [
   },
   
   {
-    path: 'lista-pedidos',
-    loadChildren: () => import('./pages/EmpresaTransportes/lista-pedidos/lista-pedidos.module').then( m => m.ListaPedidosPageModule),
-    canActivate: [RoleGuard],
-    data: { requiredRole: 'Dono Empresa Transportes', titleKey: 'list_requests' }
-  },
-  {
     path: 'atribui-pedido',
     loadChildren: () => import('./pages/EmpresaTransportes/atribui-pedido/atribui-pedido.module').then( m => m.AtribuiPedidoPageModule),
     canActivate: [RoleGuard],
@@ -193,7 +187,8 @@ const routes: Routes = [
     loadChildren: () => import('./pages/Admin/edita-conta/edita-conta.module').then(m => m.EditaContaPageModule),
     canActivate: [RoleGuard],
     data: { requiredRole: 'Administrador', titleKey: 'edit_account' }
-  },  {
+  },
+  {
     path: 'gere-veiculos',
     loadChildren: () => import('./pages/EmpresaTransportes/gere-veiculos/gere-veiculos.module').then( m => m.GereVeiculosPageModule)
   },
