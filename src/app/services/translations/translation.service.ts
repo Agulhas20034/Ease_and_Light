@@ -57,6 +57,7 @@ export class TranslationService {
     manager_dashboard: { pt: 'Painel Gestor', en: 'Manager Dashboard' },
 
     /* Peregrino */
+    create_company: { pt: 'Criar Empresa Transportes', en: 'Create Transport Company' },
     create_route: { pt: 'Criar Percurso', en: 'Create Route' },
     manage_routes: { pt: 'Gerir Percursos', en: 'Manage Routes' },
     create_group: { pt: 'Criar Grupo', en: 'Create Group' },
@@ -111,7 +112,7 @@ export class TranslationService {
     create_location: { pt: 'Criar Localização', en: 'Create Location' },
     edit_location: { pt: 'Editar Localização', en: 'Edit Location' }
     ,
-    /* Admin / common actions */
+    /* Admin */
     edit: { pt: 'Editar', en: 'Edit' },
     edit_account: { pt: 'Editar Conta', en: 'Edit Account' },
     deactivate_account: { pt: 'Desativar Conta', en: 'Deactivate Account' },
@@ -138,6 +139,7 @@ export class TranslationService {
     edit_company: { pt: 'Editar Empresa', en: 'Edit Company' },
     company_name: { pt: 'Nome da Empresa', en: 'Company Name' },
     company_phone: { pt: 'Telefone da Empresa', en: 'Company Phone' },
+    company_email: { pt: 'Email da Empresa', en: 'Company Email' },
     provide_all_fields: { pt: 'Preencha todos os campos', en: 'Please fill in all fields' },
     invalid_registration: { pt: 'matricula inválida', en: 'invalid registration' },
     invalid_vin: { pt: 'VIN inválido', en: 'invalid VIN' },

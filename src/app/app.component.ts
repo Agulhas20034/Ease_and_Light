@@ -21,7 +21,8 @@ export class AppComponent {
   isProfileType(profileName: string): boolean {
     const user = this.currentUser;
     if (!user) return false;
-    return user.profileType === profileName || user.id_tipo === profileName;
+    const stored = (user.profileType || user.id_tipo || '').toString();
+    return stored === profileName.toString();
   }
 
   t(key: string) {
