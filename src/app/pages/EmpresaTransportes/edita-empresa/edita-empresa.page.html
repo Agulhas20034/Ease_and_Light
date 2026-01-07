@@ -15,11 +15,13 @@
       <ion-input [(ngModel)]="name" type="text"></ion-input>
     </ion-item>
     <ion-item>
-    </ion-item>
-    <ion-item>
       <ion-label position="stacked">{{ t.translate('company_phone') }}</ion-label>
       <ion-input [(ngModel)]="phone" type="text"></ion-input>
     </ion-item>
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('company_email') }}</ion-label>
+        <ion-input [(ngModel)]="email" type="email"></ion-input>
+      </ion-item>
     <ion-item>
       <ion-label position="stacked">{{ t.translate('tax_id') }}</ion-label>
       <ion-input [(ngModel)]="nif" type="text"></ion-input>

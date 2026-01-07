@@ -38,6 +38,7 @@ export class ListaLocalizacoesPage implements OnInit {
     try {
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
+
       const role = (user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '');
 
       if (role === 'Administrador') {
@@ -48,7 +49,9 @@ export class ListaLocalizacoesPage implements OnInit {
         // obter os estabelecimentos associados ao utilizador e buscar localizacoes
         const rels: any = await this.supabase.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
+
         const estabIds = relRows.map((r: any) => Number(r.id_estabelecimento)).filter((v: any) => !!v);
+
         const result: any[] = [];
         for (const id of estabIds) {
           try {
@@ -59,6 +62,7 @@ export class ListaLocalizacoesPage implements OnInit {
             console.warn('Failed to load locations for estabelecimento', id, e);
           }
         }
+
         this.locais = result.map((r: any) => ({ ...(r||{}), estado: Number(r.estado), _expanded: false }));
       } else {
         this.locais = [];

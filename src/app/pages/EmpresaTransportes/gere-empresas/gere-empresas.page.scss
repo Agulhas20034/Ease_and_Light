@@ -70,13 +70,15 @@
   }
 }
 
-/* Center the create button at bottom */
-ion-fab.fab-center {
-  left: 50%;
-  transform: translateX(-50%);
+ion-fab[horizontal="center"] {
+  --transform: translateX(0);
 }
 
-ion-fab.fab-center ion-fab-button {
+ion-fab[horizontal="center"] ion-fab-button {
   width: 56px;
   height: 56px;
+}
+
+ion-fab[vertical="bottom"] {
+  bottom: 7%;
 }

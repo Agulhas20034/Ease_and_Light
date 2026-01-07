@@ -12,3 +12,17 @@
 	text-align: center;
 	margin-top: 24px;
 }
+
+
+ion-fab[horizontal="center"] {
+	--transform: translateX(0);
+}
+
+ion-fab[horizontal="center"] ion-fab-button {
+	width: 56px;
+	height: 56px;
+}
+
+ion-fab[vertical="bottom"] {
+	bottom: 7%;
+}

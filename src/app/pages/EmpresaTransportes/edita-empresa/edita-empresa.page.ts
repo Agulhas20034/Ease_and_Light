@@ -14,6 +14,7 @@ export class EditaEmpresaPage implements OnInit {
   id: any = null;
   name = '';
   phone = '';
+  email = '';
   nif = '';
   loading = false;
 
@@ -41,6 +42,7 @@ export class EditaEmpresaPage implements OnInit {
       const c = data || (data?.data && data.data[0]) || {};
       this.name = c.nome || c.name || '';
       this.phone = c.telefone || c.phone || '';
+      this.email = c.email || '';
       this.nif = c.nif || '';
     } catch (e) {
       console.error('Failed to load company', e);
@@ -72,6 +74,7 @@ export class EditaEmpresaPage implements OnInit {
       const updates: any = {};
       if (this.name) updates.nome = this.name;
       if (this.phone) updates.telefone = this.phone;
+      if (this.email) updates.email = this.email;
       if (this.nif) updates.nif = this.nif;
       await this.supabase.updateEmpresaTransportes(Number(this.id), updates);
       const t = await this.toastCtrl.create({ message: this.t.translate('company_updated'), duration: 1500, color: 'success' });

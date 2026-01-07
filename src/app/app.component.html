@@ -57,7 +57,7 @@
             </ion-item>
           </ion-menu-toggle>
           <!-- Links dono de estabelecimento -->
-          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador')">
+          <ion-menu-toggle auto-hide="false" *ngIf="isProfileType('Dono Estabelecimento') || isProfileType('Administrador') || isProfileType('Empregado Estabelecimento')">
             <ion-item routerDirection="root" routerLink="/regista-mochila" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon aria-hidden="true" slot="start" ios="bag-add-outline" md="bag-add-sharp"></ion-icon>
               <ion-label>{{ t('register_backpack') }}</ion-label>

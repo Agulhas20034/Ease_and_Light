@@ -13,6 +13,7 @@ import { TranslationService } from '../../../services/translations/translation.s
 export class CriaEmpresaPage implements OnInit {
   nome = '';
   telefone = '';
+  email = '';
   nif = '';
   loading = false;
 
@@ -49,8 +50,60 @@ export class CriaEmpresaPage implements OnInit {
 
       const rec: any = { nome: this.nome, estado: 1 };
       if (this.telefone) rec.telefone = this.telefone;
+      if (this.email) rec.email = this.email;
       if (this.nif) rec.nif = this.nif;
-      await this.supabase.createEmpresaTransportes(rec);
+      const resp: any = await this.supabase.createEmpresaTransportes(rec);
+      console.debug('createEmpresaTransportes response', resp);
+      let inserted = Array.isArray(resp) ? resp[0] : (resp?.data ? resp.data[0] : resp);
+      let newId = inserted?.id_empresa ?? inserted?.id;
+
+      if (!newId && this.nif) {
+        try {
+          const nifClean = String(this.nif).replace(/\D/g, '').trim();
+          const found: any = await this.supabase.fetchByPk('empresa_transportes', 'nif', nifClean);
+          if (found) {
+            console.debug('createEmpresaTransportes found by nif', found);
+            newId = found.id_empresa ?? found.id;
+          }
+        } catch (e) {
+          console.warn('createEmpresaTransportes lookup by nif failed', e);
+        }
+      }
+
+      if (!newId) {
+        try {
+          const all: any = await this.supabase.getAllEmpresaTransportes();
+          const rows = Array.isArray(all) ? all : (all?.data || []);
+          const found = rows.find((r: any) => {
+            if (this.nif && r.nif && String(r.nif) === String(this.nif)) return true;
+            if (this.telefone && r.telefone && String(r.telefone) === String(this.telefone)) return true;
+            if (this.nome && r.nome && String(r.nome) === String(this.nome)) return true;
+            return false;
+          });
+          if (found) {
+            console.debug('createEmpresaTransportes fallback found', found);
+            newId = found.id_empresa ?? found.id;
+          } else {
+            console.warn('createEmpresaTransportes: could not determine new company id', { resp, nome: this.nome, telefone: this.telefone, nif: this.nif });
+          }
+        } catch (e) {
+          console.warn('createEmpresaTransportes fallback lookup failed', e);
+        }
+      }
+
+      try {
+        const raw = localStorage.getItem('currentUser');
+        const user = raw ? JSON.parse(raw) : null;
+        if (user && user.id_utilizador && newId) {
+          const linkResp: any = await this.supabase.addUserEmpresa(Number(user.id_utilizador), Number(newId));
+          console.debug('addUserEmpresa response', linkResp);
+        } else if (user && user.id_utilizador && !newId) {
+          console.warn('addUserEmpresa skipped: newId missing', { user });
+        }
+      } catch (linkErr) {
+        console.warn('Failed to link user to empresa', linkErr);
+      }
+
       const t = await this.toastCtrl.create({ message: this.t.translate('company_created'), duration: 1500, color: 'success' });
       t.present();
       this.router.navigate(['/gere-empresas']);

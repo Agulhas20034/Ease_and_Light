@@ -92,7 +92,58 @@ export class CriaLocalizacaoPage implements OnInit {
         estado: this.estado
       };
 
-      await this.supabase.createLocalizacao(rec);
+      const resp: any = await this.supabase.createLocalizacao(rec);
+      console.debug('createLocalizacao response', resp);
+      let inserted = Array.isArray(resp) ? resp[0] : (resp?.data ? resp.data[0] : resp);
+      let newId = inserted?.id_estabelecimento ?? inserted?.id;
+
+      if (!newId && this.nif) {
+        try {
+          const nifClean = String(this.nif).replace(/\D/g, '').trim();
+          const found: any = await this.supabase.fetchByPk('estabelecimento', 'nif', nifClean);
+          if (found) {
+            console.debug('createLocalizacao found by nif', found);
+            newId = found.id_estabelecimento ?? found.id;
+          }
+        } catch (e) {
+          console.warn('createLocalizacao lookup by nif failed', e);
+        }
+      }
+
+      if (!newId) {
+        try {
+          const all: any = await this.supabase.getAllLocalizacoes();
+          const rows = Array.isArray(all) ? all : (all?.data || []);
+          const found = rows.find((r: any) => {
+            if (this.nif && r.nif && String(r.nif) === String(this.nif)) return true;
+            if (this.email && r.email && String(r.email) === String(this.email)) return true;
+            if (this.nome && r.nome && String(r.nome) === String(this.nome)) return true;
+            return false;
+          });
+          if (found) {
+            console.debug('createLocalizacao fallback found', found);
+            newId = found.id_estabelecimento ?? found.id;
+          } else {
+            console.warn('createLocalizacao: could not determine new estabelecimento id', { resp, nome: this.nome, email: this.email, nif: this.nif });
+          }
+        } catch (e) {
+          console.warn('createLocalizacao fallback lookup failed', e);
+        }
+      }
+
+      try {
+        const raw = localStorage.getItem('currentUser');
+        const user = raw ? JSON.parse(raw) : null;
+        if (user && user.id_utilizador && newId) {
+          const linkResp: any = await this.supabase.addUserEstabelecimento(Number(user.id_utilizador), Number(newId));
+          console.debug('addUserEstabelecimento response', linkResp);
+        } else if (user && user.id_utilizador && !newId) {
+          console.warn('addUserEstabelecimento skipped: newId missing', { user });
+        }
+      } catch (linkErr) {
+        console.warn('Failed to link user to estabelecimento', linkErr);
+      }
+
       const toast = await this.toastCtrl.create({ message: this.t.translate('location_created'), duration: 1500, color: 'success' });
       toast.present();
       this.router.navigate(['/lista-localizacoes']);
