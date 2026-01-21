@@ -119,6 +119,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.tService.toggleLang();
   }
 
+  showBackButton(): boolean {
+    try {
+      const url = this.router.url || '';
+      
+      return !url.startsWith('/folder');
+    } catch {
+      return true;
+    }
+  }
+
+  goBack() {
+    window.history.back();
+  }
+
   logout() {
     localStorage.removeItem('currentUser');
     this.router.navigate(['/login']);

@@ -197,6 +197,22 @@ export class TranslationService {
     nif_in_use: { pt: 'NIF já em uso', en: 'NIF already in use' },
     passport_in_use: { pt: 'Passaporte já em uso', en: 'Passport already in use' },
     update_success: { pt: 'Atualizado com sucesso', en: 'Updated successfully' },
+    view_orders: { pt: 'Ver Pedidos', en: 'View Orders' },
+    no_orders_desc: { pt: 'Não há pedidos disponíveis para você', en: 'No orders available for you' },
+    pending: { pt: 'Não Atribuído', en: 'Unassigned' },
+    assigned: { pt: 'À Espera de Recolha', en: 'Awaiting Pickup' },
+    in_progress: { pt: 'Em Andamento', en: 'In Progress' },
+    delivered: { pt: 'Entregue', en: 'Delivered' },
+    order_details: { pt: 'Detalhes do Pedido', en: 'Order Details' },
+    order_location: { pt: 'Localização', en: 'Location' },
+    order_company: { pt: 'Empresa', en: 'Company' },
+    pickup_location: { pt: 'Recolha', en: 'Pickup' },
+    delivery_location: { pt: 'Entrega', en: 'Delivery' },
+    already_assigned: { pt: 'Já Atribuído', en: 'Already Assigned' },
+    pilgrims: { pt: 'Peregrino', en: 'Pilgrims' },
+    establishment: { pt: 'Estabelecimento', en: 'Establishment' },
+    transport_company: { pt: 'Empresa Transportes', en: 'Transport Company' },
+    admin: { pt: 'Administração', en: 'Administration' },
   };
 
   constructor() {}

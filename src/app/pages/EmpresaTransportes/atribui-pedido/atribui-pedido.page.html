@@ -8,7 +8,7 @@
   <ion-list>
     <ion-item *ngIf="empresas.length > 0">
       <ion-label>Empresa</ion-label>
-      <ion-select [(ngModel)]="empresaId" (ionChange)="loadEmployeesAndVehicles(empresaId)">
+      <ion-select [(ngModel)]="empresaId" (ionChange)="loadEmployeesAndVehicles(empresaId)" [disabled]="isCompanyLocked()">
         <ion-select-option *ngFor="let c of empresas" [value]="c.id_empresa">{{ c.nome || c.nome_empresa || c.displayName || c.id_empresa }}</ion-select-option>
       </ion-select>
     </ion-item>
