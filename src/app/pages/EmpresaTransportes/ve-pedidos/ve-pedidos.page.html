@@ -1,0 +1,67 @@
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refreshPedidos(); $event.detail.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-spinner *ngIf="loading" class="center-spinner"></ion-spinner>
+
+  <div *ngIf="!loading && pedidos.length === 0" class="empty-state">
+    <ion-text>
+      <h2>{{ t.translate('no_orders') || 'Sem pedidos' }}</h2>
+      <p>{{ t.translate('no_orders_desc') || 'Não há pedidos disponíveis' }}</p>
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="!loading && pedidos.length > 0">
+    <ion-item-sliding *ngFor="let pedido of pedidos">
+      <ion-item 
+        [button]="canAttributeOrder(pedido)"
+        [detail]="canAttributeOrder(pedido)"
+        (click)="canAttributeOrder(pedido) && verDetalhes(pedido)"
+        [disabled]="!canAttributeOrder(pedido)">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12" size-md="6">
+              <ion-text>
+                <h2>{{ t.translate('order_details') || 'Pedido' }} #{{ pedido.id_entrega_recolha || pedido.id }}</h2>
+              </ion-text>
+            </ion-col>
+            <ion-col size="12" size-md="6">
+              <ion-badge [color]="getEstadoColor(pedido.id_estado_entrega_recolha ?? pedido.estado ?? pedido.status)">
+                {{ getEstadoLabel(pedido.id_estado_entrega_recolha ?? pedido.estado ?? pedido.status) }}
+              </ion-badge>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12">
+              <ion-text color="medium">
+                <p><strong>{{ t.translate('pickup_location') || 'Recolha' }}:</strong> {{ pedido.estab_nome_r || pedido.localizacao_recolha || pedido.pickup_location || pedido.endereco_recolha || 'N/A' }}</p>
+              </ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12">
+              <ion-text color="medium">
+                <p><strong>{{ t.translate('delivery_location') || 'Entrega' }}:</strong> {{ pedido.estab_nome_e || pedido.localizacao_entrega || pedido.dropoff_location || pedido.endereco_entrega || 'N/A' }}</p>
+              </ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row *ngIf="pedido.id_empresa">
+            <ion-col size="12">
+              <ion-text color="medium">
+                <p>{{ t.translate('order_company') || 'Empresa' }}: {{ pedido.nome_empresa || 'Empresa #' + pedido.id_empresa }}</p>
+              </ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row *ngIf="pedido.data_criacao || pedido.created_at">
+            <ion-col size="12">
+              <ion-text color="medium">
+                <p>{{ pedido.data_criacao || pedido.created_at | date: 'short' }}</p>
+              </ion-text>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-item>
+    </ion-item-sliding>
+  </ion-list>
+</ion-content>

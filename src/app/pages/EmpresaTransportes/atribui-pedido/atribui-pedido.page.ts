@@ -36,9 +36,20 @@ export class AtribuiPedidoPage implements OnInit {
     this.loadInitial();
   }
 
+  isCompanyLocked(): boolean {
+    return this.entregaId !== null && this.entregaId > 0;
+  }
+
   async loadInitial() {
     this.loading = true;
     try {
+      if (this.entregaId && this.entregaId > 0) {
+        const ordem: any = await this.supabase.fetchByPk('entregas_recolhas', 'id_entrega_recolha', this.entregaId);
+        if (ordem) {
+          this.empresaId = Number(ordem.id_empresa);
+        }
+      }
+
       // carregar empresas se admin (ou para popular select)
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
@@ -117,6 +128,7 @@ export class AtribuiPedidoPage implements OnInit {
             const updates: any = {
               id_veiculo: veicId,
               id_estafeta: empId,
+              estado: 2,
             };
             await this.supabase.updateEntregaRecolha(Number(this.entregaId), updates);
             const to = await this.toastCtrl.create({ message: this.t.translate('update_success') || 'Atualizado', duration: 1500, color: 'success' });
