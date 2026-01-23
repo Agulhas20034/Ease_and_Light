@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ionic-app
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: ./www
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
