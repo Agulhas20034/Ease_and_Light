@@ -233,8 +233,6 @@ export class TranslationService {
     operation_error: { pt: 'Erro', en: 'Error' },
     select_item_to_delete: { pt: 'Selecione o item para apagar', en: 'Select item to delete' },
     select_item_to_update: { pt: 'Selecione o item para atualizar', en: 'Select item to update' },
-
-    // Field labels for database operations
     id_utilizador: { pt: 'ID do Utilizador', en: 'User ID' },
     id_empresa: { pt: 'ID da Empresa', en: 'Company ID' },
     id_estabelecimento: { pt: 'ID do Estabelecimento', en: 'Establishment ID' },

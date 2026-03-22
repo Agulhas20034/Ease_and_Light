@@ -203,7 +203,8 @@ const routes: Routes = [
   {
     path: 'gere-pedidos',
     loadChildren: () => import('./pages/EmpresaTransportes/gere-pedidos/gere-pedidos.module').then( m => m.GerePedidosPageModule)
-  },  {
+  },
+  {
     path: 've-pedidos',
     loadChildren: () => import('./pages/EmpresaTransportes/ve-pedidos/ve-pedidos.module').then( m => m.VePedidosPageModule)
   },
@@ -213,15 +214,6 @@ const routes: Routes = [
     canActivate: [RoleGuard],
     data: { requiredRole: 'Administrador', titleKey: 'test_api' }
   },
-
-
-  
-
-];
-
-
-  
-
 ];
 
 @NgModule({
