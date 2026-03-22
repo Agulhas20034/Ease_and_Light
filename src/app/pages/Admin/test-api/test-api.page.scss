@@ -1,0 +1,19 @@
+ion-card {
+  margin: 16px;
+}
+
+ion-card-content {
+  pre {
+    background: #f4f4f4;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+ion-button {
+  margin-top: 8px;
+}
