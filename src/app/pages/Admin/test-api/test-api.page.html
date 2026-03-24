@@ -48,7 +48,7 @@
             [name]="field"
             [compareWith]="compareDropdownFields">
             <ion-select-option *ngFor="let option of getDropdownOptions(field)" [value]="option">
-              {{ getDisplayLabel(option) }}
+              {{ getDisplayLabel(option, field) }}
             </ion-select-option>
           </ion-select>
 
@@ -95,7 +95,7 @@
               [name]="field"
               [compareWith]="compareDropdownFields">
               <ion-select-option *ngFor="let option of getDropdownOptions(field)" [value]="option">
-                {{ getDisplayLabel(option) }}
+                {{ getDisplayLabel(option, field) }}
               </ion-select-option>
             </ion-select>
 

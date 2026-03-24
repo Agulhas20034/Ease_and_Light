@@ -28,34 +28,50 @@ export class TestApiPage implements OnInit {
     'mochilas',
     'percurso',
     'grupo',
+    'etapas',
+    'grupo_user',
+    'etapas_percurso',
+    'users_empresa_transportes',
+    'users_estabelecimento',
     'tipo_perfil',
     'tipo_veiculo',
     'tipo_estabelecimento',
     'estado_entrega_recolha',
     'estado_grupo',
     'estado_percurso',
+    'estado_conta',
+    'estado_empresa',
+    'estado_estabelecimento',
+    'estado_veiculo',
     'dificuldade_percurso',
-    'etapas',
     'info_percurso'
   ];
 
   private fieldDependencies: { [key: string]: { [key: string]: string } } = {
-    users: { id_tipo: 'tipo_perfil' },
-    empresa_transportes: {},
-    estabelecimento: { id_tipo_estabelecimento: 'tipo_estabelecimento' },
-    veiculos: { id_tipo: 'tipo_veiculo', id_empresa: 'empresa_transportes' },
-    entregas_recolhas: { id_tipo: 'tipo_entrega_recolha', id_estado: 'estado_entrega_recolha', id_estabelecimento: 'estabelecimento', id_user: 'users' },
+    users: { id_tipo: 'tipo_perfil', estado: 'estado_conta' },
+    empresa_transportes: { estado: 'estado_empresa' },
+    estabelecimento: { id_tipo_estabelecimento: 'tipo_estabelecimento', estado: 'estado_estabelecimento' },
+    veiculos: { id_tipo: 'tipo_veiculo', id_empresa: 'empresa_transportes', estado: 'estado_veiculo' },
+    entregas_recolhas: { id_estabelecimento_r: 'estabelecimento', id_estabelecimento_e: 'estabelecimento', id_veiculo: 'veiculos', id_mochila: 'mochilas', id_estafeta: 'users', id_empresa: 'empresa_transportes', id_estado: 'estado_entrega_recolha' },
     mochilas: { id_user: 'users' },
     percurso: { id_dificuldade: 'dificuldade_percurso', id_estado: 'estado_percurso' },
     grupo: { id_estado: 'estado_grupo' },
+    etapas: {},
+    grupo_user: { id_grupo: 'grupo', id_user: 'users' },
+    etapas_percurso: { id_percurso: 'percurso', id_etapa: 'etapas' },
+    users_empresa_transportes: { id_utilizador: 'users', id_empresa: 'empresa_transportes' },
+    users_estabelecimento: { id_utilizador: 'users', id_estabelecimento: 'estabelecimento' },
     tipo_perfil: {},
     tipo_veiculo: {},
     tipo_estabelecimento: {},
     estado_entrega_recolha: {},
     estado_grupo: {},
     estado_percurso: {},
+    estado_conta: {},
+    estado_empresa: {},
+    estado_estabelecimento: {},
+    estado_veiculo: {},
     dificuldade_percurso: {},
-    etapas: {},
     info_percurso: { id_percurso: 'percurso' }
   };
 
@@ -77,11 +93,12 @@ export class TestApiPage implements OnInit {
 
   async onOperationChange() {
     this.resetForm();
+    await this.loadDropdownData();
     if (this.operation === 'delete') {
       await this.loadTableData();
     }
     if (this.operation === 'update') {
-      await this.loadTableData(); // For selecting which record to update
+      await this.loadTableData();
     }
   }
 
@@ -91,17 +108,17 @@ export class TestApiPage implements OnInit {
       return;
     }
     
-    // Pre-fill form with existing data
+    // preencher formData com os dados do registo selecionado para update
     this.formData = { ...record };
     
-    // Load dropdown data first
+    //carregar dados para dropdowns relacionados se existirem
     await this.loadDropdownData();
     
-    // For foreign key fields, map the IDs to the actual objects for proper dropdown selection
+    // para foreign keys, substituir o valor do id pelo objeto correspondente do dropdown para mostrar o valor legível no form
     if (this.fieldDependencies[this.selectedTable]) {
       for (const [field, table] of Object.entries(this.fieldDependencies[this.selectedTable])) {
         if (record[field] && this.dropdownData[field]) {
-          // Find the matching object in dropdown data
+          // procurar o objeto no dropdownData que corresponde ao id do record[field] e substituir o valor no formData por esse objeto
           const matchingOption = this.dropdownData[field].find((option: any) => 
             option.id === record[field] || option[field] === record[field]
           );
@@ -118,11 +135,54 @@ export class TestApiPage implements OnInit {
 
     this.dropdownData = {};
     const dependencies = this.fieldDependencies[this.selectedTable];
+    
+    // Mapping para determinar o campo de ID correto para cada tabela, já que nem todas usam 'id' como chave primária e isso é necessário para comparar os objetos do dropdown com os valores do record para update/delete
+    const idFieldMap: { [key: string]: string } = {
+      users: 'id_utilizador',
+      empresa_transportes: 'id_empresa',
+      estabelecimento: 'id_estabelecimento',
+      veiculos: 'matricula',
+      entregas_recolhas: 'id_entrega_recolha',
+      mochilas: 'id_mochila',
+      percurso: 'id_percurso',
+      grupo: 'id_grupo',
+      etapas: 'id_etapa',
+      grupo_user: 'id_grupo',
+      etapas_percurso: 'id_percurso',
+      users_empresa_transportes: 'id_utilizador',
+      users_estabelecimento: 'id_utilizador',
+      tipo_perfil: 'id_tipo',
+      tipo_veiculo: 'id_tipo',
+      tipo_estabelecimento: 'id_tipo',
+      estado_entrega_recolha: 'id_estado',
+      estado_grupo: 'id_estado',
+      estado_percurso: 'id_estado',
+      estado_conta: 'id_estado',
+      estado_empresa: 'id_estado',
+      estado_estabelecimento: 'id_estado',
+      estado_veiculo: 'id_estado',
+      dificuldade_percurso: 'id_dificuldade',
+      info_percurso: 'id_info_percurso'
+    };
 
     for (const [field, table] of Object.entries(dependencies)) {
       try {
-        const data = await (this.supabase as any)[this.getLoadMethod(table)]();
-        this.dropdownData[field] = data || [];
+        const method = this.getLoadMethod(table);
+        let data;
+        
+        if (method === 'fetchAll') {
+          //Para tabelas de associação, usar o método genérico fetchAll com o nome da tabela para obter os dados
+          data = await this.supabase.fetchAll(table);
+        } else {
+          data = await (this.supabase as any)[method]();
+        }
+        
+        const idField = idFieldMap[table] || 'id';
+        //Normalizar os dados do dropdown para ter um campo 'id' que é usado para comparação e seleção, já que as chaves primárias têm nomes diferentes em cada tabela
+        this.dropdownData[field] = (data || []).map((item: any) => ({
+          ...item,
+          id: item[idField]
+        }));
       } catch (error) {
         console.error(`Error loading ${table}:`, error);
         this.dropdownData[field] = [];
@@ -143,6 +203,7 @@ export class TestApiPage implements OnInit {
         mochilas: 'getAllMochilas',
         percurso: 'getAllPercurso',
         grupo: 'getAllGrupo',
+        etapas: 'getAllEtapas',
         tipo_perfil: 'getAllTipoPerfil',
         tipo_veiculo: 'getAllTipoVeiculo',
         tipo_estabelecimento: 'getAllTipoEstabelecimento',
@@ -150,11 +211,20 @@ export class TestApiPage implements OnInit {
         estado_grupo: 'getAllEstadoGrupo',
         estado_percurso: 'getAllEstadoPercurso',
         dificuldade_percurso: 'getAllDificuldadePercurso',
-        etapas: 'getAllEtapas',
-        info_percurso: 'getAllInfoPercurso'
+        info_percurso: 'getAllInfoPercurso',
+        grupo_user: 'fetchAll',
+        etapas_percurso: 'fetchAll',
+        users_empresa_transportes: 'fetchAll',
+        users_estabelecimento: 'fetchAll'
       };
       const method = methodMap[this.selectedTable];
-      this.tableData = (await (this.supabase as any)[method]()) || [];
+      
+      if (method === 'fetchAll') {
+        //Para tabelas de associação, usar o método genérico fetchAll com o nome da tabela para obter os dados
+        this.tableData = (await this.supabase.fetchAll(this.selectedTable)) || [];
+      } else {
+        this.tableData = (await (this.supabase as any)[method]()) || [];
+      }
     } catch (error) {
       console.error('Error loading table data:', error);
       this.tableData = [];
@@ -171,16 +241,24 @@ export class TestApiPage implements OnInit {
       mochilas: 'getAllMochilas',
       percurso: 'getAllPercurso',
       grupo: 'getAllGrupo',
+      etapas: 'getAllEtapas',
       tipo_perfil: 'getAllTipoPerfil',
       tipo_veiculo: 'getAllTipoVeiculo',
       tipo_estabelecimento: 'getAllTipoEstabelecimento',
       estado_entrega_recolha: 'getAllEstadoEntregaRecolha',
       estado_grupo: 'getAllEstadoGrupo',
       estado_percurso: 'getAllEstadoPercurso',
+      estado_conta: 'getAllEstadoConta',
+      estado_empresa: 'getAllEstadoEmpresa',
+      estado_estabelecimento: 'getAllEstadoEstabelecimento',
+      estado_veiculo: 'getAllEstadoVeiculo',
       dificuldade_percurso: 'getAllDificuldadePercurso',
-      etapas: 'getAllEtapas',
       info_percurso: 'getAllInfoPercurso',
-      tipo_entrega_recolha: 'getAllTipoEntregaRecolha'
+      tipo_entrega_recolha: 'getAllTipoEntregaRecolha',
+      grupo_user: 'fetchAll',
+      etapas_percurso: 'fetchAll',
+      users_empresa_transportes: 'fetchAll',
+      users_estabelecimento: 'fetchAll'
     };
     return methodMap[table] || 'getAllUsers';
   }
@@ -189,15 +267,23 @@ export class TestApiPage implements OnInit {
     return this.dropdownData[field] || [];
   }
 
-  getDisplayLabel(item: any): string {
+  getDisplayLabel(item: any, field?: string): string {
     if (!item) return '';
     
-    // For tipo and estado tables, show only the Descr field
-    if (this.selectedTable.startsWith('estado_') || this.selectedTable.startsWith('tipo_') || this.selectedTable === 'dificuldade_percurso') {
-      return item.Descr || item.descr || item.estado || item.tipo || item.dificuldade || item.nome || JSON.stringify(item).substring(0, 50);
+    // Determinar a tabela de origem do campo para tentar mostrar um label mais correto, especialmente para campos de estados e tipos que têm uma descrição
+    let sourceTable = '';
+    if (field && this.fieldDependencies[this.selectedTable]?.[field]) {
+      sourceTable = this.fieldDependencies[this.selectedTable][field];
+    } else if (this.selectedTable) {
+      sourceTable = this.selectedTable;
     }
     
-    // For other tables, try common display fields
+    // Mostrar um campo específico para tabelas de estados e tipos, ou fallback para um campo comum ou o JSON stringificado
+    if (sourceTable.startsWith('estado_') || sourceTable.startsWith('tipo_') || sourceTable === 'dificuldade_percurso') {
+      return item.descr || JSON.stringify(item).substring(0, 50);
+    }
+    
+    // Para outras tabelas, tentar mostrar um campos comum como nome, tipo ou estado, ou fallback para o primeiro campo disponível
     return item.nome || item.tipo || item.estado || item.dificuldade || item.marca || item.email || JSON.stringify(item).substring(0, 50);
   }
 
@@ -211,14 +297,22 @@ export class TestApiPage implements OnInit {
       mochilas: 'id_mochila',
       percurso: 'id_percurso',
       grupo: 'id_grupo',
+      etapas: 'id_etapa',
+      grupo_user: 'id_grupo', 
+      etapas_percurso: 'id_percurso', 
+      users_empresa_transportes: 'id_utilizador', 
+      users_estabelecimento: 'id_utilizador', 
       tipo_perfil: 'id_tipo',
       tipo_veiculo: 'id_tipo',
       tipo_estabelecimento: 'id_tipo',
       estado_entrega_recolha: 'id_estado',
       estado_grupo: 'id_estado',
       estado_percurso: 'id_estado',
+      estado_conta: 'id_estado',
+      estado_empresa: 'id_estado',
+      estado_estabelecimento: 'id_estado',
+      estado_veiculo: 'id_estado',
       dificuldade_percurso: 'id_dificuldade',
-      etapas: 'id_etapa',
       info_percurso: 'id_info_percurso'
     };
     return idFieldMap[this.selectedTable] || 'id';
@@ -292,7 +386,7 @@ export class TestApiPage implements OnInit {
   }
 
   private async callCreateMethod() {
-    // Validation for users table
+    // Validação para users - verificar se email, nif ou passaporte já existem antes de criar
     if (this.selectedTable === 'users') {
       if (this.formData.email) {
         const emailTaken = await this.supabase.getUserByEmail(this.formData.email);
@@ -314,6 +408,9 @@ export class TestApiPage implements OnInit {
       }
     }
 
+    // Converter campos de dropdown de objetos para seus IDs antes de enviar para a API
+    const submitData = this.extractIdsFromDropdownFields({ ...this.formData });
+
     const methodMap: { [key: string]: string } = {
       users: 'createUser',
       empresa_transportes: 'createEmpresaTransportes',
@@ -323,18 +420,30 @@ export class TestApiPage implements OnInit {
       mochilas: 'createMochila',
       percurso: 'createPercurso',
       grupo: 'createGrupo',
+      etapas: 'createEtapa',
+      grupo_user: 'insertOne',
+      etapas_percurso: 'insertOne',
+      users_empresa_transportes: 'insertOne',
+      users_estabelecimento: 'insertOne',
       tipo_perfil: 'createTipoPerfil',
       tipo_veiculo: 'createTipoVeiculo',
       tipo_estabelecimento: 'createTipoEstabelecimento',
       estado_entrega_recolha: 'createEstadoEntregaRecolha',
       estado_grupo: 'createEstadoGrupo',
       estado_percurso: 'createEstadoPercurso',
+      estado_conta: 'createEstadoConta',
+      estado_empresa: 'createEstadoEmpresa',
+      estado_estabelecimento: 'createEstadoEstabelecimento',
+      estado_veiculo: 'createEstadoVeiculo',
       dificuldade_percurso: 'createDificuldadePercurso',
-      etapas: 'createEtapa',
       info_percurso: 'createInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
-    return await (this.supabase as any)[method](this.formData);
+    
+    if (method === 'insertOne') {
+      return await this.supabase.insertOne(this.selectedTable, submitData);
+    }
+    return await (this.supabase as any)[method](submitData);
   }
 
   private async callReadMethod() {
@@ -347,14 +456,22 @@ export class TestApiPage implements OnInit {
       mochilas: 'getAllMochilas',
       percurso: 'getAllPercurso',
       grupo: 'getAllGrupo',
+      etapas: 'getAllEtapas',
+      grupo_user: 'fetchAll',
+      etapas_percurso: 'fetchAll',
+      users_empresa_transportes: 'fetchAll',
+      users_estabelecimento: 'fetchAll',
       tipo_perfil: 'getAllTipoPerfil',
       tipo_veiculo: 'getAllTipoVeiculo',
       tipo_estabelecimento: 'getAllTipoEstabelecimento',
       estado_entrega_recolha: 'getAllEstadoEntregaRecolha',
       estado_grupo: 'getAllEstadoGrupo',
       estado_percurso: 'getAllEstadoPercurso',
+      estado_conta: 'getAllEstadoConta',
+      estado_empresa: 'getAllEstadoEmpresa',
+      estado_estabelecimento: 'getAllEstadoEstabelecimento',
+      estado_veiculo: 'getAllEstadoVeiculo',
       dificuldade_percurso: 'getAllDificuldadePercurso',
-      etapas: 'getAllEtapas',
       info_percurso: 'getAllInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
@@ -365,7 +482,7 @@ export class TestApiPage implements OnInit {
     const id = this.getIdFromFormData();
     if (!id) throw new Error('ID necessário para update');
 
-    // Validation for users table
+    // Validação pra tabela users - verificar se email, nif ou passaporte já existem para outro utilizador
     if (this.selectedTable === 'users') {
       if (this.formData.email) {
         const emailTaken = await this.supabase.getUserByEmail(this.formData.email);
@@ -387,6 +504,9 @@ export class TestApiPage implements OnInit {
       }
     }
 
+    //Converter campos de dropdown de objetos para seus IDs antes de enviar para a API
+    const submitData = this.extractIdsFromDropdownFields({ ...this.formData });
+
     const methodMap: { [key: string]: string } = {
       users: 'updateUser',
       empresa_transportes: 'updateEmpresaTransportes',
@@ -396,18 +516,39 @@ export class TestApiPage implements OnInit {
       mochilas: 'updateMochila',
       percurso: 'updatePercurso',
       grupo: 'updateGrupo',
+      etapas: 'updateEtapa',
+      grupo_user: 'updateOne',
+      etapas_percurso: 'updateOne',
+      users_empresa_transportes: 'updateOne',
+      users_estabelecimento: 'updateOne',
       tipo_perfil: 'updateTipoPerfil',
       tipo_veiculo: 'updateTipoVeiculo',
       tipo_estabelecimento: 'updateTipoEstabelecimento',
       estado_entrega_recolha: 'updateEstadoEntregaRecolha',
       estado_grupo: 'updateEstadoGrupo',
       estado_percurso: 'updateEstadoPercurso',
+      estado_conta: 'updateEstadoConta',
+      estado_empresa: 'updateEstadoEmpresa',
+      estado_estabelecimento: 'updateEstadoEstabelecimento',
+      estado_veiculo: 'updateEstadoVeiculo',
       dificuldade_percurso: 'updateDificuldadePercurso',
-      etapas: 'updateEtapa',
       info_percurso: 'updateInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
-    return await (this.supabase as any)[method](id, this.formData);
+    return await (this.supabase as any)[method](id, submitData);
+  }
+
+  private extractIdsFromDropdownFields(data: any): any {
+    const submitData = { ...data };
+    if (this.fieldDependencies[this.selectedTable]) {
+      for (const field of Object.keys(this.fieldDependencies[this.selectedTable])) {
+        // Se o campo existe no formData e é um objeto com um campo 'id', substituir o valor pelo id para enviar para a API
+        if (submitData[field] && typeof submitData[field] === 'object' && submitData[field].id !== undefined) {
+          submitData[field] = submitData[field].id;
+        }
+      }
+    }
+    return submitData;
   }
 
   private async callDeleteMethod() {
@@ -424,14 +565,22 @@ export class TestApiPage implements OnInit {
       mochilas: 'deleteMochila',
       percurso: 'deletePercurso',
       grupo: 'deleteGrupo',
+      etapas: 'deleteEtapa',
+      grupo_user: 'deleteByPk',
+      etapas_percurso: 'deleteByPk',
+      users_empresa_transportes: 'deleteByPk',
+      users_estabelecimento: 'deleteByPk',
       tipo_perfil: 'deleteTipoPerfil',
       tipo_veiculo: 'deleteTipoVeiculo',
       tipo_estabelecimento: 'deleteTipoEstabelecimento',
       estado_entrega_recolha: 'deleteEstadoEntregaRecolha',
       estado_grupo: 'deleteEstadoGrupo',
       estado_percurso: 'deleteEstadoPercurso',
+      estado_conta: 'deleteEstadoConta',
+      estado_empresa: 'deleteEstadoEmpresa',
+      estado_estabelecimento: 'deleteEstadoEstabelecimento',
+      estado_veiculo: 'deleteEstadoVeiculo',
       dificuldade_percurso: 'deleteDificuldadePercurso',
-      etapas: 'deleteEtapa',
       info_percurso: 'deleteInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
@@ -445,23 +594,31 @@ export class TestApiPage implements OnInit {
 
   getFormFields(): string[] {
     const baseFields: { [key: string]: string[] } = {
-      users: ['id_utilizador', 'email', 'password', 'nome', 'telefone', 'nif', 'passaporte', 'nacionalidade', 'id_tipo', 'estado'],
-      empresa_transportes: ['id_empresa', 'nome', 'telefone', 'email', 'nif'],
-      estabelecimento: ['id_estabelecimento', 'nome', 'telefone', 'email', 'nif', 'hora_abertura', 'hora_fecho', 'link_google', 'rua', 'codigo_postal', 'id_tipo_estabelecimento'],
-      veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa'],
-      entregas_recolhas: ['id_entrega_recolha', 'id_tipo', 'id_estado', 'id_estabelecimento', 'id_user', 'data_hora'],
-      mochilas: ['id_mochila', 'peso', 'cor', 'id_user'],
-      percurso: ['id_percurso', 'nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
-      grupo: ['id_grupo', 'nome', 'id_estado', 'data_criacao'],
-      tipo_perfil: ['id_tipo', 'tipo'],
-      tipo_veiculo: ['id_tipo', 'tipo'],
-      tipo_estabelecimento: ['id_tipo', 'tipo'],
-      estado_entrega_recolha: ['id_estado', 'estado'],
-      estado_grupo: ['id_estado', 'estado'],
-      estado_percurso: ['id_estado', 'estado'],
-      dificuldade_percurso: ['id_dificuldade', 'dificuldade'],
-      etapas: ['id_etapa', 'nome', 'descricao', 'coordenadas'],
-      info_percurso: ['id_info_percurso', 'titulo', 'conteudo', 'id_percurso']
+      users: ['email', 'password', 'nome', 'telefone', 'nif', 'passaporte', 'nacionalidade', 'id_tipo', 'estado'],
+      empresa_transportes: ['nome', 'telefone', 'email', 'nif','estado'],
+      estabelecimento: ['nome', 'telefone', 'email', 'nif', 'hora_abertura', 'hora_fecho', 'link_google', 'rua', 'codigo_postal', 'id_tipo_estabelecimento', 'estado'],
+      veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa', 'estado'],
+      entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_veiculo', 'id_mochila', 'id_estafeta', 'id_empresa', 'data_hora'],
+      mochilas: ['peso', 'cor', 'id_user'],
+      percurso: ['nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
+      grupo: ['nome', 'id_estado', 'data_criacao'],
+      etapas: ['nome', 'descricao', 'coordenadas'],
+      grupo_user: ['id_grupo', 'id_user'],
+      etapas_percurso: ['id_percurso', 'id_etapa'],
+      users_empresa_transportes: ['id_utilizador', 'id_empresa'],
+      users_estabelecimento: ['id_utilizador', 'id_estabelecimento'],
+      tipo_perfil: ['tipo'],
+      tipo_veiculo: ['tipo'],
+      tipo_estabelecimento: ['tipo'],
+      estado_entrega_recolha: ['estado'],
+      estado_grupo: ['estado'],
+      estado_percurso: ['estado'],
+      estado_conta: ['estado'],
+      estado_empresa: ['estado'],
+      estado_estabelecimento: ['estado'],
+      estado_veiculo: ['estado'],
+      dificuldade_percurso: ['dificuldade'],
+      info_percurso: ['titulo', 'conteudo', 'id_percurso']
     };
 
     if (this.operation === 'read') {
@@ -471,10 +628,32 @@ export class TestApiPage implements OnInit {
     const fields = baseFields[this.selectedTable] || [];
 
     if (this.operation === 'create') {
-      // Exclude autoincrement primary key fields from create operations
-      const autoincrementFields = ['id_utilizador', 'id_empresa', 'id_estabelecimento', 'id_entrega_recolha', 'id_mochila', 'id_percurso', 'id_grupo', 'id_etapa', 'id_info_percurso', 'matricula'];
-      
-      return fields.filter(f => !autoincrementFields.includes(f));
+  //apenas excluir primary keys das proprias tabelas
+      const primaryKeyMap: { [key: string]: string } = {
+        users: 'id_utilizador',
+        empresa_transportes: 'id_empresa',
+        estabelecimento: 'id_estabelecimento',
+        veiculos: 'matricula',
+        entregas_recolhas: 'id_entrega_recolha',
+        mochilas: 'id_mochila',
+        percurso: 'id_percurso',
+        grupo: 'id_grupo',
+        tipo_perfil: 'id_tipo',
+        tipo_veiculo: 'id_tipo',
+        tipo_estabelecimento: 'id_tipo',
+        estado_entrega_recolha: 'id_estado',
+        estado_grupo: 'id_estado',
+        estado_percurso: 'id_estado',
+        estado_conta: 'id_estado',
+        estado_empresa: 'id_estado',
+        estado_estabelecimento: 'id_estado',
+        estado_veiculo: 'id_estado',
+        dificuldade_percurso: 'id_dificuldade',
+        etapas: 'id_etapa',
+        info_percurso: 'id_info_percurso'
+      };
+      const primaryKey = primaryKeyMap[this.selectedTable];
+      return primaryKey ? fields.filter(f => f !== primaryKey) : fields;
     }
 
     return fields;
@@ -522,12 +701,11 @@ export class TestApiPage implements OnInit {
   compareDropdownFields(obj1: any, obj2: any): boolean {
     if (!obj1 || !obj2) return obj1 === obj2;
     
-    // If both are objects, compare by id field
     if (typeof obj1 === 'object' && typeof obj2 === 'object') {
       return obj1.id === obj2.id;
     }
     
-    // Fallback to JSON comparison
+    // Fallback
     return JSON.stringify(obj1) === JSON.stringify(obj2);
   }
 }
