@@ -218,6 +218,48 @@ class ApiService {
     return await this.supabase.deleteUser(id);
   }
 
+  async registerUser(email, password, nome, additionalData = {}) {
+    const data = {
+      email,
+      password,
+      nome,
+      id_tipo: additionalData.id_tipo || 5,
+      telefone: additionalData.telefone || '',
+      nacionalidade: additionalData.nacionalidade || null,
+      nif: additionalData.nif || null,
+      passaporte: additionalData.passaporte || null,
+      estado: 1
+    };
+    return await this.createUser(data);
+  }
+
+  async loginUser(email, password) {
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+
+    email = email.trim().toLowerCase();
+    const user = await this.supabase.getUserByEmail(email);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const bcrypt = require('bcryptjs');
+    const isValid = await bcrypt.compare(password, user.password || '');
+    if (!isValid) {
+      throw new Error('Invalid password');
+    }
+
+    return {
+      id_utilizador: user.id_utilizador,
+      email: user.email,
+      nome: user.nome,
+      id_tipo: user.id_tipo,
+      estado: user.estado
+    };
+  }
+
   async createEmpresaTransportes(data) {
     this.validateRequiredFields(data, 'empresa_transportes', false);
 

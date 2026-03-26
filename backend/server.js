@@ -29,6 +29,27 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Auth endpoints
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, nome, ...additionalData } = req.body;
+    const result = await apiService.registerUser(email, password, nome, additionalData);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await apiService.loginUser(email, password);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 // Users endpoints
 app.post('/api/users', async (req, res) => {
   try {

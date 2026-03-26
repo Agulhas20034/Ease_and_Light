@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -15,7 +15,7 @@ export class GereContasPage implements OnInit {
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -32,7 +32,7 @@ export class GereContasPage implements OnInit {
   async loadUsers() {
     this.loading = true;
     try {
-      const data: any = await this.supabase.getAllUsers();
+      const data: any = await this.httpApi.getAllUsers();
       this.users = Array.isArray(data) ? data : (data?.data || []);
     } catch (e) {
       console.error('Failed to load users', e);
@@ -50,7 +50,7 @@ export class GereContasPage implements OnInit {
   async toggleActive(u: any) {
     const newEstado = (Number(u.estado) === 1) ? 2 : 1;
     try {
-      await this.supabase.updateUser(u.id_utilizador, { estado: newEstado });
+      await this.httpApi.updateUser(u.id_utilizador, { estado: newEstado });
       const msg = newEstado === 1 ? this.t.translate('account_activated') : this.t.translate('account_deactivated');
       const t = await this.toastCtrl.create({ message: msg, duration: 1500, color: 'success' });
       t.present();

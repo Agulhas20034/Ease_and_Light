@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -76,7 +76,7 @@ export class TestApiPage implements OnInit {
   };
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private toastCtrl: ToastController,
     public t: TranslationService
   ) {}
@@ -172,9 +172,9 @@ export class TestApiPage implements OnInit {
         
         if (method === 'fetchAll') {
           //Para tabelas de associação, usar o método genérico fetchAll com o nome da tabela para obter os dados
-          data = await this.supabase.fetchAll(table);
+          data = await this.httpApi.getAll(table);
         } else {
-          data = await (this.supabase as any)[method]();
+          data = await (this.httpApi as any)[method]();
         }
         
         const idField = idFieldMap[table] || 'id';
@@ -221,9 +221,9 @@ export class TestApiPage implements OnInit {
       
       if (method === 'fetchAll') {
         //Para tabelas de associação, usar o método genérico fetchAll com o nome da tabela para obter os dados
-        this.tableData = (await this.supabase.fetchAll(this.selectedTable)) || [];
+        this.tableData = (await this.httpApi.getAll(this.selectedTable)) || [];
       } else {
-        this.tableData = (await (this.supabase as any)[method]()) || [];
+        this.tableData = (await (this.httpApi as any)[method]()) || [];
       }
     } catch (error) {
       console.error('Error loading table data:', error);
@@ -390,27 +390,7 @@ export class TestApiPage implements OnInit {
   }
 
   private async callCreateMethod() {
-    // Validação para users - verificar se email, nif ou passaporte já existem antes de criar
-    if (this.selectedTable === 'users') {
-      if (this.formData.email) {
-        const emailTaken = await this.supabase.getUserByEmail(this.formData.email);
-        if (emailTaken) {
-          throw new Error('Email already exists');
-        }
-      }
-      if (this.formData.nif) {
-        const nifTaken = await this.supabase.isNifTaken(this.formData.nif);
-        if (nifTaken) {
-          throw new Error('NIF already exists');
-        }
-      }
-      if (this.formData.passaporte) {
-        const passaporteTaken = await this.supabase.isPassaporteTaken(this.formData.passaporte);
-        if (passaporteTaken) {
-          throw new Error('Passport already exists');
-        }
-      }
-    }
+   
 
     // Converter campos de dropdown de objetos para seus IDs antes de enviar para a API
     const submitData = this.extractIdsFromDropdownFields({ ...this.formData });
@@ -445,9 +425,9 @@ export class TestApiPage implements OnInit {
     const method = methodMap[this.selectedTable];
     
     if (method === 'insertOne') {
-      return await this.supabase.insertOne(this.selectedTable, submitData);
+      return await this.httpApi.create(this.selectedTable, submitData);
     }
-    return await (this.supabase as any)[method](submitData);
+    return await (this.httpApi as any)[method](submitData);
   }
 
   private async callReadMethod() {
@@ -479,34 +459,14 @@ export class TestApiPage implements OnInit {
       info_percurso: 'getAllInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
-    return await (this.supabase as any)[method]();
+    return await (this.httpApi as any)[method]();
   }
 
   private async callUpdateMethod() {
     const id = this.getIdFromFormData();
     if (!id) throw new Error('ID necessário para update');
 
-    // Validação pra tabela users - verificar se email, nif ou passaporte já existem para outro utilizador
-    if (this.selectedTable === 'users') {
-      if (this.formData.email) {
-        const emailTaken = await this.supabase.getUserByEmail(this.formData.email);
-        if (emailTaken) {
-          throw new Error('Email already exists for another user');
-        }
-      }
-      if (this.formData.nif) {
-        const nifTaken = await this.supabase.isNifTakenByOther(this.formData.nif, id);
-        if (nifTaken) {
-          throw new Error('NIF already exists for another user');
-        }
-      }
-      if (this.formData.passaporte) {
-        const passaporteTaken = await this.supabase.isPassaporteTakenByOther(this.formData.passaporte, id);
-        if (passaporteTaken) {
-          throw new Error('Passport already exists for another user');
-        }
-      }
-    }
+
 
     //Converter campos de dropdown de objetos para seus IDs antes de enviar para a API
     const submitData = this.extractIdsFromDropdownFields({ ...this.formData });
@@ -539,7 +499,7 @@ export class TestApiPage implements OnInit {
       info_percurso: 'updateInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
-    return await (this.supabase as any)[method](id, submitData);
+    return await (this.httpApi as any)[method](id, submitData);
   }
 
   private extractIdsFromDropdownFields(data: any): any {
@@ -588,7 +548,7 @@ export class TestApiPage implements OnInit {
       info_percurso: 'deleteInfoPercurso'
     };
     const method = methodMap[this.selectedTable];
-    return await (this.supabase as any)[method](id);
+    return await (this.httpApi as any)[method](id);
   }
 
   private getIdFromFormData(): any {

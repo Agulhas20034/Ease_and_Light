@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { TranslationService } from '../../../services/translations/translation.service';
 
 @Component({
@@ -29,20 +29,13 @@ export class CriaContasPage implements OnInit {
   tipos: any[] = [];
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastController: ToastController,
     public tService: TranslationService
   ) {}
 
   async ngOnInit() {
-    try {
-      const tipos: any = await this.supabase.getAllTipoPerfil();
-      if (Array.isArray(tipos) && tipos.length) {
-        if (!this.tipoPerfil) this.tipoPerfil = tipos[0].id_tipo;
-        this.tipos = tipos;
-      }
-    } catch (e) {}
   }
 
   t(key: string) {
@@ -50,9 +43,14 @@ export class CriaContasPage implements OnInit {
   }
 
   onPasswordChange() {
-    const validation = this.supabase.validatePassword(this.password);
-    this.passwordFeedback = validation.feedback;
-    this.passwordIsValid = validation.isValid;
+    const feedback: string[] = [];
+    if (this.password.length < 8) feedback.push('pw_len');
+    if (!/[A-Z]/.test(this.password)) feedback.push('pw_upper');
+    if (!/[a-z]/.test(this.password)) feedback.push('pw_lower');
+    if (!/[0-9]/.test(this.password)) feedback.push('pw_number');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(this.password)) feedback.push('pw_special');
+    this.passwordFeedback = feedback;
+    this.passwordIsValid = feedback.length === 0;
   }
 
   isTelefoneValid(): boolean {
@@ -83,70 +81,15 @@ export class CriaContasPage implements OnInit {
 
     this.loading = true;
     try {
-      if (!this.nif && !this.passaporte) {
-        this.showToast(this.t('provide_nif_or_passport'), 'warning');
-        this.loading = false;
-        return;
-      }
-
-      if (this.telefone && !this.isTelefoneValid()) {
-        this.showToast(this.t('phone_invalid'), 'warning');
-        this.loading = false;
-        return;
-      }
-      if (this.nif && !this.isNifValid()) {
-        this.showToast(this.t('nif_invalid'), 'warning');
-        this.loading = false;
-        return;
-      }
-
-      const rec: any = {
-        email: this.email,
-        password: this.password,
-        nome: this.nome,
-        telefone: this.telefone || null,
+      const additionalData: any = {
         id_tipo: this.tipoPerfil ?? 5,
+        telefone: this.telefone || null,
         nacionalidade: this.nacionalidade || null,
         nif: this.nif || null,
         passaporte: this.passaporte || null
       };
 
-      if (this.telefone) {
-        const telTaken = await this.supabase.isTelefoneTaken(this.telefone);
-        if (telTaken) {
-          this.showToast(this.t('phone_invalid') + ' — already in use', 'warning');
-          this.loading = false;
-          return;
-        }
-      }
-      if (this.nif) {
-        const nifTaken = await this.supabase.isNifTaken(this.nif);
-        if (nifTaken) {
-          this.showToast(this.t('nif_invalid') + ' — already in use', 'warning');
-          this.loading = false;
-          return;
-        }
-      }
-      if (this.passaporte) {
-        const passTaken = await this.supabase.isPassaporteTaken(this.passaporte);
-        if (passTaken) {
-          this.showToast(this.t('passaporte') + ' — already in use', 'warning');
-          this.loading = false;
-          return;
-        }
-      }
-
-      await this.supabase.registerUser(this.email, this.password, this.nome);
-      const created = await this.supabase.getUserByEmail(this.email);
-      if (created) {
-        await this.supabase.updateUser(created.id_utilizador, {
-          telefone: rec.telefone,
-          id_tipo: rec.id_tipo,
-          nacionalidade: rec.nacionalidade,
-          nif: rec.nif,
-          passaporte: rec.passaporte
-        });
-      }
+      await this.httpApi.register(this.email, this.password, this.nome, additionalData);
       this.showToast('Account created successfully!', 'success');
       setTimeout(() => this.router.navigate(['/gere-contas']), 1500);
     } catch (error: any) {

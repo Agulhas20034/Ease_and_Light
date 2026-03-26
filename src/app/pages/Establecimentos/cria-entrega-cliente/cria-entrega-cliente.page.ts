@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { TranslationService } from '../../../services/translations/translation.service';
 import { ToastController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -16,7 +16,7 @@ export class CriaEntregaClientePage implements OnInit {
   public debugInfo: { fetched: number; filtered: number } = { fetched: 0, filtered: 0 };
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     public t: TranslationService,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -37,7 +37,7 @@ export class CriaEntregaClientePage implements OnInit {
       const user = raw ? JSON.parse(raw) : null;
       const role = user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '';
 
-      const all: any = await this.supabase.getAllEntregasRecolhas();
+      const all: any = await this.httpApi.getAllEntregasRecolhas();
       const rows = Array.isArray(all) ? all : (all?.data || []);
       console.debug('cria-entrega-cliente: fetched rows', Array.isArray(rows) ? rows.length : 0, rows);
 
@@ -54,7 +54,7 @@ export class CriaEntregaClientePage implements OnInit {
       if (role === 'Administrador') {
         this.entregas = filtered;
       } else if (user && user.id_utilizador) {
-        const rels: any = await this.supabase.getUserEstabelecimentos(Number(user.id_utilizador));
+        const rels: any = await this.httpApi.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const estabIds = relRows.map((r: any) => Number(r.id_estabelecimento)).filter((v: any) => !!v);
         this.entregas = filtered.filter((r: any) => {
@@ -90,7 +90,7 @@ export class CriaEntregaClientePage implements OnInit {
                 try {
                   const now = new Date().toISOString();
                   const updates: any = { tipo: 2, estado: 4, data_hora_entrega: now };
-                  await this.supabase.updateEntregaRecolha(Number(id), updates);
+                  await this.httpApi.updateEntregaRecolha(Number(id), updates);
                   this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
                   // remove localmente pra manter a lista atualizada
                   this.entregas = (this.entregas || []).filter((e: any) => {

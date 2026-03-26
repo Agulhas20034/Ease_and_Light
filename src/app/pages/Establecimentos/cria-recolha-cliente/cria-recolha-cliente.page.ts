@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { TranslationService } from '../../../services/translations/translation.service';
 import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -30,7 +30,7 @@ export class CriaRecolhaClientePage implements OnInit {
   public loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     public t: TranslationService,
     private toastCtrl: ToastController,
     private router: Router
@@ -49,7 +49,7 @@ export class CriaRecolhaClientePage implements OnInit {
   async loadClients() {
     try {
       const peregrinoTipo = 5;
-      const byTipo = await this.supabase.getUsersByTipo(peregrinoTipo);
+      const byTipo = await this.httpApi.getUsersByTipo(peregrinoTipo);
       this.clients = (byTipo || []) as any[];
     } catch (e) {
       console.error('Erro ao carregar clientes', e);
@@ -62,14 +62,14 @@ export class CriaRecolhaClientePage implements OnInit {
     this.selectedMochila = null;
     if (!this.selectedClient) return;
     try {
-      const all = await this.supabase.getAllMochilas();
+      const all = await this.httpApi.getAllMochilas();
       const uid = String(this.selectedClient.id_utilizador || this.selectedClient.id_user || '');
       // mochilas pertencentes ao utilizador
       let userMochilas = (all || []).filter((m: any) => String(m.id_user ?? m.id_utilizador ?? '') === uid);
 
       // remover mochilas que já estejam em entregas_recolhas com estado != 4
       try {
-        const ents: any = await this.supabase.getAllEntregasRecolhas();
+        const ents: any = await this.httpApi.getAllEntregasRecolhas();
         const entRows = Array.isArray(ents) ? ents : (ents?.data || []);
         const taken = new Set<string>();
         for (const er of (entRows || [])) {
@@ -98,18 +98,18 @@ export class CriaRecolhaClientePage implements OnInit {
       const role = (user && (user.profileType) ? (user.profileType).toString() : '');
 
       if (role === 'Administrador') {
-        const data: any = await this.supabase.getAllLocalizacoes();
+        const data: any = await this.httpApi.getAllLocalizacoes();
         const rows = Array.isArray(data) ? data : (data?.data || []);
         this.estabelecimentos = rows || [];
       } else if (user && user.id_utilizador) {
         // obter os estabelecimentos associados ao utilizador e buscar localizacoes
-        const rels: any = await this.supabase.getUserEstabelecimentos(Number(user.id_utilizador));
+        const rels: any = await this.httpApi.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const estabIds = relRows.map((r: any) => Number(r.id_estabelecimento)).filter((v: any) => !!v);
         const result: any[] = [];
         for (const id of estabIds) {
           try {
-            const locs: any = await this.supabase.getLocalizacoesByEstabelecimento(Number(id));
+            const locs: any = await this.httpApi.getLocalizacoesByEstabelecimento(Number(id));
             const list = Array.isArray(locs) ? locs : (locs?.data || []);
             for (const l of list) result.push(l);
           } catch (e) {
@@ -134,7 +134,7 @@ export class CriaRecolhaClientePage implements OnInit {
   // Carregar empresas de transporte para o dropdown
   async loadEmpresas() {
     try {
-      const all = await this.supabase.getAllEmpresaTransportes();
+      const all = await this.httpApi.getAllEmpresaTransportes();
       this.empresas = (all || []) as any[];
     } catch (e) {
       console.error('Erro ao carregar empresas', e);
@@ -187,7 +187,7 @@ export class CriaRecolhaClientePage implements OnInit {
       let lastErr: any = null;
       let created = false;
         try {
-          await this.supabase.createEntregaRecolha(base);
+          await this.httpApi.createEntregaRecolha(base);
           created = true;
           
         } catch (err: any) {
@@ -222,7 +222,7 @@ export class CriaRecolhaClientePage implements OnInit {
   // Atualiza lista de estabelecimentos de entrega (todas exceto a de recolha selecionada)
   async updateDeliveryEstabelecimentos() {
     try {
-      const all: any = await this.supabase.getAllLocalizacoes();
+      const all: any = await this.httpApi.getAllLocalizacoes();
       const rows = Array.isArray(all) ? all : (all?.data || []);
       const excludeId = this.selectedEstabelecimento ? (this.selectedEstabelecimento.id_estabelecimento || this.selectedEstabelecimento.id) : null;
       this.deliveryEstabelecimentos = (rows || []).filter((r: any) => {

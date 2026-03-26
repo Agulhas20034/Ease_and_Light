@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { TranslationService } from '../../../services/translations/translation.service';
 
 @Component({
@@ -12,7 +12,7 @@ export class ListaMochilasPage implements OnInit {
   public mochilas: any[] = [];
   public loading = false;
 
-  constructor(private supabase: SupabaseService, public t: TranslationService) { }
+  constructor(private httpApi: HttpApiService, public t: TranslationService) { }
 
   async ngOnInit() {
     await this.loadMochilas();
@@ -30,13 +30,13 @@ export class ListaMochilasPage implements OnInit {
   async loadMochilas() {
     this.loading = true;
     try {
-      const all = await this.supabase.getAllMochilas();
+      const all = await this.httpApi.getAllMochilas();
       const user = this.currentUser;
 
       // Carregar users para mapear donos
       let users: any[] = [];
       try {
-        users = await this.supabase.getAllUsers() || [];
+        users = await this.httpApi.getAllUsers() || [];
       } catch (uErr) {
         console.warn('Could not load users for owner mapping', uErr);
       }
@@ -54,7 +54,7 @@ export class ListaMochilasPage implements OnInit {
 
       let isAdmin = false;
       try {
-        const tipos = await this.supabase.getAllTipoPerfil();
+        const tipos = await this.httpApi.getAllTipoPerfil();
         const adminTipo = (tipos || []).find((t: any) => {
           const n = ((t.nome || t.descr || t.descricao) || '').toString().toLowerCase();
           return n.includes('admin') || n.includes('administrador');

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { SupabaseService } from 'src/app/services/supabase/supabase';
+import { HttpApiService } from 'src/app/services/http-api/http-api.service';
 import { TranslationService } from 'src/app/services/translations/translation.service';
 import { AlertController, ToastController } from '@ionic/angular';
 
@@ -16,7 +16,7 @@ export class ListaEmpregadosPage implements OnInit {
   estabId: number | null = null;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private route: ActivatedRoute,
     public t: TranslationService,
@@ -40,10 +40,10 @@ export class ListaEmpregadosPage implements OnInit {
     this.loading = true;
     try {
       if (this.estabId) {
-        const res: any = await this.supabase.getUsersByEstabelecimento(this.estabId);
+        const res: any = await this.httpApi.getUsersByEstabelecimento(this.estabId);
         this.users = (res.data || []).map((u: any) => ({ ...u, estado: Number(u.estado) }));
       } else {
-        const all = await this.supabase.getUsersByTipo(6);
+        const all = await this.httpApi.getUsersByTipo(6);
         this.users = (all || []).map((u: any) => ({ ...u, estado: Number(u.estado) }));
       }
     } catch (err) {
@@ -70,7 +70,7 @@ export class ListaEmpregadosPage implements OnInit {
           handler: async () => {
             const newEstado = user.estado === 1 ? 2 : 1;
             try {
-              await this.supabase.updateUser(user.id_utilizador, { estado: newEstado });
+              await this.httpApi.updateUser(user.id_utilizador, { estado: newEstado });
               user.estado = newEstado;
               const toast = await this.toastCtrl.create({ message: this.t.translate('employee_updated'), duration: 1500 });
               toast.present();

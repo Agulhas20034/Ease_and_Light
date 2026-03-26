@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { SupabaseService } from '../../services/supabase/supabase';
 import { TranslationService } from '../../services/translations/translation.service';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -21,7 +20,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private supabase: SupabaseService,
     public tService: TranslationService
   ) {}
 

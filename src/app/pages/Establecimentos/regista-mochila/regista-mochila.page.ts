@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { TranslationService } from '../../../services/translations/translation.service';
 import { PopoverController } from '@ionic/angular';
 import { OwnerPopoverComponent } from '../owner-popover.component';
@@ -21,7 +21,7 @@ export class RegistaMochilaPage implements OnInit {
   public searching: string = '';
   public loading = false;
 
-  constructor(private supabase: SupabaseService, public t: TranslationService, private popoverCtrl: PopoverController) { }
+  constructor(private httpApi: HttpApiService, public t: TranslationService, private popoverCtrl: PopoverController) { }
 
   async openOwnerPopover(ev?: any) {
     const pop = await this.popoverCtrl.create({
@@ -50,11 +50,11 @@ export class RegistaMochilaPage implements OnInit {
       if (peregrinoTipo) {
         // Busca utilizadores com o tipo de perfil "Peregrino"
         try {
-          const byTipo = await this.supabase.getUsersByTipo(peregrinoTipo);
+          const byTipo = await this.httpApi.getUsersByTipo(peregrinoTipo);
           this.peregrinoUsers = (byTipo || []) as any[];
         } catch (err) {
           // Fallback se falhar
-          const users = await this.supabase.getAllUsers();
+          const users = await this.httpApi.getAllUsers();
           this.users = users || [];
           this.peregrinoUsers = this.users.filter(u => String(u.id_tipo) === String(peregrinoTipo));
         }
@@ -105,7 +105,7 @@ export class RegistaMochilaPage implements OnInit {
     };
 
     try {
-      await this.supabase.createMochila(rec);
+      await this.httpApi.createMochila(rec);
       alert(this.t.translate('backpack_created'));
       // reset
       this.selectedOwner = null;

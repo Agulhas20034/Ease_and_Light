@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
@@ -16,7 +16,7 @@ export class GerePedidosPage implements OnInit {
   public loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService,
@@ -38,7 +38,7 @@ export class GerePedidosPage implements OnInit {
       const empresaParam = qp['id'] ?? qp['empresaId'] ?? null;
       const empresaFilterId = empresaParam ? Number(empresaParam) : null;
 
-      const all: any = await this.supabase.getAllEntregasRecolhas();
+      const all: any = await this.httpApi.getAllEntregasRecolhas();
       const rows = Array.isArray(all) ? all : (all?.data || []);
 
       // selecionar entregas que têm id_empresa e não têm veiculo/estafeta atribuídos
@@ -57,7 +57,7 @@ export class GerePedidosPage implements OnInit {
         if (role === 'Administrador') {
           this.pedidos = filtered;
         } else if (user && user.id_utilizador) {
-          const rels: any = await this.supabase.getUserEmpresas(Number(user.id_utilizador));
+          const rels: any = await this.httpApi.getUserEmpresas(Number(user.id_utilizador));
           const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
           const myEmpresaIds = relRows.map((r: any) => Number(r.id_empresa)).filter(Boolean);
           this.pedidos = filtered.filter((p: any) => myEmpresaIds.includes(Number(p.id_empresa ?? p.empresa_id ?? p.id_emp)));
