@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ headerTitle }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card class="forecast-card">
+    <ion-card-header>
+      <ion-card-title>{{ cityName }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="weather" class="today-weather">
+        <div class="weather-header">{{ t('today_weather') }}</div>
+        <ion-item class="weather-item">
+          <ion-label>
+            <p class="temp">{{ weather.temperature }}°C</p>
+            <p class="description">{{ getTranslatedDescription(weather.weatherCode) }}</p>
+          </ion-label>
+        </ion-item>
+      </div>
+
+      <div class="forecast-header">{{ t('forecast_7_days') }}</div>
+      <ion-list>
+        <ion-item *ngFor="let day of forecast" class="forecast-item">
+          <ion-label>
+            <p class="date">{{ getFormattedDate(day.date) }}</p>
+            <p class="forecast-text">{{ day.temperature }}° {{ getTranslatedDescription(day.weatherCode) }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

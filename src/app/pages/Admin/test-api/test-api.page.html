@@ -35,12 +35,10 @@
         </ion-select>
       </ion-item>
 
-      <!-- CREATE FORM -->
       <form *ngIf="selectedTable && operation === 'create'" (ngSubmit)="executeOperation()">
         <ion-item *ngFor="let field of getFormFields()">
           <ion-label position="stacked">{{ getFieldLabel(field) }}</ion-label>
           
-          <!-- Dropdown for foreign key fields -->
           <ion-select 
             *ngIf="isDropdownField(field)"
             interface="popover"
@@ -52,7 +50,6 @@
             </ion-select-option>
           </ion-select>
 
-          <!-- Regular input for non-foreign-key fields -->
           <ion-input
             *ngIf="!isDropdownField(field)"
             [type]="field.includes('password') ? 'password' : field.includes('email') ? 'email' : field.includes('data_hora') ? 'datetime-local' : field.includes('hora_') ? 'time' : 'text'"
@@ -68,7 +65,6 @@
         </ion-button>
       </form>
 
-      <!-- UPDATE SECTION -->
       <div *ngIf="selectedTable && operation === 'update'">
         <ion-item>
           <ion-label position="stacked">{{ t.translate('select_item_to_update') }}</ion-label>
@@ -87,7 +83,6 @@
           <ion-item *ngFor="let field of getFormFields()">
             <ion-label position="stacked">{{ getFieldLabel(field) }}</ion-label>
             
-            <!-- Dropdown for foreign key fields -->
             <ion-select 
               *ngIf="isDropdownField(field)"
               interface="popover"
@@ -99,7 +94,6 @@
               </ion-select-option>
             </ion-select>
 
-            <!-- Regular input for non-foreign-key fields -->
             <ion-input
               *ngIf="!isDropdownField(field)"
               [type]="field.includes('password') ? 'password' : field.includes('email') ? 'email' : field.includes('data_hora') ? 'datetime-local' : field.includes('hora_') ? 'time' : 'text'"
@@ -116,7 +110,6 @@
         </form>
       </div>
 
-      <!-- DELETE SECTION -->
       <div *ngIf="selectedTable && operation === 'delete'">
         <ion-item>
           <ion-label position="stacked">{{ t.translate('select_item_to_delete') }}</ion-label>
@@ -136,26 +129,28 @@
         </ion-button>
       </div>
 
-      <!-- READ BUTTON -->
       <ion-button *ngIf="selectedTable && operation === 'read'" expand="block" (click)="executeOperation()" [disabled]="loading">
         <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
         {{ t.translate('execute') }} {{ t.translate('read_all') }}
       </ion-button>
 
-      <!-- CLEAR BUTTON -->
       <ion-button *ngIf="selectedTable && (operation === 'create' || operation === 'update' || operation === 'delete')" expand="block" fill="outline" (click)="resetForm()">
         {{ t.translate('clear') }}
       </ion-button>
     </ion-card-content>
   </ion-card>
 
-  <!-- RESULTS CARD -->
   <ion-card *ngIf="result">
     <ion-card-header>
       <ion-card-title>{{ t.translate('result') }}</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <pre>{{ result | json }}</pre>
+      <div *ngIf="result.message; else jsonResult">
+        <p>{{ result.message }}</p>
+      </div>
+      <ng-template #jsonResult>
+        <pre>{{ result | json }}</pre>
+      </ng-template>
     </ion-card-content>
   </ion-card>
 

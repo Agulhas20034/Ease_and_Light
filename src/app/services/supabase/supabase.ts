@@ -152,6 +152,12 @@ export class SupabaseService {
     }
   }
 
+  async updateOne(table: string, pk: Record<string, any>, updates: any) {
+    const { data, error } = await this.supabase.from(table).update(updates).match(pk);
+    if (error) throw error;
+    return data;
+  }
+
   async deleteByPk(table: string, pk: string | Record<string, any>, value?: any) {
     if (typeof pk === 'string') {
       const { data, error } = await this.supabase.from(table).delete().eq(pk, value);
@@ -479,5 +485,21 @@ export class SupabaseService {
   async createVeiculo(rec: any) { return this.insertOne('veiculos', rec); }
   async updateVeiculo(matricula: string, updates: any) { return this.updateByPk('veiculos', 'matricula', { id: matricula, updates }); }
   async deleteVeiculo(matricula: string) { return this.deleteByPk('veiculos', 'matricula', matricula); }
+
+  async isVinTaken(vin: string) {
+    if (!vin) return false;
+    const cleaned = String(vin).trim().toUpperCase();
+    const { data, error } = await this.supabase.from('veiculos').select('matricula').eq('vin', cleaned).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
+  async isVinTakenByOther(vin: string, matricula: string) {
+    if (!vin) return false;
+    const cleaned = String(vin).trim().toUpperCase();
+    const { data, error } = await this.supabase.from('veiculos').select('matricula').eq('vin', cleaned).neq('matricula', matricula).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
 
 }

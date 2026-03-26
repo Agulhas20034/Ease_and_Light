@@ -343,6 +343,10 @@ export class TestApiPage implements OnInit {
         response = await this.callCreateMethod();
       } else if (this.operation === 'read') {
         response = await this.callReadMethod();
+        this.tableData = response;
+        if (!response || response.length === 0) {
+          response = { message: this.t.translate('no_registries_found') };
+        }
       } else if (this.operation === 'update') {
         response = await this.callUpdateMethod();
       }
