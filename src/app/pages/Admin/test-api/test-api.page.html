@@ -1,0 +1,157 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('test_api') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="page-content">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ t.translate('test_api') }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ t.translate('api_tester') }}</ion-card-title>
+      <ion-card-subtitle>{{ t.translate('api_tester_subtitle') }}</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label>{{ t.translate('select_table') }}</ion-label>
+        <ion-select interface="popover" [(ngModel)]="selectedTable" (ionChange)="onTableChange()">
+          <ion-select-option *ngFor="let table of tables" [value]="table">{{ table }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>{{ t.translate('operation') }}</ion-label>
+        <ion-select interface="popover" [(ngModel)]="operation" (ionChange)="onOperationChange()">
+          <ion-select-option value="create">{{ t.translate('create') }}</ion-select-option>
+          <ion-select-option value="read">{{ t.translate('read_all') }}</ion-select-option>
+          <ion-select-option value="update">{{ t.translate('update') }}</ion-select-option>
+          <ion-select-option value="delete">{{ t.translate('delete') }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <form *ngIf="selectedTable && operation === 'create'" (ngSubmit)="executeOperation()">
+        <ion-item *ngFor="let field of getFormFields()">
+          <ion-label position="stacked">{{ getFieldLabel(field) }}</ion-label>
+          
+          <ion-select 
+            *ngIf="isDropdownField(field)"
+            interface="popover"
+            [(ngModel)]="formData[field]"
+            [name]="field"
+            [compareWith]="compareDropdownFields">
+            <ion-select-option *ngFor="let option of getDropdownOptions(field)" [value]="option">
+              {{ getDisplayLabel(option, field) }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input
+            *ngIf="!isDropdownField(field)"
+            [type]="field.includes('password') ? 'password' : field.includes('email') ? 'email' : field.includes('data_hora') ? 'datetime-local' : field.includes('hora_') ? 'time' : 'text'"
+            [(ngModel)]="formData[field]"
+            [name]="field"
+            [placeholder]="t.translate('enter') + ' ' + getFieldLabel(field)">
+          </ion-input>
+        </ion-item>
+
+        <ion-button expand="block" type="submit" [disabled]="loading">
+          <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+          {{ t.translate('execute') }} {{ t.translate('create') }}
+        </ion-button>
+      </form>
+
+      <div *ngIf="selectedTable && operation === 'update'">
+        <ion-item>
+          <ion-label position="stacked">{{ t.translate('select_item_to_update') }}</ion-label>
+          <ion-select 
+            interface="popover"
+            [(ngModel)]="selectedDeleteRow"
+            (ionChange)="onUpdateRecordSelected(selectedDeleteRow)"
+            [compareWith]="compareDropdownFields">
+            <ion-select-option *ngFor="let row of tableData" [value]="row">
+              {{ getDisplayLabel(row) }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <form *ngIf="selectedDeleteRow" (ngSubmit)="executeOperation()">
+          <ion-item *ngFor="let field of getFormFields()">
+            <ion-label position="stacked">{{ getFieldLabel(field) }}</ion-label>
+            
+            <ion-select 
+              *ngIf="isDropdownField(field)"
+              interface="popover"
+              [(ngModel)]="formData[field]"
+              [name]="field"
+              [compareWith]="compareDropdownFields">
+              <ion-select-option *ngFor="let option of getDropdownOptions(field)" [value]="option">
+                {{ getDisplayLabel(option, field) }}
+              </ion-select-option>
+            </ion-select>
+
+            <ion-input
+              *ngIf="!isDropdownField(field)"
+              [type]="field.includes('password') ? 'password' : field.includes('email') ? 'email' : field.includes('data_hora') ? 'datetime-local' : field.includes('hora_') ? 'time' : 'text'"
+              [(ngModel)]="formData[field]"
+              [name]="field"
+              [placeholder]="t.translate('enter') + ' ' + getFieldLabel(field)">
+            </ion-input>
+          </ion-item>
+
+          <ion-button expand="block" type="submit" [disabled]="loading">
+            <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+            {{ t.translate('execute') }} {{ t.translate('update') }}
+          </ion-button>
+        </form>
+      </div>
+
+      <div *ngIf="selectedTable && operation === 'delete'">
+        <ion-item>
+          <ion-label position="stacked">{{ t.translate('select_item_to_delete') }}</ion-label>
+          <ion-select 
+            interface="popover"
+            [(ngModel)]="selectedDeleteRow"
+            [compareWith]="compareDropdownFields">
+            <ion-select-option *ngFor="let row of tableData" [value]="row">
+              {{ getDisplayLabel(row) }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-button expand="block" color="danger" (click)="deleteSelectedRow()" [disabled]="loading || !selectedDeleteRow">
+          <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+          {{ t.translate('delete') }}
+        </ion-button>
+      </div>
+
+      <ion-button *ngIf="selectedTable && operation === 'read'" expand="block" (click)="executeOperation()" [disabled]="loading">
+        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+        {{ t.translate('execute') }} {{ t.translate('read_all') }}
+      </ion-button>
+
+      <ion-button *ngIf="selectedTable && (operation === 'create' || operation === 'update' || operation === 'delete')" expand="block" fill="outline" (click)="resetForm()">
+        {{ t.translate('clear') }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="result">
+    <ion-card-header>
+      <ion-card-title>{{ t.translate('result') }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="result.message; else jsonResult">
+        <p>{{ result.message }}</p>
+      </div>
+      <ng-template #jsonResult>
+        <pre>{{ result | json }}</pre>
+      </ng-template>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

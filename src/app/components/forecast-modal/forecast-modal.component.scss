@@ -1,0 +1,67 @@
+.forecast-card {
+  margin: 16px;
+}
+
+.today-weather {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.weather-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: var(--ion-text-color);
+}
+
+.weather-item {
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.weather-item ion-label {
+  margin: 0;
+}
+
+.temp {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 4px 0 0 0;
+}
+
+.forecast-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin: 16px 0 12px 0;
+  color: var(--ion-text-color);
+}
+
+.forecast-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.forecast-item:last-child {
+  border-bottom: none;
+}
+
+.date {
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+}
+
+.forecast-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}

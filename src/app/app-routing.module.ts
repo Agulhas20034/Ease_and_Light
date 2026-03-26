@@ -203,14 +203,17 @@ const routes: Routes = [
   {
     path: 'gere-pedidos',
     loadChildren: () => import('./pages/EmpresaTransportes/gere-pedidos/gere-pedidos.module').then( m => m.GerePedidosPageModule)
-  },  {
+  },
+  {
     path: 've-pedidos',
     loadChildren: () => import('./pages/EmpresaTransportes/ve-pedidos/ve-pedidos.module').then( m => m.VePedidosPageModule)
   },
-
-
-  
-
+  {
+    path: 'test-api',
+    loadChildren: () => import('./pages/Admin/test-api/test-api.module').then( m => m.TestApiPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Administrador', titleKey: 'test_api' }
+  },
 ];
 
 @NgModule({

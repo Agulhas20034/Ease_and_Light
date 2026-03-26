@@ -152,6 +152,12 @@ export class SupabaseService {
     }
   }
 
+  async updateOne(table: string, pk: Record<string, any>, updates: any) {
+    const { data, error } = await this.supabase.from(table).update(updates).match(pk);
+    if (error) throw error;
+    return data;
+  }
+
   async deleteByPk(table: string, pk: string | Record<string, any>, value?: any) {
     if (typeof pk === 'string') {
       const { data, error } = await this.supabase.from(table).delete().eq(pk, value);
@@ -214,6 +220,34 @@ export class SupabaseService {
   async createEstadoPercurso(rec: any) { return this.insertOne('estado_percurso', rec); }
   async updateEstadoPercurso(id: number, updates: any) { return this.updateByPk('estado_percurso', 'id_estado', { id, updates }); }
   async deleteEstadoPercurso(id: number) { return this.deleteByPk('estado_percurso', 'id_estado', id); }
+
+  // estado_conta
+  async getAllEstadoConta() { return this.fetchAll('estado_conta'); }
+  async getEstadoConta(id: number) { return this.fetchByPk('estado_conta', 'id_estado', id); }
+  async createEstadoConta(rec: any) { return this.insertOne('estado_conta', rec); }
+  async updateEstadoConta(id: number, updates: any) { return this.updateByPk('estado_conta', 'id_estado', { id, updates }); }
+  async deleteEstadoConta(id: number) { return this.deleteByPk('estado_conta', 'id_estado', id); }
+
+  // estado_empresa
+  async getAllEstadoEmpresa() { return this.fetchAll('estado_empresa'); }
+  async getEstadoEmpresa(id: number) { return this.fetchByPk('estado_empresa', 'id_estado', id); }
+  async createEstadoEmpresa(rec: any) { return this.insertOne('estado_empresa', rec); }
+  async updateEstadoEmpresa(id: number, updates: any) { return this.updateByPk('estado_empresa', 'id_estado', { id, updates }); }
+  async deleteEstadoEmpresa(id: number) { return this.deleteByPk('estado_empresa', 'id_estado', id); }
+
+  // estado_estabelecimento
+  async getAllEstadoEstabelecimento() { return this.fetchAll('estado_estabelecimento'); }
+  async getEstadoEstabelecimento(id: number) { return this.fetchByPk('estado_estabelecimento', 'id_estado', id); }
+  async createEstadoEstabelecimento(rec: any) { return this.insertOne('estado_estabelecimento', rec); }
+  async updateEstadoEstabelecimento(id: number, updates: any) { return this.updateByPk('estado_estabelecimento', 'id_estado', { id, updates }); }
+  async deleteEstadoEstabelecimento(id: number) { return this.deleteByPk('estado_estabelecimento', 'id_estado', id); }
+
+  // estado_veiculo
+  async getAllEstadoVeiculo() { return this.fetchAll('estado_veiculo'); }
+  async getEstadoVeiculo(id: number) { return this.fetchByPk('estado_veiculo', 'id_estado', id); }
+  async createEstadoVeiculo(rec: any) { return this.insertOne('estado_veiculo', rec); }
+  async updateEstadoVeiculo(id: number, updates: any) { return this.updateByPk('estado_veiculo', 'id_estado', { id, updates }); }
+  async deleteEstadoVeiculo(id: number) { return this.deleteByPk('estado_veiculo', 'id_estado', id); }
 
   // etapas
   async getAllEtapas() { return this.fetchAll('etapas'); }
@@ -451,5 +485,21 @@ export class SupabaseService {
   async createVeiculo(rec: any) { return this.insertOne('veiculos', rec); }
   async updateVeiculo(matricula: string, updates: any) { return this.updateByPk('veiculos', 'matricula', { id: matricula, updates }); }
   async deleteVeiculo(matricula: string) { return this.deleteByPk('veiculos', 'matricula', matricula); }
+
+  async isVinTaken(vin: string) {
+    if (!vin) return false;
+    const cleaned = String(vin).trim().toUpperCase();
+    const { data, error } = await this.supabase.from('veiculos').select('matricula').eq('vin', cleaned).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
+  async isVinTakenByOther(vin: string, matricula: string) {
+    if (!vin) return false;
+    const cleaned = String(vin).trim().toUpperCase();
+    const { data, error } = await this.supabase.from('veiculos').select('matricula').eq('vin', cleaned).neq('matricula', matricula).maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
 
 }
