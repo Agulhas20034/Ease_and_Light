@@ -694,6 +694,7 @@ class ApiService {
 
   async createGrupoUser(data) {
     this.validateRequiredFields(data, 'grupo_user', false);
+    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('grupo_user', data);
   }
 
@@ -708,6 +709,7 @@ class ApiService {
 
   async createEtapasPercurso(data) {
     this.validateRequiredFields(data, 'etapas_percurso', false);
+    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('etapas_percurso', data);
   }
 
@@ -722,6 +724,7 @@ class ApiService {
 
   async createUsersEmpresaTransportes(data) {
     this.validateRequiredFields(data, 'users_empresa_transportes', false);
+    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('users_empresa_transportes', data);
   }
 
@@ -736,6 +739,7 @@ class ApiService {
 
   async createUsersEstabelecimento(data) {
     this.validateRequiredFields(data, 'users_estabelecimento', false);
+    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('users_estabelecimento', data);
   }
 

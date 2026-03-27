@@ -166,7 +166,7 @@ export class VePedidosPage implements OnInit {
       if (localizacaoIds.size > 0) {
         for (const locId of Array.from(localizacaoIds)) {
           try {
-            const loc: any = await this.httpApi.fetchByPk('estabelecimento', 'id_estabelecimento', locId);
+            const loc: any = await this.httpApi.getLocalizacao(locId);
             if (loc) {
               localizacoesMap.set(locId, Array.isArray(loc) ? loc[0] : loc);
             }

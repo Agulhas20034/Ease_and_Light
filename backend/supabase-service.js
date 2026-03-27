@@ -32,7 +32,7 @@ class SupabaseService {
   }
 
   async insertOne(table, record) {
-    const { data, error } = await this.supabase.from(table).insert([record]);
+    const { data, error } = await this.supabase.from(table).insert([record]).select();
     if (error) throw error;
     return data;
   }

@@ -49,6 +49,7 @@ export class EditaEmpregadoPage implements OnInit {
         this.nif = u.nif || '';
         this.passaporte = u.passaporte || '';
         this.estado = Number(u.estado) || 1;
+        console.log('Loaded user:', { userId: this.userId, estado: this.estado, nome: this.nome });
       }
     } catch (e) {
       console.error('Erro ao carregar utilizador', e);
@@ -95,13 +96,15 @@ export class EditaEmpregadoPage implements OnInit {
           return;
         }
       }
-      await this.httpApi.updateUser(this.userId, {
+      const updateData = {
         nome: this.nome || null,
         telefone: this.telefone || null,
         nif: this.nif || null,
         passaporte: this.passaporte || null,
-        estado: this.estado
-      });
+        estado: Number(this.estado) || 1
+      };
+      console.log('Updating user:', { userId: this.userId, updateData });
+      await this.httpApi.updateUser(this.userId, updateData);
       const toast = await this.toastCtrl.create({ message: this.tKey('edit_saved'), duration: 1500, color: 'success' });
       toast.present();
       setTimeout(() => this.router.navigate(['/lista-empregados'], { queryParams: { id: null } }), 600);

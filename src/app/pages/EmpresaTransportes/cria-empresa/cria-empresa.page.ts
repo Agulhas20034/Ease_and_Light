@@ -60,7 +60,8 @@ export class CriaEmpresaPage implements OnInit {
       if (!newId && this.nif) {
         try {
           const nifClean = String(this.nif).replace(/\D/g, '').trim();
-          const found: any = await this.httpApi.fetchByPk('empresa_transportes', 'nif', nifClean);
+          const empresas = await this.httpApi.getAllEmpresaTransportes();
+          const found = empresas.find((e: any) => String(e.nif) === nifClean);
           if (found) {
             console.debug('createEmpresaTransportes found by nif', found);
             newId = found.id_empresa ?? found.id;

@@ -44,7 +44,7 @@ export class AtribuiPedidoPage implements OnInit {
     this.loading = true;
     try {
       if (this.entregaId && this.entregaId > 0) {
-        const ordem: any = await this.httpApi.fetchByPk('entregas_recolhas', 'id_entrega_recolha', this.entregaId);
+        const ordem: any = await this.httpApi.getEntregaRecolha(this.entregaId);
         if (ordem) {
           this.empresaId = Number(ordem.id_empresa);
         }

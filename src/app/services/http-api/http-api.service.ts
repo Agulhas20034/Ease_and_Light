@@ -114,6 +114,11 @@ export class HttpApiService {
     return this.getAll('entregas_recolhas');
   }
 
+  async getEntregaRecolha(id: number): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/entregas_recolhas/${id}`).toPromise() as any;
+    return response?.data;
+  }
+
   async createEntregaRecolha(data: any): Promise<any> {
     return this.create('entregas_recolhas', data);
   }
@@ -397,7 +402,8 @@ export class HttpApiService {
   }
 
   async getUser(id: number): Promise<any> {
-    return this.fetchByPk('users', 'id_utilizador', id);
+    const response = await this.http.get(`${this.apiUrl}/api/users/${id}`).toPromise() as any;
+    return response?.data;
   }
 
   async getUsersByTipo(tipoId: number): Promise<any[]> {
@@ -411,8 +417,20 @@ export class HttpApiService {
     }
   }
 
-  async getUsersByEstabelecimento(estabId: number): Promise<any> {
-    return this.fetchByPk('users_estabelecimento', 'id_estabelecimento', estabId);
+  async getUsersByEstabelecimento(estabId: number): Promise<any[]> {
+    try {
+      const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_estabelecimento=${estabId}`).toPromise() as any;
+      const relations = response?.data || [];
+      const relationArray = Array.isArray(relations) ? relations : [];
+      
+      const allUsers = await this.getAllUsers();
+      const userIds = relationArray.map((r: any) => r.id_utilizador);
+      
+      return allUsers.filter((u: any) => userIds.includes(u.id_utilizador));
+    } catch (err) {
+      console.error('Error fetching users by estabelecimento:', err);
+      return [];
+    }
   }
 
   async updateUserPassword(id: number, password: string): Promise<any> {
@@ -420,11 +438,14 @@ export class HttpApiService {
   }
 
   async getEmpresaTransportes(id: number): Promise<any> {
-    return this.fetchByPk('empresa_transportes', 'id_empresa', id);
+    const response = await this.http.get(`${this.apiUrl}/api/empresa_transportes/${id}`).toPromise() as any;
+    return response?.data;
   }
 
-  async getUserEmpresas(userId: number): Promise<any> {
-    return this.fetchByPk('users_empresa_transportes', 'id_utilizador', userId);
+  async getUserEmpresas(userId: number): Promise<any[]> {
+    const response = await this.http.get(`${this.apiUrl}/api/users_empresa_transportes?id_utilizador=${userId}`).toPromise() as any;
+    const data = response?.data || [];
+    return Array.isArray(data) ? data : [];
   }
 
   async addUserEmpresa(userId: number, empresaId: number): Promise<any> {
@@ -432,15 +453,24 @@ export class HttpApiService {
   }
 
   async getVeiculo(matricula: string): Promise<any> {
-    return this.fetchByPk('veiculos', 'matricula', matricula);
+    const response = await this.http.get(`${this.apiUrl}/api/veiculos/${matricula}`).toPromise() as any;
+    return response?.data;
   }
 
-  async getVeiculosByEmpresa(empresaId: number): Promise<any> {
-    return this.fetchByPk('veiculos', 'id_empresa', empresaId);
+  async getVeiculosByEmpresa(empresaId: number): Promise<any[]> {
+    const response = await this.http.get(`${this.apiUrl}/api/veiculos?id_empresa=${empresaId}`).toPromise() as any;
+    const data = response?.data || [];
+    return Array.isArray(data) ? data : [];
   }
 
   async checkVehicleVinUniqueness(table: string, vin: string): Promise<any> {
-    return { data: await this.fetchByPk(table, 'vin', vin), error: null };
+    try {
+      const vehicles = await this.getAllVeiculos();
+      const found = vehicles.find((v: any) => String(v.vin) === String(vin));
+      return { data: found, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
   }
 
   async getAllLocalizacoes(): Promise<any> {
@@ -448,11 +478,14 @@ export class HttpApiService {
   }
 
   async getLocalizacao(id: number): Promise<any> {
-    return this.fetchByPk('estabelecimento', 'id_estabelecimento', id);
+    const response = await this.http.get(`${this.apiUrl}/api/estabelecimento/${id}`).toPromise() as any;
+    return response?.data;
   }
 
-  async getLocalizacoesByEstabelecimento(estabId: number): Promise<any> {
-    return this.fetchByPk('estabelecimento', 'id_estabelecimento', estabId);
+  async getLocalizacoesByEstabelecimento(estabId: number): Promise<any[]> {
+    const response = await this.http.get(`${this.apiUrl}/api/estabelecimento/${estabId}`).toPromise() as any;
+    const data = response?.data;
+    return data ? [data] : [];
   }
 
   async createLocalizacao(data: any): Promise<any> {
@@ -469,8 +502,10 @@ export class HttpApiService {
 
   
   
-  async getUserEstabelecimentos(userId: number): Promise<any> {
-    return this.fetchByPk('users_estabelecimento', 'id_utilizador', userId);
+  async getUserEstabelecimentos(userId: number): Promise<any[]> {
+    const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_utilizador=${userId}`).toPromise() as any;
+    const data = response?.data || [];
+    return Array.isArray(data) ? data : [];
   }
 
   async addUserEstabelecimento(userId: number, estabId: number): Promise<any> {
@@ -480,8 +515,8 @@ export class HttpApiService {
   async isTelefoneTaken(telefone: string): Promise<boolean> {
     if (!telefone) return false;
     try {
-      const found = await this.fetchByPk('users', 'telefone', telefone);
-      return !!found;
+      const users = await this.getAllUsers();
+      return users.some((u: any) => String(u.telefone) === String(telefone));
     } catch (e) {
       return false;
     }
@@ -490,8 +525,8 @@ export class HttpApiService {
   async isNifTaken(nif: string): Promise<boolean> {
     if (!nif) return false;
     try {
-      const found = await this.fetchByPk('users', 'nif', nif);
-      return !!found;
+      const users = await this.getAllUsers();
+      return users.some((u: any) => String(u.nif) === String(nif));
     } catch (e) {
       return false;
     }
@@ -500,8 +535,8 @@ export class HttpApiService {
   async isPassaporteTaken(passaporte: string): Promise<boolean> {
     if (!passaporte) return false;
     try {
-      const found = await this.fetchByPk('users', 'passaporte', passaporte);
-      return !!found;
+      const users = await this.getAllUsers();
+      return users.some((u: any) => String(u.passaporte) === String(passaporte));
     } catch (e) {
       return false;
     }
@@ -521,8 +556,8 @@ export class HttpApiService {
   async isLocalizacaoNifTaken(nif: string): Promise<boolean> {
     if (!nif) return false;
     try {
-      const found = await this.fetchByPk('estabelecimento', 'nif', nif);
-      return !!found;
+      const estabelecimentos = await this.getAllEstabelecimento();
+      return estabelecimentos.some((e: any) => String(e.nif) === String(nif));
     } catch (e) {
       return false;
     }
