@@ -45,24 +45,15 @@ export class RegistaMochilaPage implements OnInit {
   async loadUsers() {
     this.loading = true;
     try {
-      const peregrinoTipo = 5;
+      const peregrinoTipo = 5; 
 
-      if (peregrinoTipo) {
-        // Busca utilizadores com o tipo de perfil "Peregrino"
-        try {
-          const byTipo = await this.httpApi.getUsersByTipo(peregrinoTipo);
-          this.peregrinoUsers = (byTipo || []) as any[];
-        } catch (err) {
-          // Fallback se falhar
-          const users = await this.httpApi.getAllUsers();
-          this.users = users || [];
-          this.peregrinoUsers = this.users.filter(u => String(u.id_tipo) === String(peregrinoTipo));
-        }
-      }
-
+      const users = await this.httpApi.getUsersByTipo(peregrinoTipo);
+      this.peregrinoUsers = Array.isArray(users) ? users : [];
       this.filteredUsers = [...this.peregrinoUsers];
     } catch (err) {
       console.error('Error loading users', err);
+      this.peregrinoUsers = [];
+      this.filteredUsers = [];
     } finally {
       this.loading = false;
     }

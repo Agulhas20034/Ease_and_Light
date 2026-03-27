@@ -16,6 +16,13 @@ app.use(express.urlencoded({ extended: true }));
 const supabaseService = new SupabaseService();
 const apiService = new ApiService(supabaseService);
 
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    req.url = req.url.replace(/_/g, '-');
+  }
+  next();
+});
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -43,9 +50,11 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
     const result = await apiService.loginUser(email, password);
     res.json({ success: true, data: result });
   } catch (error) {
+    console.error('Login error:', error.message);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -114,6 +123,7 @@ app.put('/api/empresa-transportes/:id', async (req, res) => {
     const result = await apiService.updateEmpresaTransportes(req.params.id, req.body);
     res.json({ success: true, data: result });
   } catch (error) {
+    console.error('Error updating empresa-transportes:', error.message);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -266,6 +276,15 @@ app.put('/api/entregas-recolhas/:id', async (req, res) => {
 });
 
 app.get('/api/entregas-recolhas', async (req, res) => {
+  try {
+    const result = await apiService.getAllEntregasRecolhas();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/entregas_recolhas', async (req, res) => {
   try {
     const result = await apiService.getAllEntregasRecolhas();
     res.json({ success: true, data: result });
@@ -500,6 +519,15 @@ app.post('/api/grupo-user', async (req, res) => {
   }
 });
 
+app.get('/api/grupo-user', async (req, res) => {
+  try {
+    const result = await supabaseService.fetchAll('grupo_user');
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/grupo-user/:id_grupo/:id_user', async (req, res) => {
   try {
     const result = await apiService.updateGrupoUser(req.params.id_grupo, req.params.id_user, req.body);
@@ -524,6 +552,15 @@ app.post('/api/etapas-percurso', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/etapas-percurso', async (req, res) => {
+  try {
+    const result = await supabaseService.fetchAll('etapas_percurso');
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -554,6 +591,15 @@ app.post('/api/users-empresa-transportes', async (req, res) => {
   }
 });
 
+app.get('/api/users-empresa-transportes', async (req, res) => {
+  try {
+    const result = await supabaseService.fetchAll('users_empresa_transportes');
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/users-empresa-transportes/:id_utilizador/:id_empresa', async (req, res) => {
   try {
     const result = await apiService.updateUsersEmpresaTransportes(req.params.id_utilizador, req.params.id_empresa, req.body);
@@ -578,6 +624,15 @@ app.post('/api/users-estabelecimento', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/users-estabelecimento', async (req, res) => {
+  try {
+    const result = await supabaseService.fetchAll('users_estabelecimento');
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

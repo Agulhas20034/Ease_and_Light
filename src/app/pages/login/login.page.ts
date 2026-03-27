@@ -53,7 +53,11 @@ export class LoginPage {
         return;
       }
 
-      const userWithProfile = { ...user, profileType: 'User', id_tipo: user.id_tipo };
+      const userWithProfile = { 
+        ...user, 
+        profileType: this.getProfileTypeName(user.id_tipo), 
+        id_tipo: user.id_tipo 
+      };
       localStorage.setItem('currentUser', JSON.stringify(userWithProfile));
       this.showToast(this.t('login_successful') || 'Login successful!', 'success');
       this.router.navigate(['/folder/inbox']);
@@ -70,6 +74,19 @@ export class LoginPage {
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
+  }
+
+  private getProfileTypeName(id_tipo: number): string {
+    const profileMap: { [key: number]: string } = {
+      1: 'Administrador',
+      2: 'Dono Empresa',
+      3: 'Empregado Empresa',
+      4: 'Dono Estabelecimento',
+      5: 'Empregado Estabelecimento',
+      6: 'Peregrino',
+      7: 'Estafeta'
+    };
+    return profileMap[id_tipo] || 'User';
   }
 
   private async showToast(message: string, color: string) {

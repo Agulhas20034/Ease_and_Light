@@ -84,16 +84,26 @@ class ApiService {
     const fields = requiredFields[table] || [];
     const optionalFields = ['password', 'nif', 'passaporte'];
 
-    for (const field of fields) {
-      if (!optionalFields.includes(field) && (data[field] === undefined || data[field] === null || data[field] === '')) {
-        throw new Error(`Field '${field}' is required and cannot be empty`);
+    if (isUpdate) {
+      for (const field of fields) {
+        if (data[field] === undefined) {
+          continue;
+        }
+        if (!optionalFields.includes(field) && (data[field] === null || data[field] === '')) {
+          throw new Error(`Field '${field}' cannot be empty`);
+        }
       }
-    }
+    } else {
+      for (const field of fields) {
+        if (!optionalFields.includes(field) && (data[field] === undefined || data[field] === null || data[field] === '')) {
+          throw new Error(`Field '${field}' is required and cannot be empty`);
+        }
+      }
 
-    if (isUpdate && (data.password === undefined || data.password === null || data.password === '')) {
-    } else if (!isUpdate && !optionalFields.includes('password') && fields.includes('password')) {
-      if (data.password === undefined || data.password === null || data.password === '') {
-        throw new Error(`Field 'password' is required and cannot be empty`);
+      if (!optionalFields.includes('password') && fields.includes('password')) {
+        if (data.password === undefined || data.password === null || data.password === '') {
+          throw new Error(`Field 'password' is required and cannot be empty`);
+        }
       }
     }
   }
@@ -102,7 +112,7 @@ class ApiService {
     this.validateRequiredFields(data, 'users', false);
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
@@ -156,7 +166,7 @@ class ApiService {
     this.validateRequiredFields(data, 'users', true);
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
@@ -238,26 +248,42 @@ class ApiService {
       throw new Error('Email and password are required');
     }
 
-    email = email.trim().toLowerCase();
+    email = email.trim();
+    console.log('Attempting login for email:', email);
     const user = await this.supabase.getUserByEmail(email);
+    console.log('User found:', !!user);
     
     if (!user) {
       throw new Error('User not found');
     }
 
+    if (!user.password) {
+      console.error('User has no password hash stored!');
+      throw new Error('Invalid user data');
+    }
+
     const bcrypt = require('bcryptjs');
-    const isValid = await bcrypt.compare(password, user.password || '');
+    const isValid = await bcrypt.compare(password, user.password);
+    console.log('Password validation result:', isValid);
+    
     if (!isValid) {
       throw new Error('Invalid password');
     }
 
-    return {
+    const userResponse = {
       id_utilizador: user.id_utilizador,
       email: user.email,
       nome: user.nome,
       id_tipo: user.id_tipo,
-      estado: user.estado
+      estado: user.estado,
+      telefone: user.telefone,
+      nacionalidade: user.nacionalidade,
+      nif: user.nif,
+      passaporte: user.passaporte
     };
+    
+    console.log('Login successful for user:', user.email, 'with id_tipo:', user.id_tipo);
+    return userResponse;
   }
 
   async createEmpresaTransportes(data) {
@@ -275,7 +301,7 @@ class ApiService {
     }
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
@@ -307,20 +333,20 @@ class ApiService {
       if (!this.validateTelefone(data.telefone)) {
         throw new Error('Telefone must be exactly 9 digits');
       }
-      const telefoneTaken = await this.supabase.isTelefoneTaken(data.telefone);
-      if (telefoneTaken) {
-        throw new Error('Telefone already exists');
+      const existing = await this.supabase.fetchByPk('empresa_transportes', 'telefone', data.telefone);
+      if (existing && String(existing.id_empresa) !== String(id)) {
+        throw new Error('Telefone already exists for another empresa');
       }
     }
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
-      const emailTaken = await this.supabase.getUserByEmail(data.email);
-      if (emailTaken) {
-        throw new Error('Email already exists');
+      const existing = await this.supabase.fetchByPk('empresa_transportes', 'email', data.email);
+      if (existing && String(existing.id_empresa) !== String(id)) {
+        throw new Error('Email already exists for another empresa');
       }
     }
 
@@ -329,9 +355,9 @@ class ApiService {
       if (!this.validateNif(data.nif)) {
         throw new Error('NIF must be exactly 9 digits');
       }
-      const nifTaken = await this.supabase.isNifTaken(data.nif);
-      if (nifTaken) {
-        throw new Error('NIF already exists');
+      const existing = await this.supabase.fetchByPk('empresa_transportes', 'nif', data.nif);
+      if (existing && String(existing.id_empresa) !== String(id)) {
+        throw new Error('NIF already exists for another empresa');
       }
     }
 
@@ -365,7 +391,7 @@ class ApiService {
     }
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
@@ -411,7 +437,7 @@ class ApiService {
     }
 
     if (data.email) {
-      data.email = this.trimString(data.email).toLowerCase();
+      data.email = this.trimString(data.email);
       if (!this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }

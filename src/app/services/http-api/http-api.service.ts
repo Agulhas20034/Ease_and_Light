@@ -10,8 +10,10 @@ export class HttpApiService {
 
   constructor(private http: HttpClient) {}
 
-  async getAll(table: string): Promise<any> {
-    return this.http.get(`${this.apiUrl}/api/${table}`).toPromise();
+  async getAll(table: string): Promise<any[]> {
+    const response = await this.http.get(`${this.apiUrl}/api/${table}`).toPromise() as any;
+    const data = response?.data || response;
+    return Array.isArray(data) ? data : [];
   }
 
   async create(table: string, data: any): Promise<any> {
@@ -398,8 +400,15 @@ export class HttpApiService {
     return this.fetchByPk('users', 'id_utilizador', id);
   }
 
-  async getUsersByTipo(tipoId: number): Promise<any> {
-    return this.fetchByPk('users', 'id_perfil', tipoId);
+  async getUsersByTipo(tipoId: number): Promise<any[]> {
+    try {
+      const response = await this.http.get(`${this.apiUrl}/api/users?id_tipo=${tipoId}`).toPromise() as any;
+      const data = response?.data || [];
+      return Array.isArray(data) ? data : [data];
+    } catch (err) {
+      console.error('Error fetching users by tipo:', err);
+      return [];
+    }
   }
 
   async getUsersByEstabelecimento(estabId: number): Promise<any> {
