@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from 'src/app/services/supabase/supabase';
+import { HttpApiService } from 'src/app/services/http-api/http-api.service';
 import { TranslationService } from 'src/app/services/translations/translation.service';
 import { ToastController } from '@ionic/angular';
 
@@ -22,7 +22,7 @@ export class EditaEmpregadoPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -41,7 +41,7 @@ export class EditaEmpregadoPage implements OnInit {
     if (!this.userId) return;
     this.loading = true;
     try {
-      const u: any = await this.supabase.getUser(this.userId);
+      const u: any = await this.httpApi.getUser(this.userId);
       if (u) {
         this.nome = u.nome || '';
         this.email = u.email || '';
@@ -49,6 +49,7 @@ export class EditaEmpregadoPage implements OnInit {
         this.nif = u.nif || '';
         this.passaporte = u.passaporte || '';
         this.estado = Number(u.estado) || 1;
+        console.log('Loaded user:', { userId: this.userId, estado: this.estado, nome: this.nome });
       }
     } catch (e) {
       console.error('Erro ao carregar utilizador', e);
@@ -87,7 +88,7 @@ export class EditaEmpregadoPage implements OnInit {
     try {
       // Verifica se o NIF já existe em outro utilizador (permitir manter o mesmo NIF do próprio utilizador)
       if (this.nif) {
-        const taken = await this.supabase.isNifTakenByOther(this.nif, this.userId);
+        const taken = await this.httpApi.isNifTakenByOther(this.nif, this.userId);
         if (taken) {
           const toast = await this.toastCtrl.create({ message: this.tKey('nif_in_use'), duration: 2000, color: 'warning' });
           toast.present();
@@ -95,13 +96,15 @@ export class EditaEmpregadoPage implements OnInit {
           return;
         }
       }
-      await this.supabase.updateUser(this.userId, {
+      const updateData = {
         nome: this.nome || null,
         telefone: this.telefone || null,
         nif: this.nif || null,
         passaporte: this.passaporte || null,
-        estado: this.estado
-      });
+        estado: Number(this.estado) || 1
+      };
+      console.log('Updating user:', { userId: this.userId, updateData });
+      await this.httpApi.updateUser(this.userId, updateData);
       const toast = await this.toastCtrl.create({ message: this.tKey('edit_saved'), duration: 1500, color: 'success' });
       toast.present();
       setTimeout(() => this.router.navigate(['/lista-empregados'], { queryParams: { id: null } }), 600);

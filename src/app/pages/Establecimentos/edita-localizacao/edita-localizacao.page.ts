@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -30,7 +30,7 @@ export class EditaLocalizacaoPage implements OnInit {
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private route: ActivatedRoute,
     private router: Router,
     private toastCtrl: ToastController,
@@ -45,7 +45,7 @@ export class EditaLocalizacaoPage implements OnInit {
 
   async loadTipos() {
     try {
-      const r: any = await this.supabase.getAllTipoEstabelecimento();
+      const r: any = await this.httpApi.getAllTipoEstabelecimento();
       this.tipos = Array.isArray(r) ? r : (r?.data || []);
     } catch (e) {
       console.warn('Failed to load tipos', e);
@@ -55,7 +55,7 @@ export class EditaLocalizacaoPage implements OnInit {
   async loadLocalizacao() {
     try {
       // Carregar pela relação id_estabelecimento — pode devolver várias localizações, usamos a primeira
-      const list: any = await this.supabase.getLocalizacoesByEstabelecimento(Number(this.id));
+      const list: any = await this.httpApi.getLocalizacoesByEstabelecimento(Number(this.id));
       const rows = Array.isArray(list) ? list : (list?.data || []);
       const rec = rows && rows.length > 0 ? rows[0] : null;
       if (!rec) return;
@@ -92,7 +92,7 @@ export class EditaLocalizacaoPage implements OnInit {
         // Se o NIF não mudou em relação ao original, não validar unicidade
         if (nifClean !== originalClean) {
           const locIdNum = this.locId ? Number(this.locId) : NaN;
-          const taken = this.locId ? await this.supabase.isLocalizacaoNifTakenByOther(nifClean, locIdNum) : await this.supabase.isLocalizacaoNifTaken(nifClean);
+          const taken = this.locId ? await this.httpApi.isLocalizacaoNifTakenByOther(nifClean, locIdNum) : await this.httpApi.isLocalizacaoNifTaken(nifClean);
           if (taken) {
             this.showToast(this.t.translate('nif_taken'), 'warning');
             this.loading = false;
@@ -126,9 +126,9 @@ export class EditaLocalizacaoPage implements OnInit {
 
       const estabId = Number(this.id);
       if (!isNaN(estabId)) {
-        await this.supabase.updateLocalizacaoByEstabelecimento(estabId, updates);
+        await this.httpApi.updateLocalizacaoByEstabelecimento(estabId, updates);
       } else if (this.locId) {
-        await this.supabase.updateLocalizacao(Number(this.locId), updates);
+        await this.httpApi.updateLocalizacao(Number(this.locId), updates);
       } else {
         throw new Error('Invalid id for update');
       }

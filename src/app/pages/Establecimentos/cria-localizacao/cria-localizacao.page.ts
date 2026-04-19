@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -28,7 +28,7 @@ export class CriaLocalizacaoPage implements OnInit {
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -41,42 +41,17 @@ export class CriaLocalizacaoPage implements OnInit {
   // carregar tipos de estabelecimento para o select
   async loadTipos() {
     try {
-      const r: any = await this.supabase.getAllTipoEstabelecimento();
+      const r: any = await this.httpApi.getAllTipoEstabelecimento();
       this.tipos = Array.isArray(r) ? r : (r?.data || []);
     } catch (e) {
       console.warn('Failed to load tipos', e);
     }
   }
 
-  // Validações e criação da localizacao
+  // Criação da localizacao - backend handles all validation
   async createLocation() {
     this.loading = true;
     try {
-      // validar NIF: exatamente 9 dígitos
-      if (this.nif) {
-        const nifClean = (this.nif || '').replace(/\D/g, '');
-        if (nifClean.length !== 9) {
-          this.showToast(this.t.translate('nif_invalid'), 'warning');
-          this.loading = false;
-          return;
-        }
-        const taken = await this.supabase.isLocalizacaoNifTaken(nifClean);
-        if (taken) {
-          this.showToast(this.t.translate('nif_taken'), 'warning');
-          this.loading = false;
-          return;
-        }
-      }
-
-      // validar cod_postal formato ###-####
-      if (this.cod_postal) {
-        if (!/^\d{4}-\d{3}$/.test(this.cod_postal)) {
-          this.showToast(this.t.translate('postal_invalid'), 'warning');
-          this.loading = false;
-          return;
-        }
-      }
-
       const rec: any = {
         tipo: this.tipo,
         hora_abertura: this.hora_abertura,
@@ -92,57 +67,8 @@ export class CriaLocalizacaoPage implements OnInit {
         estado: this.estado
       };
 
-      const resp: any = await this.supabase.createLocalizacao(rec);
-      console.debug('createLocalizacao response', resp);
-      let inserted = Array.isArray(resp) ? resp[0] : (resp?.data ? resp.data[0] : resp);
-      let newId = inserted?.id_estabelecimento ?? inserted?.id;
-
-      if (!newId && this.nif) {
-        try {
-          const nifClean = String(this.nif).replace(/\D/g, '').trim();
-          const found: any = await this.supabase.fetchByPk('estabelecimento', 'nif', nifClean);
-          if (found) {
-            console.debug('createLocalizacao found by nif', found);
-            newId = found.id_estabelecimento ?? found.id;
-          }
-        } catch (e) {
-          console.warn('createLocalizacao lookup by nif failed', e);
-        }
-      }
-
-      if (!newId) {
-        try {
-          const all: any = await this.supabase.getAllLocalizacoes();
-          const rows = Array.isArray(all) ? all : (all?.data || []);
-          const found = rows.find((r: any) => {
-            if (this.nif && r.nif && String(r.nif) === String(this.nif)) return true;
-            if (this.email && r.email && String(r.email) === String(this.email)) return true;
-            if (this.nome && r.nome && String(r.nome) === String(this.nome)) return true;
-            return false;
-          });
-          if (found) {
-            console.debug('createLocalizacao fallback found', found);
-            newId = found.id_estabelecimento ?? found.id;
-          } else {
-            console.warn('createLocalizacao: could not determine new estabelecimento id', { resp, nome: this.nome, email: this.email, nif: this.nif });
-          }
-        } catch (e) {
-          console.warn('createLocalizacao fallback lookup failed', e);
-        }
-      }
-
-      try {
-        const raw = localStorage.getItem('currentUser');
-        const user = raw ? JSON.parse(raw) : null;
-        if (user && user.id_utilizador && newId) {
-          const linkResp: any = await this.supabase.addUserEstabelecimento(Number(user.id_utilizador), Number(newId));
-          console.debug('addUserEstabelecimento response', linkResp);
-        } else if (user && user.id_utilizador && !newId) {
-          console.warn('addUserEstabelecimento skipped: newId missing', { user });
-        }
-      } catch (linkErr) {
-        console.warn('Failed to link user to estabelecimento', linkErr);
-      }
+      const resp: any = await this.httpApi.createEstabelecimento(rec);
+      console.debug('createEstabelecimento response', resp);
 
       const toast = await this.toastCtrl.create({ message: this.t.translate('location_created'), duration: 1500, color: 'success' });
       toast.present();

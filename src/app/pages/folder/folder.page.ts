@@ -1,9 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { SupabaseService } from '../../services/supabase/supabase';
 import { LocationService } from '../../services/location/location.service';
 import { WeatherService, WeatherData, ForecastData } from '../../services/weather/weather.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslationService } from '../../services/translations/translation.service';
+import { HttpApiService } from '../../services/http-api/http-api.service';
 import { AlertController, ModalController } from '@ionic/angular';
 import { ForecastModalComponent } from '../../components/forecast-modal/forecast-modal.component';
 import * as L from 'leaflet';
@@ -44,12 +44,12 @@ export class FolderPage implements OnInit {
   public forecast: ForecastData[] | null = null;
   
   constructor(
-    private supabase: SupabaseService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
     public tService: TranslationService,
     private locationService: LocationService,
     private weatherService: WeatherService,
+    private httpApi: HttpApiService,
     private alertCtrl: AlertController,
     private modalCtrl: ModalController
   ) {}
@@ -108,7 +108,7 @@ export class FolderPage implements OnInit {
 
   private async loadAllLocationMarkers() {
     try {
-      const data: any = await this.supabase.getAllLocalizacoes();
+      const data: any = await this.httpApi.getAllLocalizacoes();
       const rows = Array.isArray(data) ? data : (data?.data || []);
       for (const r of rows) {
         const lat = Number(r.lat || r.latitude || r.latitud || 0);

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -23,7 +23,7 @@ export class EditaVeiculoPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private toastCtrl: ToastController,
     private router: Router,
     public t: TranslationService
@@ -39,7 +39,7 @@ export class EditaVeiculoPage implements OnInit {
 
   private async loadTipoVeiculos() {
     try {
-      const data: any = await this.supabase.getAllTipoVeiculo();
+      const data: any = await this.httpApi.getAllTipoVeiculo();
       const rows = Array.isArray(data) ? data : (data?.data || []);
       this.tipos = rows.map((tp: any) => ({ ...(tp||{}), displayName: tp.descr || tp.descricao || tp.nome || tp.nome_tipo || tp.tipo || tp.name || tp.tipo_veiculo || (`Tipo ${tp.id_tipo}`) }));
     } catch (e) {
@@ -49,7 +49,7 @@ export class EditaVeiculoPage implements OnInit {
 
   private async loadVehicle(matricula: string) {
     try {
-      const data: any = await this.supabase.getVeiculo(matricula);
+      const data: any = await this.httpApi.getVeiculo(matricula);
       const v = data || (data?.data && data.data[0]) || {};
       this.matricula = v.matricula || v['matricula'] || '';
       this.vin_veiculo = v.vin_veiculo || v['vin_veiculo'] || '';
@@ -81,7 +81,7 @@ export class EditaVeiculoPage implements OnInit {
       try {
         const vinTrim = (this.vin_veiculo || '').trim();
         if (vinTrim) {
-          const { data: existingVin, error: vinErr } = await this.supabase.client.from('veiculos').select('matricula').eq('vin_veiculo', vinTrim).maybeSingle();
+          const { data: existingVin, error: vinErr } = await this.httpApi.checkVehicleVinUniqueness('veiculos', vinTrim);
           if (vinErr) throw vinErr;
           if (existingVin && String(existingVin.matricula || existingVin['matricula']) !== String(this.matricula)) {
             const toast = await this.toastCtrl.create({ message: this.t.translate('vin_taken'), duration: 2200, color: 'warning' });
@@ -99,7 +99,7 @@ export class EditaVeiculoPage implements OnInit {
         modelo: this.modelo.trim() || null,
         cor: this.cor.trim() || null
       };
-      await this.supabase.updateVeiculo(this.matricula, updates);
+      await this.httpApi.updateVeiculo(this.matricula, updates);
       const toast = await this.toastCtrl.create({ message: this.t.translate('edit_saved') || 'Alterações guardadas', duration: 1500, color: 'success' });
       toast.present();
       this.router.navigate(['/gere-veiculos'], { queryParams: { id: this.id_empresa } });

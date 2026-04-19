@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -18,7 +18,7 @@ export class GereVeiculosPage implements OnInit {
   companyParamKey: string | null = null;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private route: ActivatedRoute,
     private toastCtrl: ToastController,
@@ -47,7 +47,7 @@ export class GereVeiculosPage implements OnInit {
   /** Busca o registo da empresa e extrai o nome para exibição no cabeçalho */
   private async loadCompanyName(id: number) {
     try {
-      const data: any = await this.supabase.getEmpresaTransportes(Number(id));
+      const data: any = await this.httpApi.getEmpresaTransportes(Number(id));
       const c = data || (data?.data && data.data[0]) || {};
       this.companyName = c.nome;
     } catch (e) {
@@ -72,8 +72,8 @@ export class GereVeiculosPage implements OnInit {
 
       // carregar veículos e tipos para mostrar a descrição do tipo
       const [data, tiposData]: any = await Promise.all([
-        this.supabase.getVeiculosByEmpresa(Number(companyId)),
-        this.supabase.getAllTipoVeiculo()
+        this.httpApi.getVeiculosByEmpresa(Number(companyId)),
+        this.httpApi.getAllTipoVeiculo()
       ]);
       const rows = Array.isArray(data) ? data : (data?.data || []);
       const tiposRows = Array.isArray(tiposData) ? tiposData : (tiposData?.data || []);
@@ -148,7 +148,7 @@ export class GereVeiculosPage implements OnInit {
   /** Atualiza o estado do veículo na base de dados e recarrega a lista */
   private async updateVehicleEstado(matricula: any, newEstado: number) {
     try {
-      await this.supabase.updateVeiculo(matricula, { estado: newEstado });
+      await this.httpApi.updateVeiculo(matricula, { estado: newEstado });
       const toast = await this.toastCtrl.create({ message: this.t.translate(newEstado === 3 ? 'vehicle_discontinued' : 'vehicle_inactive'), duration: 1500, color: 'success' });
       toast.present();
       this.loadVehicles(this.companyId);

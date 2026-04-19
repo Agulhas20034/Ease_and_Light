@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -17,7 +17,7 @@ export class VePedidosPage implements OnInit {
   public userName: string = '';
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -50,7 +50,7 @@ export class VePedidosPage implements OnInit {
 
       
 
-      const all: any = await this.supabase.getAllEntregasRecolhas();
+      const all: any = await this.httpApi.getAllEntregasRecolhas();
       const rows = Array.isArray(all) ? all : (all?.data || []);
 
       let filtered: any[] = [];
@@ -58,7 +58,7 @@ export class VePedidosPage implements OnInit {
       if (role === 'Administrador') {
         filtered = rows || [];
       } else if (role === 'Dono Empresa Transportes') {
-        const empresas: any = await this.supabase.getUserEmpresas(Number(userId));
+        const empresas: any = await this.httpApi.getUserEmpresas(Number(userId));
         const empresaRows = Array.isArray(empresas) ? empresas : (empresas?.data || []);
         const myEmpresaIds = empresaRows.map((e: any) => Number(e.id_empresa)).filter(Boolean);
 
@@ -156,7 +156,7 @@ export class VePedidosPage implements OnInit {
       const localizacoesMap = new Map<number, any>();
 
       if (empresaIds.size > 0) {
-        const allEmpresas: any = await this.supabase.getAllEmpresaTransportes();
+        const allEmpresas: any = await this.httpApi.getAllEmpresaTransportes();
         const empresaRows = Array.isArray(allEmpresas) ? allEmpresas : (allEmpresas?.data || []);
         empresaRows.forEach((e: any) => {
           empresasMap.set(Number(e.id_empresa), e);
@@ -166,7 +166,7 @@ export class VePedidosPage implements OnInit {
       if (localizacaoIds.size > 0) {
         for (const locId of Array.from(localizacaoIds)) {
           try {
-            const loc: any = await this.supabase.fetchByPk('estabelecimento', 'id_estabelecimento', locId);
+            const loc: any = await this.httpApi.getLocalizacao(locId);
             if (loc) {
               localizacoesMap.set(locId, Array.isArray(loc) ? loc[0] : loc);
             }

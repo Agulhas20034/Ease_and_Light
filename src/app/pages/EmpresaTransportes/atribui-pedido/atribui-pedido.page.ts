@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController, AlertController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -22,7 +22,7 @@ export class AtribuiPedidoPage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -44,7 +44,7 @@ export class AtribuiPedidoPage implements OnInit {
     this.loading = true;
     try {
       if (this.entregaId && this.entregaId > 0) {
-        const ordem: any = await this.supabase.fetchByPk('entregas_recolhas', 'id_entrega_recolha', this.entregaId);
+        const ordem: any = await this.httpApi.getEntregaRecolha(this.entregaId);
         if (ordem) {
           this.empresaId = Number(ordem.id_empresa);
         }
@@ -56,13 +56,13 @@ export class AtribuiPedidoPage implements OnInit {
       const role = user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '';
 
       if (role === 'Administrador') {
-        const all: any = await this.supabase.getAllEmpresaTransportes();
+        const all: any = await this.httpApi.getAllEmpresaTransportes();
         this.empresas = Array.isArray(all) ? all : (all?.data || []);
       } else if (user && user.id_utilizador) {
-        const rels: any = await this.supabase.getUserEmpresas(Number(user.id_utilizador));
+        const rels: any = await this.httpApi.getUserEmpresas(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const ids = relRows.map((r: any) => Number(r.id_empresa)).filter(Boolean);
-        const all: any = await this.supabase.getAllEmpresaTransportes();
+        const all: any = await this.httpApi.getAllEmpresaTransportes();
         const rows = Array.isArray(all) ? all : (all?.data || []);
         this.empresas = rows.filter((c: any) => ids.includes(Number(c.id_empresa)));
       }
@@ -91,9 +91,9 @@ export class AtribuiPedidoPage implements OnInit {
       }
       this.empresaId = Number(companyId);
       const [rels, usersResp, veics]: any = await Promise.all([
-        this.supabase.fetchAll('users_empresa_transportes'),
-        this.supabase.getAllUsers(),
-        this.supabase.getVeiculosByEmpresa(Number(companyId))
+        this.httpApi.fetchAll('users_empresa_transportes'),
+        this.httpApi.getAllUsers(),
+        this.httpApi.getVeiculosByEmpresa(Number(companyId))
       ]);
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
       const userRows = Array.isArray(usersResp) ? usersResp : (usersResp?.data || []);
@@ -130,7 +130,7 @@ export class AtribuiPedidoPage implements OnInit {
               id_estafeta: empId,
               estado: 2,
             };
-            await this.supabase.updateEntregaRecolha(Number(this.entregaId), updates);
+            await this.httpApi.updateEntregaRecolha(Number(this.entregaId), updates);
             const to = await this.toastCtrl.create({ message: this.t.translate('update_success') || 'Atualizado', duration: 1500, color: 'success' });
             to.present();
             this.router.navigateByUrl('/folder/inbox');

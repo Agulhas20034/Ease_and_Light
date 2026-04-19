@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController, MenuController } from '@ionic/angular';
-import { SupabaseService } from '../../services/supabase/supabase';
+import { HttpApiService } from '../../services/http-api/http-api.service';
 import { TranslationService } from '../../services/translations/translation.service';
 
 @Component({
@@ -17,7 +17,7 @@ export class LoginPage {
   showPassword: boolean = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastController: ToastController,
     private menu: MenuController,
@@ -44,7 +44,7 @@ export class LoginPage {
 
     this.loading = true;
     try {
-      const user: any = await this.supabase.loginUser(this.email, this.password);
+      const user: any = await this.httpApi.login(this.email, this.password);
 
       // apenas permitir utilizadores com estado === 1
       if (typeof user.estado !== 'undefined' && Number(user.estado) !== 1) {
@@ -53,18 +53,11 @@ export class LoginPage {
         return;
       }
 
-      // obter descrição do tipo de perfil (ex: 'Administrador') e armazenar no localStorage
-      let profileType = 'User';
-      if (user.id_tipo) {
-        try {
-          const profileData = await this.supabase.fetchProfileType(user.id_tipo);
-          if (profileData && profileData.descr) profileType = profileData.descr;
-        } catch (e) {
-          console.warn('Could not fetch profile type:', e);
-        }
-      }
-
-      const userWithProfile = { ...user, profileType, id_tipo: user.id_tipo };
+      const userWithProfile = { 
+        ...user, 
+        profileType: this.getProfileTypeName(user.id_tipo), 
+        id_tipo: user.id_tipo 
+      };
       localStorage.setItem('currentUser', JSON.stringify(userWithProfile));
       this.showToast(this.t('login_successful') || 'Login successful!', 'success');
       this.router.navigate(['/folder/inbox']);
@@ -81,6 +74,19 @@ export class LoginPage {
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
+  }
+
+  private getProfileTypeName(id_tipo: number): string {
+    const profileMap: { [key: number]: string } = {
+      1: 'Administrador',
+      2: 'Dono Empresa',
+      3: 'Empregado Empresa',
+      4: 'Dono Estabelecimento',
+      5: 'Empregado Estabelecimento',
+      6: 'Peregrino',
+      7: 'Estafeta'
+    };
+    return profileMap[id_tipo] || 'User';
   }
 
   private async showToast(message: string, color: string) {
