@@ -41,6 +41,7 @@ export class EditaContaPage implements OnInit {
   ) {}
 
   async ngOnInit() {
+    await this.loadTipos();
     this.route.queryParams.subscribe(async params => {
       const id = params['id'];
       if (id) {
@@ -48,6 +49,16 @@ export class EditaContaPage implements OnInit {
         await this.loadUser();
       }
     });
+  }
+
+  async loadTipos() {
+    try {
+      const result: any = await this.httpApi.getAllTipoPerfil();
+      this.tipos = result?.data || result || [];
+    } catch (e) {
+      console.error('Erro ao carregar tipos', e);
+      this.tipos = [];
+    }
   }
 
   async loadUser() {

@@ -58,7 +58,7 @@ class ApiService {
       empresa_transportes: ['nome', 'telefone', 'email', 'estado'],
       estabelecimento: ['nome', 'telefone', 'email', 'hora_abertura', 'hora_fecho', 'link_google', 'rua', 'codigo_postal', 'id_tipo_estabelecimento', 'estado'],
       veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa', 'estado'],
-      entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_veiculo', 'id_mochila', 'id_estafeta', 'id_empresa', 'data_hora'],
+      entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_mochila', 'id_empresa', 'data_hora_recolha'],
       mochilas: ['peso', 'cor', 'id_user'],
       percurso: ['nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
       grupo: ['nome', 'id_estado', 'data_criacao'],
@@ -82,7 +82,7 @@ class ApiService {
     };
 
     const fields = requiredFields[table] || [];
-    const optionalFields = ['password', 'nif', 'passaporte'];
+    const optionalFields = ['password', 'nif', 'passaporte', 'id_veiculo', 'id_estafeta'];
 
     if (isUpdate) {
       for (const field of fields) {
@@ -425,36 +425,44 @@ class ApiService {
   async updateEstabelecimento(id, data) {
     this.validateRequiredFields(data, 'estabelecimento', true);
 
+    const current = await this.supabase.getEstabelecimento(id);
+
     if (data.telefone) {
       data.telefone = this.trimString(data.telefone);
-      if (!this.validateTelefone(data.telefone)) {
+      if (data.telefone && !this.validateTelefone(data.telefone)) {
         throw new Error('Telefone must be exactly 9 digits');
       }
-      const telefoneTaken = await this.supabase.isTelefoneTaken(data.telefone);
-      if (telefoneTaken) {
-        throw new Error('Telefone already exists');
+      if (data.telefone && data.telefone !== current.telefone) {
+        const telefoneTaken = await this.supabase.isTelefoneTaken(data.telefone);
+        if (telefoneTaken) {
+          throw new Error('Telefone already exists');
+        }
       }
     }
 
     if (data.email) {
       data.email = this.trimString(data.email);
-      if (!this.validateEmail(data.email)) {
+      if (data.email && !this.validateEmail(data.email)) {
         throw new Error('Invalid email format');
       }
-      const emailTaken = await this.supabase.getUserByEmail(data.email);
-      if (emailTaken) {
-        throw new Error('Email already exists');
+      if (data.email && data.email !== current.email) {
+        const emailTaken = await this.supabase.getUserByEmail(data.email);
+        if (emailTaken) {
+          throw new Error('Email already exists');
+        }
       }
     }
 
     if (data.nif) {
       data.nif = this.trimString(data.nif);
-      if (!this.validateNif(data.nif)) {
+      if (data.nif && !this.validateNif(data.nif)) {
         throw new Error('NIF must be exactly 9 digits');
       }
-      const nifTaken = await this.supabase.isLocalizacaoNifTakenByOther(data.nif, id);
-      if (nifTaken) {
-        throw new Error('NIF already exists for another estabelecimento');
+      if (data.nif && data.nif !== current.nif) {
+        const nifTaken = await this.supabase.isLocalizacaoNifTakenByOther(data.nif, id);
+        if (nifTaken) {
+          throw new Error('NIF already exists for another estabelecimento');
+        }
       }
     }
 

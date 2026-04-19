@@ -36,6 +36,17 @@ export class CriaContasPage implements OnInit {
   ) {}
 
   async ngOnInit() {
+    await this.loadTipos();
+  }
+
+  async loadTipos() {
+    try {
+      const result: any = await this.httpApi.getAllTipoPerfil();
+      this.tipos = result?.data || result || [];
+    } catch (e) {
+      console.error('Erro ao carregar tipos', e);
+      this.tipos = [];
+    }
   }
 
   t(key: string) {
