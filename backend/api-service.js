@@ -1,8 +1,9 @@
 const bcryptjs = require('bcryptjs');
 
 class ApiService {
-  constructor(supabaseService) {
+  constructor(supabaseService, mongoService) {
     this.supabase = supabaseService;
+    this.mongo = mongoService;
   }
 
   validateEmail(email) {
@@ -61,9 +62,9 @@ class ApiService {
       entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_mochila', 'id_empresa', 'data_hora_recolha'],
       mochilas: ['peso', 'cor', 'id_user'],
       percurso: ['nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
-      grupo: ['nome', 'id_estado', 'data_criacao'],
+      grupo: ['nome', 'descr', 'hora_criacao', 'estado'],
       etapas: ['nome', 'descricao', 'coordenadas'],
-      grupo_user: ['id_grupo', 'id_user'],
+      grupo_user: ['id_grupo', 'id_user', 'criador', 'status_convite', 'Data_Convite'],
       etapas_percurso: ['id_percurso', 'id_etapa'],
       users_empresa_transportes: ['id_utilizador', 'id_empresa'],
       users_estabelecimento: ['id_utilizador', 'id_estabelecimento'],
@@ -82,7 +83,7 @@ class ApiService {
     };
 
     const fields = requiredFields[table] || [];
-    const optionalFields = ['password', 'nif', 'passaporte', 'id_veiculo', 'id_estafeta'];
+    const optionalFields = ['password', 'nif', 'passaporte', 'id_veiculo', 'id_estafeta', 'Data_Entrada', 'Data_Saida'];
 
     if (isUpdate) {
       for (const field of fields) {
@@ -702,7 +703,6 @@ class ApiService {
 
   async createGrupoUser(data) {
     this.validateRequiredFields(data, 'grupo_user', false);
-    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('grupo_user', data);
   }
 
@@ -713,6 +713,19 @@ class ApiService {
 
   async deleteGrupoUser(id_grupo, id_user) {
     return await this.supabase.deleteByPk('grupo_user', { id_grupo, id_user });
+  }
+
+  async updateAllGrupoUsersByGroup(id_grupo, data) {
+    data.Data_Saida = new Date().toISOString();
+    return await this.supabase.updateAllByGroup('grupo_user', id_grupo, data);
+  }
+
+  async leaveGroup(id_grupo, id_user) {
+    return await this.supabase.updateGroupUserStatusWithExit(id_grupo, id_user, 4);
+  }
+
+  async acceptGroupInvite(id_grupo, id_user) {
+    return await this.supabase.acceptGroupInvite(id_grupo, id_user);
   }
 
   async createEtapasPercurso(data) {
@@ -974,6 +987,88 @@ class ApiService {
 
   async deleteInfoPercurso(id) {
     return await this.supabase.deleteInfoPercurso(id);
+  }
+
+  // Supabase Groups and MongoDB Chat
+  async createGroup(data) {
+    const groupData = {};
+
+    if (data.nome !== undefined) {
+      groupData.nome = data.nome;
+    }
+
+    if (data.descr !== undefined) {
+      groupData.descr = data.descr;
+    }
+
+    if (data.hora_criacao !== undefined) {
+      groupData.hora_criacao = data.hora_criacao;
+    }
+
+    if (data.estado !== undefined) {
+      groupData.estado = data.estado;
+    }
+
+    const result = await this.createGrupo(groupData);
+    const createdGroup = Array.isArray(result) ? result[0] : result;
+
+    const userId = data.createdBy?.id_utilizador || data.createdBy ||
+      (Array.isArray(data.members) ? data.members[0] : null) ||
+      null;
+
+    if (createdGroup?.id_grupo && userId) {
+      try {
+        await this.createGrupoUser({ 
+          id_grupo: createdGroup.id_grupo, 
+          id_user: Number(userId),
+          criador: true,
+          status_convite: 1,
+          Data_Convite: new Date().toISOString(),
+          Data_Entrada: new Date().toISOString()
+        });
+      } catch (memberError) {
+        console.log(`Warning: Could not add member ${userId} to group ${createdGroup.id_grupo}:`, memberError.message);
+      }
+    } else {
+      console.log('Skipping grupo_user creation - missing id_grupo or userId');
+    }
+
+    return createdGroup;
+  }
+
+  async getGroupsByUser(userId) {
+    return await this.supabase.getGroupsByUser(userId);
+  }
+
+  async getGroupById(id) {
+    return await this.supabase.getGrupo(id);
+  }
+
+  async updateGroup(id, data) {
+    return await this.supabase.updateGrupo(id, data);
+  }
+
+  async deleteGroup(id) {
+    return await this.supabase.deleteGrupo(id);
+  }
+
+  async addMemberToGroup(groupId, userId) {
+    return await this.supabase.addMemberToGroup(groupId, userId);
+  }
+
+  async removeMemberFromGroup(groupId, userId) {
+    return await this.supabase.removeMemberFromGroup(groupId, userId);
+  }
+
+  async saveChatMessage(data) {
+    if (data.senderId) {
+      await this.mongo.createOrUpdateUser({ id_utilizador: data.senderId });
+    }
+    return await this.mongo.saveChatMessage(data);
+  }
+
+  async getChatMessages(groupId, limit) {
+    return await this.mongo.getChatMessages(groupId, limit);
   }
 }
 

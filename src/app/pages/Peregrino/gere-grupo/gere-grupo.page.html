@@ -1,11 +1,83 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('manage_groups') }}</ion-title>
+    <ion-badge slot="end" color="danger" *ngIf="unreadInvitesCount > 0">{{ unreadInvitesCount }}</ion-badge>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <ion-tabs>
+    <ion-tab tab="my-groups">
+      <ion-list>
+        <ion-item *ngFor="let group of groups">
+          <ion-label (click)="goToGroup(group)" style="cursor: pointer;">
+            <h2>{{ group.nome }}</h2>
+            <p style="font-size: 0.9em; color: var(--ion-color-medium);">{{ group.descr }}</p>
+            <p>{{ t.translate('group_members') }}: {{ getMemberCount(group) }}</p>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button 
+              *ngIf="isGroupOwner(group)" 
+              (click)="deleteGroup(group)" 
+              color="danger">
+              <ion-icon name="trash"></ion-icon>
+            </ion-button>
+            <ion-button 
+              *ngIf="!isGroupOwner(group)" 
+              (click)="leaveGroup(group)" 
+              color="medium">
+              <ion-icon name="exit"></ion-icon>
+            </ion-button>
+            <ion-button (click)="goToGroup(group)">
+              <ion-icon name="chevron-forward"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+      </ion-list>
+    </ion-tab>
+
+    <ion-tab tab="invites">
+      <ion-list>
+        <ion-item *ngFor="let invite of pendingInvites">
+          <ion-label>
+            <h2>{{ invite.nome }}</h2>
+            <p style="font-size: 0.9em; color: var(--ion-color-medium);">{{ invite.descr }}</p>
+            <p>{{ t.translate('created') }}: {{ invite.hora_criacao | date:'short' }}</p>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button (click)="acceptGroupInvite(invite)" color="success">
+              <ion-icon name="checkmark-circle"></ion-icon>
+            </ion-button>
+            <ion-button (click)="declineGroupInvite(invite)" color="danger">
+              <ion-icon name="close-circle"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+      </ion-list>
+
+      <ion-text *ngIf="pendingInvites.length === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_pending_invites') }}</p>
+      </ion-text>
+    </ion-tab>
+
+    <ion-tab-bar slot="bottom">
+      <ion-tab-button tab="my-groups">
+        <ion-icon name="folder"></ion-icon>
+        <ion-label>{{ t.translate('manage_groups') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="invites">
+        <ion-icon name="mail"></ion-icon>
+        <ion-label>{{ t.translate('manage_invites') }}</ion-label>
+        <ion-badge color="danger" *ngIf="unreadInvitesCount > 0">{{ unreadInvitesCount }}</ion-badge>
+      </ion-tab-button>
+    </ion-tab-bar>
+  </ion-tabs>
+
+  <ion-loading [isOpen]="loading" [message]="t.translate('loading')"></ion-loading>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button (click)="goToCreateGroup()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
