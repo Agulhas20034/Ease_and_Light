@@ -1,11 +1,26 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('create_group') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+  
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('group_name') }}</ion-label>
+      <ion-input [(ngModel)]="group.name" [placeholder]="t.translate('group_name_placeholder')"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('description') }}</ion-label>
+      <ion-textarea [(ngModel)]="group.description" [placeholder]="t.translate('group_description_placeholder')"></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" [disabled]="loading" (click)="saveGroup()">
+    {{ loading ? t.translate('saving') : t.translate('create_group') }}
+  </ion-button>
+
+  <ion-loading [isOpen]="loading" [message]="t.translate('loading')" />
 </ion-content>

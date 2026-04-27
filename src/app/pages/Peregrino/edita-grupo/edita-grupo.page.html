@@ -1,11 +1,50 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('edit_group') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ t.translate('edit_group_info') }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item>
+          <ion-label position="stacked">{{ t.translate('group_name') }}</ion-label>
+          <ion-input 
+            [(ngModel)]="groupName" 
+            [placeholder]="t.translate('group_name')"
+            type="text">
+          </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">{{ t.translate('group_description') }}</ion-label>
+          <ion-textarea 
+            [(ngModel)]="groupDescription" 
+            [placeholder]="t.translate('group_description')"
+            rows="4">
+          </ion-textarea>
+        </ion-item>
+      </ion-list>
+
+      <ion-button 
+        expand="block" 
+        color="primary" 
+        (click)="saveChanges()" 
+        [disabled]="!groupName.trim()">
+        {{ t.translate('save') }}
+      </ion-button>
+
+      <ion-button 
+        expand="block" 
+        color="medium" 
+        (click)="goBack()">
+        {{ t.translate('cancel') }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-loading [isOpen]="loading" [message]="t.translate('loading')"></ion-loading>
 </ion-content>

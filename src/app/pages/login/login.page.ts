@@ -79,12 +79,11 @@ export class LoginPage {
   private getProfileTypeName(id_tipo: number): string {
     const profileMap: { [key: number]: string } = {
       1: 'Administrador',
-      2: 'Dono Empresa',
-      3: 'Empregado Empresa',
+      2: 'Dono Empresa Transportes',
+      3: 'Estafeta Empresa Transportes',
       4: 'Dono Estabelecimento',
-      5: 'Empregado Estabelecimento',
-      6: 'Peregrino',
-      7: 'Estafeta'
+      5: 'Peregrino',
+      6: 'Empregado Estabelecimento'
     };
     return profileMap[id_tipo] || 'User';
   }

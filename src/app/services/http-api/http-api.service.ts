@@ -16,18 +16,23 @@ export class HttpApiService {
     return Array.isArray(data) ? data : [];
   }
 
-  async create(table: string, data: any): Promise<any> {
-    const response = await this.http.post(`${this.apiUrl}/api/${table}`, data).toPromise() as any;
+  async create(path: string, data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/${path}`, data).toPromise() as any;
     return response?.data;
   }
 
-  async update(table: string, id: any, data: any): Promise<any> {
-    const response = await this.http.put(`${this.apiUrl}/api/${table}/${id}`, data).toPromise() as any;
+  async get(path: string): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/${path}`).toPromise() as any;
     return response?.data;
   }
 
-  async delete(table: string, id: any): Promise<any> {
-    const response = await this.http.delete(`${this.apiUrl}/api/${table}/${id}`).toPromise() as any;
+  async update(path: string, data: any): Promise<any> {
+    const response = await this.http.put(`${this.apiUrl}/api/${path}`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async delete(path: string): Promise<any> {
+    const response = await this.http.delete(`${this.apiUrl}/api/${path}`).toPromise() as any;
     return response?.data;
   }
 
@@ -51,11 +56,11 @@ export class HttpApiService {
   }
 
   async updateUser(id: number, data: any): Promise<any> {
-    return this.update('users', id, data);
+    return this.update(`users/${id}`, data);
   }
 
   async deleteUser(id: number): Promise<any> {
-    return this.delete('users', id);
+    return this.delete(`users/${id}`);
   }
 
   // Empresa Transportes
@@ -68,11 +73,11 @@ export class HttpApiService {
   }
 
   async updateEmpresaTransportes(id: number, data: any): Promise<any> {
-    return this.update('empresa_transportes', id, data);
+    return this.update(`empresa_transportes/${id}`, data);
   }
 
   async deleteEmpresaTransportes(id: number): Promise<any> {
-    return this.delete('empresa_transportes', id);
+    return this.delete(`empresa_transportes/${id}`);
   }
 
   // Estabelecimento
@@ -85,11 +90,11 @@ export class HttpApiService {
   }
 
   async updateEstabelecimento(id: number, data: any): Promise<any> {
-    return this.update('estabelecimento', id, data);
+    return this.update(`estabelecimento/${id}`, data);
   }
 
   async deleteEstabelecimento(id: number): Promise<any> {
-    return this.delete('estabelecimento', id);
+    return this.delete(`estabelecimento/${id}`);
   }
 
   // Veiculos
@@ -102,11 +107,11 @@ export class HttpApiService {
   }
 
   async updateVeiculo(matricula: string, data: any): Promise<any> {
-    return this.update('veiculos', matricula, data);
+    return this.update(`veiculos/${matricula}`, data);
   }
 
   async deleteVeiculo(matricula: string): Promise<any> {
-    return this.delete('veiculos', matricula);
+    return this.delete(`veiculos/${matricula}`);
   }
 
   // Entregas Recolhas
@@ -124,11 +129,11 @@ export class HttpApiService {
   }
 
   async updateEntregaRecolha(id: number, data: any): Promise<any> {
-    return this.update('entregas_recolhas', id, data);
+    return this.update(`entregas_recolhas/${id}`, data);
   }
 
   async deleteEntregaRecolha(id: number): Promise<any> {
-    return this.delete('entregas_recolhas', id);
+    return this.delete(`entregas_recolhas/${id}`);
   }
 
   // Mochilas
@@ -141,11 +146,11 @@ export class HttpApiService {
   }
 
   async updateMochila(id: number, data: any): Promise<any> {
-    return this.update('mochilas', id, data);
+    return this.update(`mochilas/${id}`, data);
   }
 
   async deleteMochila(id: number): Promise<any> {
-    return this.delete('mochilas', id);
+    return this.delete(`mochilas/${id}`);
   }
 
   // Percurso
@@ -158,11 +163,11 @@ export class HttpApiService {
   }
 
   async updatePercurso(id: number, data: any): Promise<any> {
-    return this.update('percurso', id, data);
+    return this.update(`percurso/${id}`, data);
   }
 
   async deletePercurso(id: number): Promise<any> {
-    return this.delete('percurso', id);
+    return this.delete(`percurso/${id}`);
   }
 
   // Grupo
@@ -175,11 +180,11 @@ export class HttpApiService {
   }
 
   async updateGrupo(id: number, data: any): Promise<any> {
-    return this.update('grupo', id, data);
+    return this.update(`grupo/${id}`, data);
   }
 
   async deleteGrupo(id: number): Promise<any> {
-    return this.delete('grupo', id);
+    return this.delete(`grupo/${id}`);
   }
 
   // Etapas
@@ -192,11 +197,11 @@ export class HttpApiService {
   }
 
   async updateEtapa(id: number, data: any): Promise<any> {
-    return this.update('etapas', id, data);
+    return this.update(`etapas/${id}`, data);
   }
 
   async deleteEtapa(id: number): Promise<any> {
-    return this.delete('etapas', id);
+    return this.delete(`etapas/${id}`);
   }
 
   // Tabelas tipo e estado
@@ -209,11 +214,11 @@ export class HttpApiService {
   }
 
   async updateTipoPerfil(id: number, data: any): Promise<any> {
-    return this.update('tipo_perfil', id, data);
+    return this.update(`tipo_perfil/${id}`, data);
   }
 
   async deleteTipoPerfil(id: number): Promise<any> {
-    return this.delete('tipo_perfil', id);
+    return this.delete(`tipo_perfil/${id}`);
   }
 
   async getAllTipoVeiculo(): Promise<any> {
@@ -225,11 +230,11 @@ export class HttpApiService {
   }
 
   async updateTipoVeiculo(id: number, data: any): Promise<any> {
-    return this.update('tipo_veiculo', id, data);
+    return this.update(`tipo_veiculo/${id}`, data);
   }
 
   async deleteTipoVeiculo(id: number): Promise<any> {
-    return this.delete('tipo_veiculo', id);
+    return this.delete(`tipo_veiculo/${id}`);
   }
 
   async getAllTipoEstabelecimento(): Promise<any> {
@@ -241,11 +246,11 @@ export class HttpApiService {
   }
 
   async updateTipoEstabelecimento(id: number, data: any): Promise<any> {
-    return this.update('tipo_estabelecimento', id, data);
+    return this.update(`tipo_estabelecimento/${id}`, data);
   }
 
   async deleteTipoEstabelecimento(id: number): Promise<any> {
-    return this.delete('tipo_estabelecimento', id);
+    return this.delete(`tipo_estabelecimento/${id}`);
   }
 
   async getAllEstadoEntregaRecolha(): Promise<any> {
@@ -257,11 +262,11 @@ export class HttpApiService {
   }
 
   async updateEstadoEntregaRecolha(id: number, data: any): Promise<any> {
-    return this.update('estado_entrega_recolha', id, data);
+    return this.update(`estado_entrega_recolha/${id}`, data);
   }
 
   async deleteEstadoEntregaRecolha(id: number): Promise<any> {
-    return this.delete('estado_entrega_recolha', id);
+    return this.delete(`estado_entrega_recolha/${id}`);
   }
 
   async getAllEstadoGrupo(): Promise<any> {
@@ -273,11 +278,11 @@ export class HttpApiService {
   }
 
   async updateEstadoGrupo(id: number, data: any): Promise<any> {
-    return this.update('estado_grupo', id, data);
+    return this.update(`estado_grupo/${id}`, data);
   }
 
   async deleteEstadoGrupo(id: number): Promise<any> {
-    return this.delete('estado_grupo', id);
+    return this.delete(`estado_grupo/${id}`);
   }
 
   async getAllEstadoPercurso(): Promise<any> {
@@ -289,11 +294,11 @@ export class HttpApiService {
   }
 
   async updateEstadoPercurso(id: number, data: any): Promise<any> {
-    return this.update('estado_percurso', id, data);
+    return this.update(`estado_percurso/${id}`, data);
   }
 
   async deleteEstadoPercurso(id: number): Promise<any> {
-    return this.delete('estado_percurso', id);
+    return this.delete(`estado_percurso/${id}`);
   }
 
   async getAllEstadoConta(): Promise<any> {
@@ -305,11 +310,11 @@ export class HttpApiService {
   }
 
   async updateEstadoConta(id: number, data: any): Promise<any> {
-    return this.update('estado_conta', id, data);
+    return this.update(`estado_conta/${id}`, data);
   }
 
   async deleteEstadoConta(id: number): Promise<any> {
-    return this.delete('estado_conta', id);
+    return this.delete(`estado_conta/${id}`);
   }
 
   async getAllEstadoEmpresa(): Promise<any> {
@@ -321,11 +326,11 @@ export class HttpApiService {
   }
 
   async updateEstadoEmpresa(id: number, data: any): Promise<any> {
-    return this.update('estado_empresa', id, data);
+    return this.update(`estado_empresa/${id}`, data);
   }
 
   async deleteEstadoEmpresa(id: number): Promise<any> {
-    return this.delete('estado_empresa', id);
+    return this.delete(`estado_empresa/${id}`);
   }
 
   async getAllEstadoEstabelecimento(): Promise<any> {
@@ -337,11 +342,11 @@ export class HttpApiService {
   }
 
   async updateEstadoEstabelecimento(id: number, data: any): Promise<any> {
-    return this.update('estado_estabelecimento', id, data);
+    return this.update(`estado_estabelecimento/${id}`, data);
   }
 
   async deleteEstadoEstabelecimento(id: number): Promise<any> {
-    return this.delete('estado_estabelecimento', id);
+    return this.delete(`estado_estabelecimento/${id}`);
   }
 
   async getAllEstadoVeiculo(): Promise<any> {
@@ -353,11 +358,11 @@ export class HttpApiService {
   }
 
   async updateEstadoVeiculo(id: number, data: any): Promise<any> {
-    return this.update('estado_veiculo', id, data);
+    return this.update(`estado_veiculo/${id}`, data);
   }
 
   async deleteEstadoVeiculo(id: number): Promise<any> {
-    return this.delete('estado_veiculo', id);
+    return this.delete(`estado_veiculo/${id}`);
   }
 
   async getAllDificuldadePercurso(): Promise<any> {
@@ -369,11 +374,11 @@ export class HttpApiService {
   }
 
   async updateDificuldadePercurso(id: number, data: any): Promise<any> {
-    return this.update('dificuldade_percurso', id, data);
+    return this.update(`dificuldade_percurso/${id}`, data);
   }
 
   async deleteDificuldadePercurso(id: number): Promise<any> {
-    return this.delete('dificuldade_percurso', id);
+    return this.delete(`dificuldade_percurso/${id}`);
   }
 
   async getAllInfoPercurso(): Promise<any> {
@@ -385,11 +390,11 @@ export class HttpApiService {
   }
 
   async updateInfoPercurso(id: number, data: any): Promise<any> {
-    return this.update('info_percurso', id, data);
+    return this.update(`info_percurso/${id}`, data);
   }
 
   async deleteInfoPercurso(id: number): Promise<any> {
-    return this.delete('info_percurso', id);
+    return this.delete(`info_percurso/${id}`);
   }
 
   async fetchAll(table: string): Promise<any> {
@@ -618,6 +623,60 @@ export class HttpApiService {
                     /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
 
     return { feedback, isValid };
+  }
+
+  // Groups
+  async createGroup(data: any): Promise<any> {
+    return this.create('groups', data);
+  }
+
+  async getGroupsByUser(userId: number): Promise<any> {
+    return this.get(`groups/user/${userId}`);
+  }
+
+  async getGroupById(id: string): Promise<any> {
+    return this.get(`groups/${id}`);
+  }
+
+  async updateGroup(id: string, data: any): Promise<any> {
+    return this.update(`groups/${id}`, data);
+  }
+
+  async deleteGroup(id: string): Promise<any> {
+    return this.delete(`groups/${id}`);
+  }
+
+  async addMemberToGroup(groupId: string, userId: number): Promise<any> {
+    return this.create(`groups/${groupId}/members/${userId}`, {});
+  }
+
+  async removeMemberFromGroup(groupId: string, userId: number): Promise<any> {
+    return this.delete(`groups/${groupId}/members/${userId}`);
+  }
+
+  async updateGroupUserStatus(groupId: number, status: number): Promise<any> {
+    return this.update(`grupo-user/group/${groupId}`, { status_convite: status });
+  }
+
+  async updateUserGroupStatus(groupId: number, userId: number, status: number): Promise<any> {
+    if (status === 4) {
+      return this.update(`grupo-user/${groupId}/${userId}/leave`, {});
+    }
+    return this.update(`grupo-user/${groupId}/${userId}`, { status_convite: status });
+  }
+
+  async acceptGroupInvite(groupId: number, userId: number): Promise<any> {
+    return this.create(`grupo-user/${groupId}/${userId}/accept`, {});
+  }
+
+  // Chat
+  async saveChatMessage(data: any): Promise<any> {
+    return this.create('chat/messages', data);
+  }
+
+  async getChatMessages(groupId: string, limit?: number): Promise<any> {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.get(`chat/messages/${groupId}${params}`);
   }
 
   

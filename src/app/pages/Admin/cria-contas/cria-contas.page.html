@@ -2,7 +2,8 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="goToLogin()">
-        <ion-icon name="arrow-back"></ion-icon>
+        <ion-icon name="arrow-back" slot="start"></ion-icon>
+        {{ t('back') }}
       </ion-button>
     </ion-buttons>
     <ion-title>{{ t('create_accounts') }}</ion-title>

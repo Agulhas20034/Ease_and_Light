@@ -56,6 +56,12 @@ class SupabaseService {
     return data;
   }
 
+  async updateAllByGroup(table, id_grupo, updates) {
+    const { data, error } = await this.supabase.from(table).update(updates).eq('id_grupo', id_grupo);
+    if (error) throw error;
+    return data;
+  }
+
   async deleteByPk(table, pk, value) {
     if (typeof pk === 'string') {
       const { data, error } = await this.supabase.from(table).delete().eq(pk, value);
@@ -69,9 +75,14 @@ class SupabaseService {
   }
 
   async getUserByEmail(email) {
-    const { data, error } = await this.supabase.from('users').select('*').eq('email', email).maybeSingle();
+    const { data, error } = await this.supabase.from('users').select('*').eq('email', email);
     if (error) throw error;
-    return data;
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    return data[0];
   }
 
   async isTelefoneTaken(telefone) {
@@ -227,10 +238,95 @@ class SupabaseService {
   async deleteEtapa(id) { return this.deleteByPk('etapas', 'id_etapa', id); }
 
   async getAllGrupo() { return this.fetchAll('grupo'); }
-  async getGrupo(id) { return this.fetchByPk('grupo', 'id_grupo', id); }
+  async getGrupo(id) {
+    const { data, error } = await this.supabase
+      .from('grupo')
+      .select('*')
+      .eq('id_grupo', id)
+      .maybeSingle();
+    if (error) throw error;
+
+    const { data: membersData, error: membersError } = await this.supabase
+      .from('grupo_user')
+      .select('id_user, criador, users(id_utilizador, nome, email)')
+      .eq('id_grupo', id);
+    if (membersError) throw membersError;
+
+    const members = Array.isArray(membersData)
+      ? membersData.map((item) => item.users || { id_utilizador: item.id_user })
+      : [];
+
+    let createdBy = null;
+    if (Array.isArray(membersData)) {
+      const creatorMember = membersData.find((item) => item.criador === true);
+      if (creatorMember) {
+        createdBy = creatorMember.users || { id_utilizador: creatorMember.id_user };
+      } else if (membersData.length > 0) {
+        createdBy = membersData[0].users || { id_utilizador: membersData[0].id_user };
+      }
+    }
+
+    return {
+      ...data,
+      members,
+      createdBy,
+    };
+  }
+
   async createGrupo(rec) { return this.insertOne('grupo', rec); }
   async updateGrupo(id, updates) { return this.updateByPk('grupo', 'id_grupo', { id, updates }); }
   async deleteGrupo(id) { return this.deleteByPk('grupo', 'id_grupo', id); }
+
+  // Group-specific methods
+  async getGroupsByUser(userId) {
+    const { data, error } = await this.supabase
+      .from('grupo_user')
+      .select('status_convite, criador, Data_Convite, Data_Entrada, Data_Saida, grupo(*)')
+      .eq('id_user', userId);
+    if (error) throw error;
+
+    return Array.isArray(data)
+      ? data.map((item) => ({
+          ...item.grupo,
+          members: [],
+          grupo_user: [{
+            id_user: userId,
+            status_convite: item.status_convite,
+            criador: item.criador,
+            Data_Convite: item.Data_Convite,
+            Data_Entrada: item.Data_Entrada,
+            Data_Saida: item.Data_Saida
+          }]
+        }))
+      : [];
+  }
+
+  async addMemberToGroup(groupId, userId) {
+    return await this.insertOne('grupo_user', { 
+      id_grupo: groupId, 
+      id_user: Number(userId),
+      status_convite: 2,
+      Data_Convite: new Date().toISOString()
+    });
+  }
+
+  async acceptGroupInvite(groupId, userId) {
+    return await this.updateOne('grupo_user', { id_grupo: groupId, id_user: Number(userId) }, {
+      status_convite: 1,
+      Data_Entrada: new Date().toISOString()
+    });
+  }
+
+  async updateGroupUserStatusWithExit(groupId, userId, status) {
+    return await this.updateOne('grupo_user', { id_grupo: groupId, id_user: Number(userId) }, {
+      status_convite: status,
+      Data_Saida: new Date().toISOString()
+    });
+  }
+
+  async removeMemberFromGroup(groupId, userId) {
+    return await this.deleteByPk('grupo_user', { id_grupo: groupId, id_user: Number(userId) });
+  }
 
   async getAllInfoPercurso() { return this.fetchAll('info_percurso'); }
   async getInfoPercurso(id) { return this.fetchByPk('info_percurso', 'id_info_percurso', id); }

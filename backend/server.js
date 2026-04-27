@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const SupabaseService = require('./supabase-service');
+const MongoService = require('./mongo-service');
 const ApiService = require('./api-service');
 
 const app = express();
@@ -14,7 +15,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 const supabaseService = new SupabaseService();
-const apiService = new ApiService(supabaseService);
+const mongoService = MongoService;
+const apiService = new ApiService(supabaseService, mongoService);
 
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {
@@ -543,6 +545,33 @@ app.delete('/api/grupo-user/:id_grupo/:id_user', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/grupo-user/group/:id_grupo', async (req, res) => {
+  try {
+    const result = await apiService.updateAllGrupoUsersByGroup(req.params.id_grupo, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/grupo-user/:id_grupo/:id_user/accept', async (req, res) => {
+  try {
+    const result = await apiService.acceptGroupInvite(req.params.id_grupo, req.params.id_user);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/grupo-user/:id_grupo/:id_user/leave', async (req, res) => {
+  try {
+    const result = await apiService.leaveGroup(req.params.id_grupo, req.params.id_user);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -1083,6 +1112,93 @@ app.delete('/api/info-percurso/:id', async (req, res) => {
     const result = await apiService.deleteInfoPercurso(req.params.id);
     res.json({ success: true, data: result });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// MongoDB Groups and Chat routes
+app.post('/api/groups', async (req, res) => {
+  try {
+    const result = await apiService.createGroup(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/groups/user/:userId', async (req, res) => {
+  try {
+    const result = await apiService.getGroupsByUser(req.params.userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/groups/:id', async (req, res) => {
+  try {
+    const result = await apiService.getGroupById(req.params.id);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Group not found' });
+    }
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/groups/:id', async (req, res) => {
+  try {
+    const result = await apiService.updateGroup(req.params.id, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/groups/:id', async (req, res) => {
+  try {
+    const result = await apiService.deleteGroup(req.params.id);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/groups/:groupId/members/:userId', async (req, res) => {
+  try {
+    const result = await apiService.addMemberToGroup(req.params.groupId, req.params.userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/groups/:groupId/members/:userId', async (req, res) => {
+  try {
+    const result = await apiService.removeMemberFromGroup(req.params.groupId, req.params.userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/chat/messages', async (req, res) => {
+  try {
+    const result = await apiService.saveChatMessage(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/chat/messages/:groupId', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit) : 50;
+    const result = await apiService.getChatMessages(req.params.groupId, limit);
+    res.json({ success: true, data: Array.isArray(result) ? result : [] });
+  } catch (error) {
+    console.error('Chat messages error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

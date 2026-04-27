@@ -84,19 +84,7 @@ const routes: Routes = [
     path: 'gere-grupo',
     loadChildren: () => import('./pages/Peregrino/gere-grupo/gere-grupo.module').then( m => m.GereGrupoPageModule),
     canActivate: [RoleGuard],
-    data: { requiredRole: 'Peregrino', titleKey: 'manage_groups' }
-  },
-  {
-    path: 'cria-grupo',
-    loadChildren: () => import('./pages/Peregrino/cria-grupo/cria-grupo.module').then( m => m.CriaGrupoPageModule),
-    canActivate: [RoleGuard],
-    data: { requiredRole: 'Peregrino', titleKey: 'create_group' }
-  },
-  {
-    path: 'edita-grupo',
-    loadChildren: () => import('./pages/Peregrino/edita-grupo/edita-grupo.module').then( m => m.EditaGrupoPageModule),
-    canActivate: [RoleGuard],
-    data: { requiredRole: 'Peregrino', titleKey: 'edit_group' }
+    data: { requiredRole: '*', titleKey: 'manage_groups' }
   },
   {
     path: 'lista-mochilas',
@@ -214,6 +202,26 @@ const routes: Routes = [
     canActivate: [RoleGuard],
     data: { requiredRole: 'Administrador', titleKey: 'test_api' }
   },
+  {
+    path: 'info-grupo',
+    loadChildren: () => import('./pages/Peregrino/info-grupo/info-grupo.module').then( m => m.InfoGrupoPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: '*', titleKey: 'group_details' }
+  },
+  {
+    path: 'cria-grupo',
+    loadChildren: () => import('./pages/Peregrino/cria-grupo/cria-grupo.module').then( m => m.CriaGrupoPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: '*', titleKey: 'create_group' }
+  },
+  {
+    path: 'edita-grupo',
+    loadChildren: () => import('./pages/Peregrino/edita-grupo/edita-grupo.module').then( m => m.EditaGrupoPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: '*', titleKey: 'edit_group' }
+  },
+
+
 ];
 
 @NgModule({
