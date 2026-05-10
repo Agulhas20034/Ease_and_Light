@@ -1,11 +1,34 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-title>{{ t.translate('assign_order') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+  <ion-list>
+    <ion-item *ngIf="empresas.length > 0">
+      <ion-label>Empresa</ion-label>
+      <ion-select [(ngModel)]="empresaId" (ionChange)="loadEmployeesAndVehicles(empresaId)" [disabled]="isCompanyLocked()">
+        <ion-select-option *ngFor="let c of empresas" [value]="c.id_empresa">{{ c.nome || c.nome_empresa || c.displayName || c.id_empresa }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>Funcionário</ion-label>
+      <ion-select [(ngModel)]="selectedEmployee">
+        <ion-select-option *ngFor="let u of employees" [value]="u">{{ u.nome || u.email || u.id_utilizador }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>Veículo</ion-label>
+      <ion-select [(ngModel)]="selectedVehicle">
+        <ion-select-option *ngFor="let v of vehicles" [value]="v">{{ v.matricula || v.id || v.nome || v.descricao }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-button expand="full" color="primary" (click)="assign()">{{ t.translate('assign') }}</ion-button>
+    </ion-item>
+  </ion-list>
 </ion-content>

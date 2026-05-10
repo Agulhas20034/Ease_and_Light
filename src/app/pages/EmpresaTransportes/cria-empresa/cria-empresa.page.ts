@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -13,11 +13,12 @@ import { TranslationService } from '../../../services/translations/translation.s
 export class CriaEmpresaPage implements OnInit {
   nome = '';
   telefone = '';
+  email = '';
   nif = '';
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -49,8 +50,61 @@ export class CriaEmpresaPage implements OnInit {
 
       const rec: any = { nome: this.nome, estado: 1 };
       if (this.telefone) rec.telefone = this.telefone;
+      if (this.email) rec.email = this.email;
       if (this.nif) rec.nif = this.nif;
-      await this.supabase.createEmpresaTransportes(rec);
+      const resp: any = await this.httpApi.createEmpresaTransportes(rec);
+      console.debug('createEmpresaTransportes response', resp);
+      let inserted = Array.isArray(resp) ? resp[0] : (resp?.data ? resp.data[0] : resp);
+      let newId = inserted?.id_empresa ?? inserted?.id;
+
+      if (!newId && this.nif) {
+        try {
+          const nifClean = String(this.nif).replace(/\D/g, '').trim();
+          const empresas = await this.httpApi.getAllEmpresaTransportes();
+          const found = empresas.find((e: any) => String(e.nif) === nifClean);
+          if (found) {
+            console.debug('createEmpresaTransportes found by nif', found);
+            newId = found.id_empresa ?? found.id;
+          }
+        } catch (e) {
+          console.warn('createEmpresaTransportes lookup by nif failed', e);
+        }
+      }
+
+      if (!newId) {
+        try {
+          const all: any = await this.httpApi.getAllEmpresaTransportes();
+          const rows = Array.isArray(all) ? all : (all?.data || []);
+          const found = rows.find((r: any) => {
+            if (this.nif && r.nif && String(r.nif) === String(this.nif)) return true;
+            if (this.telefone && r.telefone && String(r.telefone) === String(this.telefone)) return true;
+            if (this.nome && r.nome && String(r.nome) === String(this.nome)) return true;
+            return false;
+          });
+          if (found) {
+            console.debug('createEmpresaTransportes fallback found', found);
+            newId = found.id_empresa ?? found.id;
+          } else {
+            console.warn('createEmpresaTransportes: could not determine new company id', { resp, nome: this.nome, telefone: this.telefone, nif: this.nif });
+          }
+        } catch (e) {
+          console.warn('createEmpresaTransportes fallback lookup failed', e);
+        }
+      }
+
+      try {
+        const raw = localStorage.getItem('currentUser');
+        const user = raw ? JSON.parse(raw) : null;
+        if (user && user.id_utilizador && newId) {
+          const linkResp: any = await this.httpApi.addUserEmpresa(Number(user.id_utilizador), Number(newId));
+          console.debug('addUserEmpresa response', linkResp);
+        } else if (user && user.id_utilizador && !newId) {
+          console.warn('addUserEmpresa skipped: newId missing', { user });
+        }
+      } catch (linkErr) {
+        console.warn('Failed to link user to empresa', linkErr);
+      }
+
       const t = await this.toastCtrl.create({ message: this.t.translate('company_created'), duration: 1500, color: 'success' });
       t.present();
       this.router.navigate(['/gere-empresas']);

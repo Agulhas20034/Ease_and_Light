@@ -28,6 +28,8 @@ export class RoleGuard implements CanActivate {
         return this.router.parseUrl('/folder/inbox');
       }
 
+      if (required === '*') return true;
+
       if (role === required || role === required.toString()) return true;
 
       if (Array.isArray(required) && required.includes(role)) return true;

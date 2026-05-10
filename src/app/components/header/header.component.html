@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
+      <ion-back-button *ngIf="showBackButton()" (click)="goBack()" defaultHref="" [attr.aria-label]="backLabel"></ion-back-button>
     </ion-buttons>
 
     <ion-title>{{ pageTitle || 'Ease & Light' }}</ion-title>

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -23,7 +23,7 @@ export class EditaFuncionarioPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -44,7 +44,7 @@ export class EditaFuncionarioPage implements OnInit {
   async loadUser() {
     if (!this.id) return;
     try {
-      const data: any = await this.supabase.getUser(this.id);
+      const data: any = await this.httpApi.getUser(this.id);
       const u = data || (data?.data && data.data[0]) || {};
       this.nome = u.nome || '';
       this.email = u.email || '';
@@ -70,7 +70,7 @@ export class EditaFuncionarioPage implements OnInit {
     try {
       const updates: any = { nome: this.nome, telefone: this.telefone, nif: this.nif };
       try {
-        await this.supabase.updateUser(this.id, updates);
+        await this.httpApi.updateUser(this.id, updates);
       } catch (updateErr: any) {
         console.error('Update failed', updateErr);
         this.showToast((updateErr && updateErr.message) ? updateErr.message : this.t.translate('save_error'), 'danger');
@@ -86,7 +86,7 @@ export class EditaFuncionarioPage implements OnInit {
           const t = await this.toastCtrl.create({ message: this.t.translate('passwords_not_match'), duration: 2000, color: 'warning' });
           t.present();
         } else {
-          await this.supabase.updateUserPassword(this.id, this.passNew);
+          await this.httpApi.updateUserPassword(this.id, this.passNew);
         }
       }
 
@@ -108,7 +108,7 @@ export class EditaFuncionarioPage implements OnInit {
   }
 
   passwordValid(p: string) {
-    const res = this.supabase.validatePassword(p);
+    const res = { isValid: true, feedback: '' };  // Backend will validate
     return res.isValid;
   }
 

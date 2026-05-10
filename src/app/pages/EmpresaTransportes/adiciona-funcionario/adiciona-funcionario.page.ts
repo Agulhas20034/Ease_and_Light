@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -28,7 +28,7 @@ export class AdicionaFuncionarioPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -40,8 +40,26 @@ export class AdicionaFuncionarioPage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
+  validatePasswordLocal(password: string) {
+    const feedback: string[] = [];
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (password.length < minLength) feedback.push('Min 8 chars');
+    if (!hasUpperCase) feedback.push('Need A-Z');
+    if (!hasLowerCase) feedback.push('Need a-z');
+    if (!hasNumbers) feedback.push('Need 0-9');
+    if (!hasSpecialChar) feedback.push('Need special char');
+    
+    return { feedback, isValid: feedback.length === 0 };
+  }
+
   onPasswordChange() {
-    const validation = this.supabase.validatePassword(this.password);
+    // Client-side password validation - moved to local implementation
+    const validation = this.validatePasswordLocal(this.password);
     this.passwordFeedback = validation.feedback;
     this.passwordIsValid = validation.isValid;
   }
@@ -96,7 +114,7 @@ export class AdicionaFuncionarioPage implements OnInit {
     try {
       // Verifica previamente unicidade para evitar criar um utilizador que depois falhará ao atualizar
       if (this.telefone) {
-        const takenTel = await this.supabase.isTelefoneTaken(this.telefone);
+        const takenTel = await this.httpApi.isTelefoneTaken(this.telefone);
         if (takenTel) {
           this.showToast(this.tKey('phone_in_use') || this.tKey('phone_invalid'), 'warning');
           this.loading = false;
@@ -104,7 +122,7 @@ export class AdicionaFuncionarioPage implements OnInit {
         }
       }
       if (this.nif) {
-        const takenNif = await this.supabase.isNifTaken(this.nif);
+        const takenNif = await this.httpApi.isNifTaken(this.nif);
         if (takenNif) {
           this.showToast(this.tKey('nif_in_use') || this.tKey('nif_invalid'), 'warning');
           this.loading = false;
@@ -112,7 +130,7 @@ export class AdicionaFuncionarioPage implements OnInit {
         }
       }
       if (this.passaporte) {
-        const takenPass = await this.supabase.isPassaporteTaken(this.passaporte);
+        const takenPass = await this.httpApi.isPassaporteTaken(this.passaporte);
         if (takenPass) {
           this.showToast(this.tKey('passport_in_use') || this.tKey('provide_nif_or_passport'), 'warning');
           this.loading = false;
@@ -120,7 +138,7 @@ export class AdicionaFuncionarioPage implements OnInit {
         }
       }
       // registerUser devolve a(s) linha(s) inserida(s); capturar o retorno para obter o novo ID com fiabilidade
-      const createdRec: any = await this.supabase.registerUser(this.email, this.password, this.nome);
+      const createdRec: any = await this.httpApi.register(this.email, this.password, this.nome);
       let userId: number | null = null;
       if (Array.isArray(createdRec) && createdRec.length) {
         userId = createdRec[0].id_utilizador || createdRec[0].id;
@@ -130,13 +148,13 @@ export class AdicionaFuncionarioPage implements OnInit {
 
       // Alternativa: procurar por email se não obtivemos um id
       if (!userId) {
-        const looked = await this.supabase.getUserByEmail(this.email);
+        const looked = userId ? await this.httpApi.getUser(userId) : null;
         userId = looked?.id_utilizador || looked?.id || null;
       }
 
       if (userId) {
         try {
-          await this.supabase.updateUser(userId, {
+          await this.httpApi.updateUser(userId, {
             telefone: this.telefone || null,
             id_tipo: 3,
             nacionalidade: this.nacionalidade || null,
@@ -148,7 +166,7 @@ export class AdicionaFuncionarioPage implements OnInit {
           console.error('Failed to update created user fields', updateErr);
           // Tentar reverter (rollback) o utilizador criado para não deixar uma conta parcialmente criada
           try {
-            await this.supabase.deleteUser(userId);
+            await this.httpApi.deleteUser(userId);
           } catch (delErr) {
             console.warn('Failed to rollback created user', delErr);
           }
@@ -160,12 +178,12 @@ export class AdicionaFuncionarioPage implements OnInit {
 
         if (this.empresaId) {
           try {
-            await this.supabase.addUserEmpresa(userId, this.empresaId);
+            await this.httpApi.addUserEmpresa(userId, this.empresaId);
           } catch (e: any) {
             console.warn('associate failed', e);
             // Tentar rollback: remover o utilizador criado se a associação falhar
             try {
-              await this.supabase.deleteUser(userId);
+              await this.httpApi.deleteUser(userId);
             } catch (delErr) {
               console.warn('Failed to rollback created user after association failure', delErr);
             }

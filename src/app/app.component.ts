@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { TranslationService } from './services/translations/translation.service';
+import { NotificationService } from './services/notification/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -7,8 +8,15 @@ import { TranslationService } from './services/translations/translation.service'
   styleUrls: ['app.component.scss'],
   standalone: false,
 })
-export class AppComponent {
-  constructor(public tService: TranslationService) {}
+export class AppComponent implements OnInit {
+  constructor(
+    public tService: TranslationService,
+    private notificationService: NotificationService
+  ) {}
+
+  ngOnInit() {
+    this.notificationService.requestPermission();
+  }
 
   get currentUser() {
     try {
@@ -21,7 +29,8 @@ export class AppComponent {
   isProfileType(profileName: string): boolean {
     const user = this.currentUser;
     if (!user) return false;
-    return user.profileType === profileName || user.id_tipo === profileName;
+    const stored = (user.profileType || user.id_tipo || '').toString();
+    return stored === profileName.toString();
   }
 
   t(key: string) {

@@ -5,9 +5,25 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ t.translate('manage_orders') }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+
+  <ion-list *ngIf="!loading && pedidos.length > 0">
+    <ion-card *ngFor="let p of pedidos" class="pedido-card">
+      <ion-card-header>
+        <ion-card-title>{{ p.id_mochila ? ('Mochila: ' + (p.nome_mochila || p.id_mochila || p.id)) : ('#' + (p.id_entrega_recolha || p.id || '')) }}</ion-card-title>
+        <ion-note *ngIf="p.data_hora_recolha">{{ p.data_hora_recolha }}</ion-note>
+      </ion-card-header>
+      <ion-card-content>
+        <div *ngIf="p.id_utilizador">{{ t.translate('backpack_owner') }}: {{ p.user_email || p.user_nome || p.id_utilizador }}</div>
+        <div *ngIf="p.id_empresa">{{ t.translate('companies_list') }}: {{ p.company_name || p.id_empresa }}</div>
+        <div class="card-actions">
+          <ion-button color="primary" (click)="atribuir(p)">{{ t.translate('assign') }}</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!loading && pedidos.length === 0" class="no-pedidos">
+    <p>{{ t.translate('no_orders') }}</p>
+  </div>
+
 </ion-content>

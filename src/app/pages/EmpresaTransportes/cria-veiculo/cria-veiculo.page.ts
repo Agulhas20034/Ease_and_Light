@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -23,7 +23,7 @@ export class CriaVeiculoPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private toastCtrl: ToastController,
     private router: Router,
     public t: TranslationService
@@ -44,7 +44,7 @@ export class CriaVeiculoPage implements OnInit {
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
       if (!user || !user.id_utilizador) return;
-      const rels: any = await this.supabase.getUserEmpresas(Number(user.id_utilizador));
+      const rels: any = await this.httpApi.getUserEmpresas(Number(user.id_utilizador));
       const rows = Array.isArray(rels) ? rels : (rels?.data || []);
       if (rows && rows.length > 0) {
         const first = rows[0];
@@ -62,7 +62,7 @@ export class CriaVeiculoPage implements OnInit {
   /** Carregar opções de tipo de veículo da tabela `tipo_veiculo` */
   private async loadTipoVeiculos() {
     try {
-      const data: any = await this.supabase.getAllTipoVeiculo();
+      const data: any = await this.httpApi.getAllTipoVeiculo();
       const rows = Array.isArray(data) ? data : (data?.data || []);
       // Normalizar um campo de exibição para o template; preferir `descr` quando existir
       this.tipos = rows.map((tp: any) => ({
@@ -119,7 +119,7 @@ export class CriaVeiculoPage implements OnInit {
       };
       // Verifica unicidade de matrícula e VIN
       try {
-        const existingMat = await this.supabase.getVeiculo(rec.matricula);
+        const existingMat = await this.httpApi.getVeiculo(rec.matricula);
         if (existingMat) {
           const toast = await this.toastCtrl.create({ message: this.t.translate('registration_taken'), duration: 2200, color: 'warning' });
           toast.present();
@@ -131,7 +131,7 @@ export class CriaVeiculoPage implements OnInit {
       }
 
       try {
-        const { data: vinRow, error: vinErr } = await this.supabase.client.from('veiculos').select('matricula').eq('vin_veiculo', rec.vin_veiculo).maybeSingle();
+        const { data: vinRow, error: vinErr } = await this.httpApi.checkVehicleVinUniqueness('veiculos', rec.vin_veiculo);
         if (vinErr) throw vinErr;
         if (vinRow) {
           const toast = await this.toastCtrl.create({ message: this.t.translate('vin_taken'), duration: 2200, color: 'warning' });
@@ -143,7 +143,7 @@ export class CriaVeiculoPage implements OnInit {
         console.warn('Failed to check existing VIN', err);
       }
 
-      await this.supabase.createVeiculo(rec);
+      await this.httpApi.createVeiculo(rec);
       const toast = await this.toastCtrl.create({ message: this.t.translate('vehicle_created') || 'Veículo criado', duration: 1600, color: 'success' });
       toast.present();
       this.router.navigate(['/gere-veiculos'], { queryParams: { id: this.id_empresa } });

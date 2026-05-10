@@ -1,6 +1,48 @@
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ t.translate('create_collection_client') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item>
+      <ion-label>{{ t.translate('choose_peregrino') }}</ion-label>
+      <ion-select [(ngModel)]="selectedClient" (ionChange)="onClientChange()" interface="popover">
+        <ion-select-option *ngFor="let c of clients" [value]="c">{{ c.nome ? (c.nome + (c.email ? ' — ' + c.email : '')) : (c.email || (c.id_utilizador || c.id)) }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item *ngIf="estabelecimentos?.length">
+      <ion-label>{{ t.translate('locations_list_pickup') }}</ion-label>
+      <ion-select [(ngModel)]="selectedEstabelecimento" (ionChange)="onEstabelecimentoChange()" [disabled]="estabelecimentos.length===1" interface="popover">
+        <ion-select-option *ngFor="let e of estabelecimentos" [value]="e">{{ (e.nome || e.designacao || e.descr) + (e.rua ? ' — ' + e.rua : '') + (e.codpostal ? ' — ' + e.codpostal : '') }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>{{ t.translate('my_backpacks') }}</ion-label>
+      <ion-select [(ngModel)]="selectedMochila" interface="popover">
+        <ion-select-option *ngFor="let m of mochilas" [value]="m">{{(m.id_mochila || m.id) }}{{ m.cor ? (' — ' + m.cor) : '' }}{{ m.peso ? (' — ' + m.peso + (typeof m.peso === 'number' ? 'kg' : '')) : '' }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item *ngIf="deliveryEstabelecimentos?.length">
+      <ion-label>{{ t.translate('locations_list_delivery') }}</ion-label>
+      <ion-select [(ngModel)]="selectedDeliveryEstabelecimento" interface="popover">
+        <ion-select-option *ngFor="let d of deliveryEstabelecimentos" [value]="d">{{ (d.nome || d.designacao || d.descr) + (d.rua ? ' — ' + d.rua : '') + (d.codpostal ? ' — ' + d.codpostal : '') }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>{{ t.translate('companies_list') }}</ion-label>
+      <ion-select [(ngModel)]="selectedEmpresa" interface="popover">
+        <ion-select-option *ngFor="let e of empresas" [value]="e">{{ e.nome ? (e.nome + (e.contacto ? ' — ' + e.contacto : '')) : (e.designacao || e.id_empresa) }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-button expand="full" color="primary" (click)="createRecolha()" [disabled]="loading">{{ t.translate('save') }}</ion-button>
+    </ion-item>
+
+  </ion-list>
 </ion-content>

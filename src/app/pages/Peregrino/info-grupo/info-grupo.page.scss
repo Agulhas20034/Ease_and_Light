@@ -1,0 +1,23 @@
+.main-content {
+  --padding-bottom: 0;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0;
+}
+
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.chat-input-box {
+  flex-shrink: 0;
+  border-top: 1px solid var(--ion-border-color);
+  background: var(--ion-background-color);
+  padding: 0;
+}
