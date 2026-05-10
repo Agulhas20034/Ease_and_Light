@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -20,7 +20,7 @@ export class EditaEmpresaPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private toastCtrl: ToastController,
     private router: Router,
     public t: TranslationService
@@ -38,7 +38,7 @@ export class EditaEmpresaPage implements OnInit {
   async loadCompany() {
     if (!this.id) return;
     try {
-      const data: any = await this.supabase.getEmpresaTransportes(Number(this.id));
+      const data: any = await this.httpApi.getEmpresaTransportes(Number(this.id));
       const c = data || (data?.data && data.data[0]) || {};
       this.name = c.nome || c.name || '';
       this.phone = c.telefone || c.phone || '';
@@ -76,7 +76,7 @@ export class EditaEmpresaPage implements OnInit {
       if (this.phone) updates.telefone = this.phone;
       if (this.email) updates.email = this.email;
       if (this.nif) updates.nif = this.nif;
-      await this.supabase.updateEmpresaTransportes(Number(this.id), updates);
+      await this.httpApi.updateEmpresaTransportes(Number(this.id), updates);
       const t = await this.toastCtrl.create({ message: this.t.translate('company_updated'), duration: 1500, color: 'success' });
       t.present();
       this.router.navigate(['/gere-empresas']);

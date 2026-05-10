@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -35,20 +35,13 @@ export class EditaContaPage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private toastCtrl: ToastController,
     public t: TranslationService
   ) {}
 
   async ngOnInit() {
-    // carregar tipos de perfil para o select
-    try {
-      const tiposData: any = await this.supabase.getAllTipoPerfil();
-      this.tipos = Array.isArray(tiposData) ? tiposData : (tiposData?.data || []);
-    } catch (e) {
-      console.warn('Could not load profile types', e);
-    }
-
+    await this.loadTipos();
     this.route.queryParams.subscribe(async params => {
       const id = params['id'];
       if (id) {
@@ -58,11 +51,21 @@ export class EditaContaPage implements OnInit {
     });
   }
 
+  async loadTipos() {
+    try {
+      const result: any = await this.httpApi.getAllTipoPerfil();
+      this.tipos = result?.data || result || [];
+    } catch (e) {
+      console.error('Erro ao carregar tipos', e);
+      this.tipos = [];
+    }
+  }
+
   async loadUser() {
     if (!this.id) return;
     this.loading = true;
     try {
-      const u: any = await this.supabase.getUser(this.id);
+      const u: any = await this.httpApi.getUser(this.id);
       if (u) {
         this.nome = u.nome || '';
         this.email = u.email || '';
@@ -90,9 +93,14 @@ export class EditaContaPage implements OnInit {
       this.passwordIsValid = false;
       return;
     }
-    const validation = this.supabase.validatePassword(this.newPassword);
-    this.passwordFeedback = validation.feedback || [];
-    this.passwordIsValid = validation.isValid;
+    const feedback: string[] = [];
+    if (this.newPassword.length < 8) feedback.push('pw_len');
+    if (!/[A-Z]/.test(this.newPassword)) feedback.push('pw_upper');
+    if (!/[a-z]/.test(this.newPassword)) feedback.push('pw_lower');
+    if (!/[0-9]/.test(this.newPassword)) feedback.push('pw_number');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(this.newPassword)) feedback.push('pw_special');
+    this.passwordFeedback = feedback;
+    this.passwordIsValid = feedback.length === 0;
   }
 
   async save() {
@@ -107,15 +115,15 @@ export class EditaContaPage implements OnInit {
           this.loading = false;
           return;
         }
-        const validation = this.supabase.validatePassword(this.newPassword);
-        if (!validation.isValid) {
+       
+      if (!this.newPassword) {
           const t = await this.toastCtrl.create({ message: this.t.translate('pw_len'), duration: 2000, color: 'warning' });
           t.present();
           this.loading = false;
           return;
         }
         // atualizar a senha (o hash é tratado no serviço)
-        await this.supabase.updateUserPassword(this.id, this.newPassword);
+        await this.httpApi.updateUserPassword(this.id, this.newPassword);
       }
 
       const updates: any = {
@@ -136,7 +144,7 @@ export class EditaContaPage implements OnInit {
       const passCur = (this.passaporte ?? '').toString();
       const passOrig = (this.origPassaporte ?? '').toString();
       if (passCur !== passOrig) updates.passaporte = this.passaporte;
-      await this.supabase.updateUser(this.id, updates);
+      await this.httpApi.updateUser(this.id, updates);
       const t = await this.toastCtrl.create({ message: this.t.translate('edit_saved'), duration: 1500, color: 'success' });
       t.present();
       this.router.navigate(['/gere-contas']);

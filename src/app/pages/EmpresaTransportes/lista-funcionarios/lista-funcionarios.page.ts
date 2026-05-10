@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { ToastController, AlertController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 
@@ -17,7 +17,7 @@ export class ListaFuncionariosPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -46,7 +46,7 @@ export class ListaFuncionariosPage implements OnInit {
 
   async loadEmployeesForUser(userId: number) {
     try {
-      const rels: any = await this.supabase.getUserEmpresas(userId);
+      const rels: any = await this.httpApi.getUserEmpresas(userId);
       const rows = Array.isArray(rels) ? rels : (rels?.data || []);
       if (rows.length > 0) {
         this.empresaId = rows[0].id_empresa;
@@ -61,11 +61,11 @@ export class ListaFuncionariosPage implements OnInit {
     if (!this.empresaId) return;
     this.loading = true;
     try {
-      const rels: any = await this.supabase.fetchAll('users_empresa_transportes');
+      const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
       const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(this.empresaId));
 
-      const users: any = await this.supabase.getAllUsers();
+      const users: any = await this.httpApi.getAllUsers();
       const all = Array.isArray(users) ? users : (users?.data || []);
 
       this.employees = assigned.map((a: any) => all.find((u: any) => Number(u.id_utilizador) === Number(a.id_utilizador))).filter(Boolean);
@@ -104,7 +104,7 @@ export class ListaFuncionariosPage implements OnInit {
   async toggleUser(u: any, activate: boolean) {
     try {
       const newEstado = activate ? 1 : 2;
-      await this.supabase.updateUser(u.id_utilizador, { estado: newEstado });
+      await this.httpApi.updateUser(u.id_utilizador, { estado: newEstado });
       const toast = await this.toastCtrl.create({ message: activate ? this.t.translate('account_activated') : this.t.translate('account_deactivated'), duration: 1500, color: 'success' });
       toast.present();
       this.loadEmployees();

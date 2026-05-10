@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -15,7 +15,7 @@ export class GereEmpresasPage implements OnInit {
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -34,9 +34,9 @@ export class GereEmpresasPage implements OnInit {
   private async enrichCompaniesWithOwnerEmail(companies: any[]) {
     try {
       // carregar todas as relações e utilizadores (pode ser otimizado para grandes conjuntos)
-      const rels: any = await this.supabase.fetchAll('users_empresa_transportes');
+      const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
-      const users: any = await this.supabase.fetchAll('users');
+      const users: any = await this.httpApi.fetchAll('users');
       const userRows = Array.isArray(users) ? users : (users?.data || []);
 
       const usersById: Record<string, any> = {};
@@ -75,7 +75,7 @@ export class GereEmpresasPage implements OnInit {
       const user = raw ? JSON.parse(raw) : null;
       const role = (user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '');
       if (role === 'Administrador') {
-        const data: any = await this.supabase.getAllEmpresaTransportes();
+        const data: any = await this.httpApi.getAllEmpresaTransportes();
         const rawCompanies = Array.isArray(data) ? data : (data?.data || []);
         // normalizar campos e marcar como não expandido
         this.companies = rawCompanies.map((c: any) => ({
@@ -89,13 +89,13 @@ export class GereEmpresasPage implements OnInit {
         await this.enrichCompaniesWithOwnerEmail(this.companies);
       } else if (user && user.id_utilizador) {
         // buscar linhas de relação e mapear para os registos das empresas
-        const rels: any = await this.supabase.getUserEmpresas(Number(user.id_utilizador));
+        const rels: any = await this.httpApi.getUserEmpresas(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const ids = relRows.map((r: any) => Number(r.id_empresa)).filter((v: any) => !!v);
         const companies: any[] = [];
         for (const id of ids) {
           try {
-            const c: any = await this.supabase.getEmpresaTransportes(Number(id));
+            const c: any = await this.httpApi.getEmpresaTransportes(Number(id));
             if (c) companies.push(c);
           } catch (e) {
             console.warn('Failed to load company', id, e);
@@ -178,23 +178,23 @@ export class GereEmpresasPage implements OnInit {
   async toggleCompany(id: any, activate: boolean) {
     try {
       const newEstado = activate ? 1 : 2;
-      await this.supabase.updateEmpresaTransportes(Number(id), { estado: newEstado });
+      await this.httpApi.updateEmpresaTransportes(Number(id), { estado: newEstado });
       // obter as relações e atualizar os utilizadores associados
-      const rels: any = await this.supabase.fetchAll('users_empresa_transportes');
+      const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
       const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(id));
       for (const a of assigned) {
         const userId = Number(a.id_utilizador);
         try {
           // obter o utilizador para saber o tipo de perfil; pular os donos (Dono Empresa Transportes / id_tipo == 2)
-          const uRaw: any = await this.supabase.getUser(userId);
+          const uRaw: any = await this.httpApi.getUser(userId);
           const user = uRaw || (uRaw?.data && uRaw.data[0]) || null;
           const userType = user && (user.profileType || user.id_tipo);
           // se o utilizador for dono, não alterar o seu estado
           if (userType === 'Dono Empresa Transportes' || Number(userType) === 2) {
             continue;
           }
-          await this.supabase.updateUser(userId, { estado: newEstado });
+          await this.httpApi.updateUser(userId, { estado: newEstado });
         } catch (e) {
           console.warn('Failed to update user estado', userId, e);
         }

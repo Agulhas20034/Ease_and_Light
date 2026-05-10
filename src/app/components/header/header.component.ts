@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { SupabaseService } from '../../services/supabase/supabase';
 import { TranslationService } from '../../services/translations/translation.service';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -17,11 +16,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private sub: Subscription | null = null;
   private langSub: Subscription | null = null;
   public logoutLabel: string = '';
+  public backLabel: string = '';
 
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private supabase: SupabaseService,
     public tService: TranslationService
   ) {}
 
@@ -31,8 +30,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.langSub = this.tService.asObservable().subscribe(() => {
       this.updateTitle();
       this.logoutLabel = this.tService.translate('logout');
+      this.backLabel = this.tService.translate('back');
     });
     this.logoutLabel = this.tService.translate('logout');
+    this.backLabel = this.tService.translate('back');
   }
 
   ngOnDestroy() {

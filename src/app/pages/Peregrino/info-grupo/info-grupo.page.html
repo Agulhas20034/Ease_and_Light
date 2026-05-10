@@ -1,0 +1,172 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ group?.nome || t.translate('manage_groups') }}</ion-title>
+    <ion-buttons slot="end" *ngIf="isCreator()">
+      <ion-button (click)="editGroup()">
+        <ion-icon name="pencil" slot="start"></ion-icon>
+        {{ t.translate('edit_group') }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="main-content">
+  
+  <ion-tabs #tabs (ionTabsDidChange)="onTabChange($event)">
+    <ion-tab tab="members">
+      <ng-template ionTabButtonLabel>
+        <ion-icon name="people"></ion-icon>
+        <ion-label>{{ t.translate('group_members') }}</ion-label>
+      </ng-template>
+
+      <ion-list *ngIf="group">
+        <ion-item *ngFor="let member of group.members">
+          <ion-avatar slot="start">
+            <ion-icon name="person-circle"></ion-icon>
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ member.nome }}</h2>
+            <p>{{ member.email }}</p>
+          </ion-label>
+          <ion-button slot="end" *ngIf="isCreator() && member.id_utilizador !== currentUser?.id_utilizador" (click)="removeMember(member)" color="danger">
+            <ion-icon name="remove-circle"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+      <ion-loading [isOpen]="loading" [message]="t.translate('loading_members')"></ion-loading>
+    </ion-tab>
+
+    <ion-tab tab="chat">
+      <ng-template ionTabButtonLabel>
+        <ion-icon name="chatbubbles"></ion-icon>
+        <ion-label>{{ t.translate('group_chat') }}</ion-label>
+      </ng-template>
+
+      <div class="chat-container">
+        <ion-list class="messages-list" #messagesList>
+          <ion-item *ngFor="let msg of messages">
+            <ion-avatar slot="start">
+              <ion-icon name="person-circle"></ion-icon>
+            </ion-avatar>
+            <ion-label>
+              <h3>{{ msg.senderName || msg.senderId?.nome || t.translate('guest') }}</h3>
+              <p>{{ msg.message }}</p>
+              <small>{{ msg.timestamp | date:'short' }}</small>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <ion-loading [isOpen]="chatLoading" [message]="t.translate('loading_messages')"></ion-loading>
+
+        <div class="chat-input-box">
+          <ion-toolbar>
+            <ion-input 
+              [(ngModel)]="newMessage" 
+              [placeholder]="t.translate('message_placeholder')" 
+              (keyup.enter)="sendMessage()">
+            </ion-input>
+            <ion-button slot="end" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+              <ion-icon name="send"></ion-icon>
+            </ion-button>
+          </ion-toolbar>
+        </div>
+      </div>
+    </ion-tab>
+
+    <ion-tab tab="add-members" *ngIf="isCreator()">
+      <ng-template ionTabButtonLabel>
+        <ion-icon name="person-add"></ion-icon>
+        <ion-label>{{ t.translate('add_member') }}</ion-label>
+      </ng-template>
+
+      <ion-list>
+        <ion-item>
+          <ion-label position="stacked">{{ t.translate('search') }}</ion-label>
+          <ion-input 
+            [(ngModel)]="memberSearchText" 
+            (ngModelChange)="updateFilteredUsers()"
+            [placeholder]="t.translate('search') + '...'">
+          </ion-input>
+        </ion-item>
+      </ion-list>
+
+      <ion-list>
+        <ion-item *ngFor="let user of filteredUsers" (click)="selectUserToAdd(user)">
+          <ion-avatar slot="start">
+            <ion-icon name="person-circle"></ion-icon>
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ user.nome }}</h2>
+            <p>{{ user.email }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-text *ngIf="filteredUsers.length === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_users_available') }}</p>
+      </ion-text>
+    </ion-tab>
+
+    <ion-tab tab="edit-group" *ngIf="isCreator()">
+      <ng-template ionTabButtonLabel>
+        <ion-icon name="pencil"></ion-icon>
+        <ion-label>{{ t.translate('edit_group') }}</ion-label>
+      </ng-template>
+
+      <ion-card style="margin: 20px;">
+        <ion-card-header>
+          <ion-card-title>{{ t.translate('edit_group_info') }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item>
+              <ion-label position="stacked">{{ t.translate('group_name') }}</ion-label>
+              <ion-input 
+                [(ngModel)]="editGroupName" 
+                [placeholder]="t.translate('group_name')"
+                type="text">
+              </ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">{{ t.translate('group_description') }}</ion-label>
+              <ion-textarea 
+                [(ngModel)]="editGroupDescription" 
+                [placeholder]="t.translate('group_description')"
+                rows="4">
+              </ion-textarea>
+            </ion-item>
+          </ion-list>
+
+          <ion-button 
+            expand="block" 
+            color="primary" 
+            (click)="saveGroupChanges()" 
+            [disabled]="!editGroupName.trim()">
+            {{ t.translate('save') }}
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </ion-tab>
+
+    <ion-tab-bar slot="bottom">
+      <ion-tab-button tab="members">
+        <ion-icon name="people"></ion-icon>
+        <ion-label>{{ t.translate('group_members') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="chat">
+        <ion-icon name="chatbubbles"></ion-icon>
+        <ion-label>{{ t.translate('group_chat') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="add-members" *ngIf="isCreator()">
+        <ion-icon name="person-add"></ion-icon>
+        <ion-label>{{ t.translate('add_member') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="edit-group" *ngIf="isCreator()">
+        <ion-icon name="pencil"></ion-icon>
+        <ion-label>{{ t.translate('edit_group') }}</ion-label>
+      </ion-tab-button>
+    </ion-tab-bar>
+  </ion-tabs>
+</ion-content>
+

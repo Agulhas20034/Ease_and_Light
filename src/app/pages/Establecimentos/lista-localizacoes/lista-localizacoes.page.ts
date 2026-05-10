@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase/supabase';
+import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
@@ -15,7 +15,7 @@ export class ListaLocalizacoesPage implements OnInit {
   loading = false;
 
   constructor(
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -42,12 +42,12 @@ export class ListaLocalizacoesPage implements OnInit {
       const role = (user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '');
 
       if (role === 'Administrador') {
-        const data: any = await this.supabase.getAllLocalizacoes();
+        const data: any = await this.httpApi.getAllLocalizacoes();
         const rows = Array.isArray(data) ? data : (data?.data || []);
         this.locais = rows.map((r: any) => ({ ...(r||{}), estado: Number(r.estado), _expanded: false }));
       } else if (user && user.id_utilizador) {
         // obter os estabelecimentos associados ao utilizador e buscar localizacoes
-        const rels: any = await this.supabase.getUserEstabelecimentos(Number(user.id_utilizador));
+        const rels: any = await this.httpApi.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
 
         const estabIds = relRows.map((r: any) => Number(r.id_estabelecimento)).filter((v: any) => !!v);
@@ -55,7 +55,7 @@ export class ListaLocalizacoesPage implements OnInit {
         const result: any[] = [];
         for (const id of estabIds) {
           try {
-            const locs: any = await this.supabase.getLocalizacoesByEstabelecimento(Number(id));
+            const locs: any = await this.httpApi.getLocalizacoesByEstabelecimento(Number(id));
             const list = Array.isArray(locs) ? locs : (locs?.data || []);
             for (const l of list) result.push(l);
           } catch (e) {
@@ -129,7 +129,7 @@ export class ListaLocalizacoesPage implements OnInit {
         t.present();
         return;
       }
-      await this.supabase.updateLocalizacaoByEstabelecimento(estabId, { estado: newEstado });
+      await this.httpApi.updateLocalizacaoByEstabelecimento(estabId, { estado: newEstado });
       const toast = await this.toastCtrl.create({ message: activate ? this.t.translate('location_activated') : this.t.translate('location_deactivated'), duration: 1500, color: 'success' });
       toast.present();
       this.loadLocations();

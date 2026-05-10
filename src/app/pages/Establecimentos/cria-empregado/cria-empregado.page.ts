@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SupabaseService } from 'src/app/services/supabase/supabase';
+import { HttpApiService } from 'src/app/services/http-api/http-api.service';
 import { ToastController } from '@ionic/angular';
 import { TranslationService } from 'src/app/services/translations/translation.service';
 
@@ -28,7 +28,7 @@ export class CriaEmpregadoPage implements OnInit {
 
   constructor(
     private act: ActivatedRoute,
-    private supabase: SupabaseService,
+    private httpApi: HttpApiService,
     private router: Router,
     private toastCtrl: ToastController,
     public t: TranslationService
@@ -37,6 +37,7 @@ export class CriaEmpregadoPage implements OnInit {
   ngOnInit() {
     this.act.queryParams.subscribe((p) => {
       if (p && p['id']) this.estabId = Number(p['id']);
+      console.log('cria-empregado ngOnInit: queryParams', p, 'estabId set to', this.estabId);
     });
   }
 
@@ -45,7 +46,7 @@ export class CriaEmpregadoPage implements OnInit {
   }
 
   onPasswordChange() {
-    const validation = this.supabase.validatePassword(this.password);
+    const validation = this.httpApi.validatePassword(this.password);
     this.passwordFeedback = validation.feedback;
     this.passwordIsValid = validation.isValid;
   }
@@ -74,6 +75,12 @@ export class CriaEmpregadoPage implements OnInit {
 
   // Cria um empregado, define id_tipo = 6 e associa ao estabelecimento
   async createEmployee() {
+    console.log('createEmployee called, estabId:', this.estabId, 'form data:', {
+      email: this.email,
+      telefone: this.telefone,
+      nif: this.nif,
+      nome: this.nome
+    });
     if (!this.email || !this.password || !this.confirmPassword) {
       this.showToast(this.tKey('provide_nif_or_passport'), 'warning');
       return;
@@ -104,7 +111,7 @@ export class CriaEmpregadoPage implements OnInit {
     this.loading = true;
     try {
       if (this.telefone) {
-        const takenTel = await this.supabase.isTelefoneTaken(this.telefone);
+        const takenTel = await this.httpApi.isTelefoneTaken(this.telefone);
         if (takenTel) {
           this.showToast(this.tKey('phone_in_use') || this.tKey('phone_invalid'), 'warning');
           this.loading = false;
@@ -112,7 +119,7 @@ export class CriaEmpregadoPage implements OnInit {
         }
       }
       if (this.nif) {
-        const takenNif = await this.supabase.isNifTaken(this.nif);
+        const takenNif = await this.httpApi.isNifTaken(this.nif);
         if (takenNif) {
           this.showToast(this.tKey('nif_in_use') || this.tKey('nif_invalid'), 'warning');
           this.loading = false;
@@ -120,7 +127,7 @@ export class CriaEmpregadoPage implements OnInit {
         }
       }
       if (this.passaporte) {
-        const takenPass = await this.supabase.isPassaporteTaken(this.passaporte);
+        const takenPass = await this.httpApi.isPassaporteTaken(this.passaporte);
         if (takenPass) {
           this.showToast(this.tKey('passport_in_use') || this.tKey('provide_nif_or_passport'), 'warning');
           this.loading = false;
@@ -129,63 +136,49 @@ export class CriaEmpregadoPage implements OnInit {
       }
 
       // Registar utilizador (usa registerUser para criar auth também)
-      const createdRec: any = await this.supabase.registerUser(this.email, this.password, this.nome);
+      const createdRec: any = await this.httpApi.register(this.email, this.password, this.nome, {
+        telefone: this.telefone,
+        nif: this.nif,
+        passaporte: this.passaporte,
+        nacionalidade: this.nacionalidade,
+        id_tipo: 6,
+        estado: 1
+      });
+      console.log('Register result:', createdRec);
       let userId: number | null = null;
       if (Array.isArray(createdRec) && createdRec.length) {
         userId = createdRec[0].id_utilizador || createdRec[0].id;
       } else if (createdRec && createdRec.id_utilizador) {
         userId = createdRec.id_utilizador;
       }
+      console.log('Extracted userId:', userId);
 
       if (!userId) {
-        const looked = await this.supabase.getUserByEmail(this.email);
+        const looked = userId ? await this.httpApi.getUser(userId) : null;
         userId = looked?.id_utilizador || looked?.id || null;
       }
 
-      if (userId) {
+      if (userId && this.estabId) {
+        console.log('Attempting association: userId', userId, 'estabId', this.estabId);
         try {
-          await this.supabase.updateUser(userId, {
-            telefone: this.telefone || null,
-            id_tipo: 6,
-            nacionalidade: this.nacionalidade || null,
-            nif: this.nif || null,
-            passaporte: this.passaporte || null,
-            estado: 1,
-          });
-        } catch (updateErr: any) {
-          console.error('Failed to update created user fields', updateErr);
+          await this.httpApi.addUserEstabelecimento(userId, this.estabId);
+          console.log('Association successful');
+        } catch (e: any) {
+          console.warn('associate failed', e);
           try {
-            await this.supabase.deleteUser(userId);
+            await this.httpApi.deleteUser(userId);
           } catch (delErr) {
-            console.warn('Failed to rollback created user', delErr);
+            console.warn('Failed to rollback created user after association failure', delErr);
           }
-          this.showToast((updateErr && updateErr.message) ? updateErr.message : this.tKey('save_error'), 'danger');
+          this.showToast((e && e.message) ? e.message : this.tKey('save_error'), 'danger');
           this.loading = false;
           return;
         }
-
-        if (this.estabId) {
-          try {
-            await this.supabase.addUserEstabelecimento(userId, this.estabId);
-          } catch (e: any) {
-            console.warn('associate failed', e);
-            try {
-              await this.supabase.deleteUser(userId);
-            } catch (delErr) {
-              console.warn('Failed to rollback created user after association failure', delErr);
-            }
-            this.showToast((e && e.message) ? e.message : this.tKey('save_error'), 'danger');
-            this.loading = false;
-            return;
-          }
-        }
-
-        this.showToast(this.tKey('edit_saved'), 'success');
-        setTimeout(() => this.router.navigate(['/lista-empregados'], { queryParams: { id: this.estabId } }), 800);
-        return;
       }
 
-      this.showToast(this.tKey('save_error'), 'danger');
+      this.showToast(this.tKey('edit_saved'), 'success');
+      setTimeout(() => this.router.navigate(['/lista-empregados'], { queryParams: { id: this.estabId } }), 800);
+      return;
     } catch (e: any) {
       console.error('Create employee failed', e);
       this.showToast(e?.message || this.tKey('save_error'), 'danger');
