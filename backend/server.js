@@ -368,9 +368,11 @@ app.delete('/api/mochilas/:id', async (req, res) => {
 // Percurso endpoints
 app.post('/api/percurso', async (req, res) => {
   try {
+    console.log('POST /api/percurso body:', req.body);
     const result = await apiService.createPercurso(req.body);
     res.json({ success: true, data: result });
   } catch (error) {
+    console.error('Error in /api/percurso:', error.message, req.body);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -408,6 +410,56 @@ app.get('/api/percurso/:id', async (req, res) => {
 app.delete('/api/percurso/:id', async (req, res) => {
   try {
     const result = await apiService.deletePercurso(req.params.id);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Grupo Percurso endpoints
+app.post('/api/grupo-percurso', async (req, res) => {
+  try {
+    const result = await apiService.createGrupoPercurso(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/grupo-percurso/:id', async (req, res) => {
+  try {
+    const result = await apiService.updateGrupoPercurso(req.params.id, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/grupo-percurso', async (req, res) => {
+  try {
+    const result = await apiService.getAllGrupoPercurso();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/grupo-percurso/:id', async (req, res) => {
+  try {
+    const result = await apiService.getGrupoPercurso(req.params.id);
+    if (result) {
+      res.json({ success: true, data: result });
+    } else {
+      res.status(404).json({ success: false, error: 'Grupo Percurso not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/grupo-percurso/:id', async (req, res) => {
+  try {
+    const result = await apiService.deleteGrupoPercurso(req.params.id);
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

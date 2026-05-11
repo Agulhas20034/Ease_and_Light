@@ -1,0 +1,31 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ t.translate('available_routes') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list *ngIf="!loading">
+    <ion-item *ngFor="let route of availableRoutes" (click)="selectRoute(route)" button>
+      <ion-label>
+        <h2>{{ route.nome }}</h2>
+        <p>{{ route.descr }}</p>
+        <p style="font-size: 0.9em; color: var(--ion-color-medium);">
+          {{ t.translate('difficulty_level') }}: {{ getDifficultyName(route) }}
+        </p>
+      </ion-label>
+      <ion-icon name="play" slot="end" color="primary"></ion-icon>
+    </ion-item>
+  </ion-list>
+
+  <ion-text *ngIf="availableRoutes.length === 0 && !loading" color="medium">
+    <p style="text-align: center; padding: 20px;">{{ t.translate('no_routes_available') }}</p>
+  </ion-text>
+
+  <ion-spinner *ngIf="loading" name="crescent" style="display: block; margin: 20px auto;"></ion-spinner>
+</ion-content>

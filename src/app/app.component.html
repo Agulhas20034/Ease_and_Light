@@ -34,12 +34,6 @@
               </ion-item>
             </ion-menu-toggle>
             <ion-menu-toggle auto-hide="false">
-              <ion-item routerDirection="root" routerLink="/gere-percurso" lines="none" detail="false" routerLinkActive="selected">
-                <ion-icon aria-hidden="true" slot="start" ios="list-outline" md="list-sharp"></ion-icon>
-                <ion-label>{{ t('manage_routes') }}</ion-label>
-              </ion-item>
-            </ion-menu-toggle>
-            <ion-menu-toggle auto-hide="false">
               <ion-item routerDirection="root" routerLink="/lista-mochilas" lines="none" detail="false" routerLinkActive="selected">
                 <ion-icon aria-hidden="true" slot="start" ios="bag-outline" md="bag-sharp"></ion-icon>
                 <ion-label>{{ t('my_backpacks') }}</ion-label>
@@ -47,7 +41,7 @@
             </ion-menu-toggle>
           </div>
 
-          <!-- Groups Section (All Logged-in Users) -->
+          <!-- Groups Section -->
           <div *ngIf="currentUser">
             <ion-list-header><ion-label>{{ t('groups') || 'Groups' }}</ion-label></ion-list-header>
             <ion-menu-toggle auto-hide="false">

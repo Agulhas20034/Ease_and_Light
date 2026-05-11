@@ -54,9 +54,29 @@
           </ion-buttons>
         </ion-item>
       </ion-list>
+    </ion-tab>
 
-      <ion-text *ngIf="pendingInvites.length === 0" color="medium">
-        <p style="text-align: center; padding: 20px;">{{ t.translate('no_pending_invites') }}</p>
+    <ion-tab tab="start-route">
+      <ion-list>
+        <ng-container *ngFor="let group of groups">
+          <ion-item *ngIf="isGroupOwner(group)">
+            <ion-label>
+              <h2>{{ group.nome }}</h2>
+              <p style="font-size: 0.9em; color: var(--ion-color-medium);">{{ group.descr }}</p>
+              <p>{{ t.translate('group_members') }}: {{ getMemberCount(group) }}</p>
+            </ion-label>
+            <ion-button
+              slot="end"
+              (click)="startRouteForGroup(group)">
+              <ion-icon name="play"></ion-icon>
+              <ion-label>{{ t.translate('start_route') }}</ion-label>
+            </ion-button>
+          </ion-item>
+        </ng-container>
+      </ion-list>
+
+      <ion-text *ngIf="getOwnedGroupsCount() === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_owned_groups') }}</p>
       </ion-text>
     </ion-tab>
 
@@ -64,6 +84,10 @@
       <ion-tab-button tab="my-groups">
         <ion-icon name="folder"></ion-icon>
         <ion-label>{{ t.translate('manage_groups') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="start-route">
+        <ion-icon name="play"></ion-icon>
+        <ion-label>{{ t.translate('start_route') }}</ion-label>
       </ion-tab-button>
       <ion-tab-button tab="invites">
         <ion-icon name="mail"></ion-icon>

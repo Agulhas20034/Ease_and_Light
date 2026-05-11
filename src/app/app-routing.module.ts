@@ -75,12 +75,6 @@ const routes: Routes = [
     data: { requiredRole: 'Peregrino', titleKey: 'create_route' }
   },
   {
-    path: 'gere-percurso',
-    loadChildren: () => import('./pages/Peregrino/gere-percurso/gere-percurso.module').then( m => m.GerePercursoPageModule),
-    canActivate: [RoleGuard],
-    data: { requiredRole: 'Peregrino', titleKey: 'manage_routes' }
-  },
-  {
     path: 'gere-grupo',
     loadChildren: () => import('./pages/Peregrino/gere-grupo/gere-grupo.module').then( m => m.GereGrupoPageModule),
     canActivate: [RoleGuard],

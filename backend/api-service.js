@@ -61,9 +61,9 @@ class ApiService {
       veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa', 'estado'],
       entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_mochila', 'id_empresa', 'data_hora_recolha'],
       mochilas: ['peso', 'cor', 'id_user'],
-      percurso: ['nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
+      percurso: ['nome', 'descr', 'id_dificuldade'],
       grupo: ['nome', 'descr', 'hora_criacao', 'estado'],
-      etapas: ['nome', 'descricao', 'coordenadas'],
+      etapas: ['id_estabelecimento'],
       grupo_user: ['id_grupo', 'id_user', 'criador', 'status_convite', 'Data_Convite'],
       etapas_percurso: ['id_percurso', 'id_etapa'],
       users_empresa_transportes: ['id_utilizador', 'id_empresa'],
@@ -74,6 +74,7 @@ class ApiService {
       estado_entrega_recolha: ['estado'],
       estado_grupo: ['estado'],
       estado_percurso: ['estado'],
+      grupo_percurso: ['id_grupo', 'id_percurso', 'id_estado', 'data_inicio'],
       estado_conta: ['estado'],
       estado_empresa: ['estado'],
       estado_estabelecimento: ['estado'],
@@ -657,6 +658,28 @@ class ApiService {
     return await this.supabase.deletePercurso(id);
   }
 
+  async createGrupoPercurso(data) {
+    this.validateRequiredFields(data, 'grupo_percurso', false);
+    return await this.supabase.insertOne('grupo_percurso', data);
+  }
+
+  async updateGrupoPercurso(id, data) {
+    this.validateRequiredFields(data, 'grupo_percurso', true);
+    return await this.supabase.updateOne('grupo_percurso', { id_grupo_percurso: id }, data);
+  }
+
+  async getAllGrupoPercurso() {
+    return await this.supabase.fetchAll('grupo_percurso');
+  }
+
+  async getGrupoPercurso(id) {
+    return await this.supabase.fetchByPk('grupo_percurso', 'id_grupo_percurso', id);
+  }
+
+  async deleteGrupoPercurso(id) {
+    return await this.supabase.deleteByPk('grupo_percurso', 'id_grupo_percurso', id);
+  }
+
   async createGrupo(data) {
     this.validateRequiredFields(data, 'grupo', false);
     return await this.supabase.createGrupo(data);
@@ -730,7 +753,6 @@ class ApiService {
 
   async createEtapasPercurso(data) {
     this.validateRequiredFields(data, 'etapas_percurso', false);
-    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('etapas_percurso', data);
   }
 
