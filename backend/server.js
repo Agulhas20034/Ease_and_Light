@@ -170,6 +170,15 @@ app.post('/api/estabelecimento', async (req, res) => {
   }
 });
 
+app.post('/api/estabelecimento/minimal', async (req, res) => {
+  try {
+    const result = await apiService.createEstabelecimentoMinimal(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/estabelecimento/:id', async (req, res) => {
   try {
     const result = await apiService.updateEstabelecimento(req.params.id, req.body);

@@ -87,3 +87,19 @@ ion-content {
   margin: 2px 0;
   font-size: 0.9rem;
 }
+
+ion-fab.fab-right-center {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+}
+
+ion-fab.fab-create {
+  top: calc(50% - 40px);
+}
+
+ion-fab.fab-refresh {
+  top: calc(50% + 40px);
+}

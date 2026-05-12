@@ -89,6 +89,10 @@ export class HttpApiService {
     return this.create('estabelecimento', data);
   }
 
+  async createEstabelecimentoMinimal(data: any): Promise<any> {
+    return this.create('estabelecimento/minimal', data);
+  }
+
   async updateEstabelecimento(id: number, data: any): Promise<any> {
     return this.update(`estabelecimento/${id}`, data);
   }

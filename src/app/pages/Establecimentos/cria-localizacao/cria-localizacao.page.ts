@@ -12,7 +12,7 @@ import { TranslationService } from '../../../services/translations/translation.s
 })
 export class CriaLocalizacaoPage implements OnInit {
   // Campos do formulário
-  tipo: any = null;
+  id_tipo_estabelecimento: any = null;
   hora_abertura = '';
   hora_fecho = '';
   email = '';
@@ -53,7 +53,7 @@ export class CriaLocalizacaoPage implements OnInit {
     this.loading = true;
     try {
       const rec: any = {
-        tipo: this.tipo,
+        tipo: this.id_tipo_estabelecimento,
         hora_abertura: this.hora_abertura,
         hora_fecho: this.hora_fecho,
         email: this.email,

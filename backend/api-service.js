@@ -57,7 +57,8 @@ class ApiService {
     const requiredFields = {
       users: ['email', 'nome', 'telefone', 'id_tipo', 'estado'],
       empresa_transportes: ['nome', 'telefone', 'email', 'estado'],
-      estabelecimento: ['nome', 'telefone', 'email', 'hora_abertura', 'hora_fecho', 'link_google', 'rua', 'codigo_postal', 'id_tipo_estabelecimento', 'estado'],
+      estabelecimento: ['nome', 'telefone', 'email', 'hora_abertura', 'hora_fecho', 'link', 'cod_postal', 'tipo', 'estado'],
+      estabelecimento_minimal: ['nome', 'lat', 'lon', 'tipo', 'estado'],
       veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa', 'estado'],
       entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_mochila', 'id_empresa', 'data_hora_recolha'],
       mochilas: ['peso', 'cor', 'id_user'],
@@ -414,9 +415,22 @@ class ApiService {
       }
     }
 
-    if (data.codigo_postal) {
-      data.codigo_postal = this.trimString(data.codigo_postal);
-      if (!this.validateCodigoPostal(data.codigo_postal)) {
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
+        throw new Error('Código postal must be in 0000-000 format');
+      }
+    }
+
+    return await this.supabase.createEstabelecimento(data);
+  }
+
+  async createEstabelecimentoMinimal(data) {
+    this.validateRequiredFields(data, 'estabelecimento_minimal', false);
+
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
         throw new Error('Código postal must be in 0000-000 format');
       }
     }
@@ -468,9 +482,9 @@ class ApiService {
       }
     }
 
-    if (data.codigo_postal) {
-      data.codigo_postal = this.trimString(data.codigo_postal);
-      if (!this.validateCodigoPostal(data.codigo_postal)) {
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
         throw new Error('Código postal must be in 0000-000 format');
       }
     }

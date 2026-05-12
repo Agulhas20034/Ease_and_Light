@@ -214,6 +214,11 @@ const routes: Routes = [
     canActivate: [RoleGuard],
     data: { requiredRole: '*', titleKey: 'edit_group' }
   },
+  {
+    path: 'peregrino/cria-localizacao',
+    loadChildren: () => import('./pages/Peregrino/cria-localizacao/cria-localizacao.module').then( m => m.CriaLocalizacaoPageModule)
+  },
+
 
 
 ];

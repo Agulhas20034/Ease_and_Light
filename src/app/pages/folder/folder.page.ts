@@ -227,6 +227,10 @@ export class FolderPage implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  goToCreateLocation() {
+    this.router.navigate(['/peregrino/cria-localizacao']);
+  }
+
   toggleLang() {
     this.tService.toggleLang();
   }

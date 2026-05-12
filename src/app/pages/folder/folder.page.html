@@ -6,9 +6,14 @@
   <div *ngIf="weatherError" class="error">{{ weatherError }}</div>
 
   <div #mapContainer id="map" style="width: 100%; height: 100%;"></div>
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+  <ion-fab class="fab-right-center fab-refresh" slot="fixed">
     <ion-fab-button color="primary" (click)="retryLocation()" title="{{ t('refresh_location') }}">
       <ion-icon name="refresh"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+  <ion-fab class="fab-right-center fab-create" slot="fixed">
+    <ion-fab-button color="primary" (click)="goToCreateLocation()" title="Create Location">
+      <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>
