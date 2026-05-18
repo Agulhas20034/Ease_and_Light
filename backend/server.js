@@ -404,6 +404,27 @@ app.get('/api/percurso', async (req, res) => {
   }
 });
 
+// Reviews endpoints 
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await apiService.createReview(payload);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/reviews/:locationId', async (req, res) => {
+  try {
+    const locationId = req.params.locationId;
+    const result = await apiService.getReviewsByLocation(locationId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/percurso/:id', async (req, res) => {
   try {
     const result = await apiService.getPercurso(req.params.id);

@@ -6,6 +6,7 @@ import { TranslationService } from '../../services/translations/translation.serv
 import { HttpApiService } from '../../services/http-api/http-api.service';
 import { AlertController, ModalController } from '@ionic/angular';
 import { ForecastModalComponent } from '../../components/forecast-modal/forecast-modal.component';
+import { ReviewModalComponent } from '../../components/review-modal/review-modal.component';
 import * as L from 'leaflet';
 
 try {
@@ -116,14 +117,62 @@ export class FolderPage implements OnInit {
         if (!this.map || !lat || !lon || isNaN(lat) || isNaN(lon)) continue;
         const title = (r.nome || r.nome_rua || r.nome_estabelecimento || r.descr || r.descricao || r.name || `Estab ${r.id_estabelecimento || ''}`);
         const marker = L.marker([lat, lon]).addTo(this.map!);
-        // popup com detalhes 
-        const popupHtml = `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal : ''}</div>`;
+        const popupHtml = this.getLocationPopupHtml(r, title);
         marker.bindPopup(popupHtml);
+        marker.on('popupopen', (ev: any) => {
+          try {
+            ev.popup.setContent(this.getLocationPopupHtml(r, title));
+            const el = ev.popup.getElement();
+            if (!el) return;
+            const addBtn = el.querySelector('.add-review-btn');
+            const viewBtn = el.querySelector('.view-reviews-btn');
+            if (addBtn) {
+              addBtn.addEventListener('click', (evt: any) => {
+                evt.preventDefault(); evt.stopPropagation();
+                try { this.openReviewModalForLocation(r); } catch (e) { console.warn(e); }
+              });
+            }
+            if (viewBtn) {
+              viewBtn.addEventListener('click', (evt: any) => {
+                evt.preventDefault(); evt.stopPropagation();
+                try { this.openReviewsListModal(r); } catch (e) { console.warn(e); }
+              });
+            }
+          } catch (e) { console.warn('popupopen handler error', e); }
+        });
         this.locationMarkers.push(marker);
       }
     } catch (e) {
       console.warn('Failed to load location markers', e);
     }
+  }
+
+  getLocationPopupHtml(r: any, title: string) {
+    const addLabel = this.t('add_review');
+    const viewLabel = this.t('view_reviews');
+    return `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal + '<br/>' : ''}<div style="margin-top:8px"><button class="add-review-btn" data-loc="${r.id_estabelecimento || r.id}">${addLabel}</button> <button class="view-reviews-btn" data-loc="${r.id_estabelecimento || r.id}">${viewLabel}</button></div></div>`;
+  }
+
+  async openReviewModalForLocation(location: any) {
+    const locationId = String(location?.id_estabelecimento || location?.id || location?.id_localizacao || location?.id_estabelecimento_supabase || '');
+    const modal = await this.modalCtrl.create({
+      component: ReviewModalComponent,
+      componentProps: { location, locationId }
+    });
+    await modal.present();
+    const res = await modal.onDidDismiss();
+    if (res?.data?.saved) {
+    }
+  }
+
+  async openReviewsListModal(location: any) {
+    const locationId = String(location?.id_estabelecimento || location?.id || location?.id_localizacao || location?.id_estabelecimento_supabase || '');
+    const { ReviewListComponent } = await import('../../components/review-list/review-list.component');
+    const modal = await this.modalCtrl.create({
+      component: ReviewListComponent,
+      componentProps: { location, locationId }
+    });
+    await modal.present();
   }
 
   private async loadWeather(lat: number, lng: number) {

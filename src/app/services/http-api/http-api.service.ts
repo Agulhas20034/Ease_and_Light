@@ -174,6 +174,17 @@ export class HttpApiService {
     return this.delete(`percurso/${id}`);
   }
 
+  // Reviews
+  async createReview(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/reviews`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getReviewsByLocation(locationId: string): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/reviews/${encodeURIComponent(locationId)}`).toPromise() as any;
+    return response?.data;
+  }
+
   // Grupo
   async getAllGrupo(): Promise<any> {
     return this.getAll('grupo');

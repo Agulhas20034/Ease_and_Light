@@ -1106,6 +1106,21 @@ class ApiService {
   async getChatMessages(groupId, limit) {
     return await this.mongo.getChatMessages(groupId, limit);
   }
+
+  // Reviews , MongoDB
+  async createReview(data) {
+    if (!data || !data.locationId) throw new Error('locationId is required');
+    if (!data.rating || typeof data.rating !== 'number' || data.rating < 1 || data.rating > 5) throw new Error('rating must be a number between 1 and 5');
+    if (data.userId) {
+      try { await this.mongo.createOrUpdateUser({ id_utilizador: data.userId }); } catch (e) {}
+    }
+    return await this.mongo.saveReview(data);
+  }
+
+  async getReviewsByLocation(locationId, limit = 50) {
+    if (!locationId) return [];
+    return await this.mongo.getReviewsByLocation(locationId, limit);
+  }
 }
 
 module.exports = ApiService;
