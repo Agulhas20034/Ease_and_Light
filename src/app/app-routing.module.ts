@@ -218,6 +218,13 @@ const routes: Routes = [
     path: 'peregrino/cria-localizacao',
     loadChildren: () => import('./pages/Peregrino/cria-localizacao/cria-localizacao.module').then( m => m.CriaLocalizacaoPageModule)
   },
+  {
+    path: 'edita-info',
+    loadChildren: () => import('./pages/Peregrino/edita-info/edita-info.module').then( m => m.EditaInfoPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: '*', titleKey: 'edit_profile' }
+  },
+
 
 
 

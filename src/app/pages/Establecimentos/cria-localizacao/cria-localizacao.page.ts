@@ -48,7 +48,7 @@ export class CriaLocalizacaoPage implements OnInit {
     }
   }
 
-  // Criação da localizacao - backend handles all validation
+  // Criação da localizacao
   async createLocation() {
     this.loading = true;
     try {
