@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController, ToastController, ModalController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
 import { NotificationService } from '../../../services/notification/notification.service';
+import { StartRouteModalComponent } from '../../../components/start-route-modal/start-route-modal.component';
 
 @Component({
   selector: 'app-gere-grupo',
@@ -25,7 +26,8 @@ export class GereGrupoPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     public t: TranslationService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private modalCtrl: ModalController
   ) { }
 
   ngOnInit() {
@@ -53,28 +55,45 @@ export class GereGrupoPage implements OnInit {
         const userData = JSON.parse(user);
         const userId = userData.id_utilizador || userData.id;
         const userTipo = userData.id_tipo;
-        
+
         const isAdmin = userTipo === 1;
-        
+
         let allGroups: any[] = [];
-        
+
         if (isAdmin) {
           const result: any = await this.httpApi.getAllGrupo();
           allGroups = Array.isArray(result) ? result : (result?.data || []);
+
+          for (let group of allGroups) {
+            try {
+              const grupoUsers = await this.httpApi.getAll('grupo_user');
+              const groupUsers = grupoUsers.filter((gu: any) => gu.id_grupo === group.id_grupo);
+              group.grupo_user = groupUsers;
+            } catch (error) {
+              console.error('Error loading grupo_user for group', group.id_grupo, error);
+              group.grupo_user = [];
+            }
+          }
+
+          console.log('Loaded groups for admin:', userId, allGroups);
           this.groups = allGroups.filter((g: any) => g.estado === 1);
         } else {
           const result: any = await this.httpApi.getGroupsByUser(userId);
           allGroups = Array.isArray(result) ? result : (result?.data || []);
-          
+
+          console.log('Loaded groups for user:', userId, allGroups);
+
           this.groups = allGroups.filter((g: any) => {
             const hasGrupoUser = !!g.grupo_user;
-            const isAccepted = hasGrupoUser && g.grupo_user.some((gu: any) => 
-              (String(gu.id_user) === String(userId)) && 
+            const isAccepted = hasGrupoUser && g.grupo_user.some((gu: any) =>
+              (String(gu.id_user) === String(userId)) &&
               gu.status_convite === 1
             );
             return isAccepted;
           });
         }
+
+        await this.annotateGroupOngoingRoutes(this.groups);
       }
     } catch (e) {
       console.error('Erro ao carregar grupos', e);
@@ -167,10 +186,12 @@ export class GereGrupoPage implements OnInit {
   }
 
   isGroupOwner(group: any): boolean {
-    if (!this.currentUser || !group?.createdBy) return false;
+    if (!this.currentUser || !group?.grupo_user) return false;
     const currentUserId = this.currentUser.id_utilizador || this.currentUser.id;
-    const creatorId = group.createdBy.id_utilizador || group.createdBy.id || group.createdBy;
-    return Number(currentUserId) === Number(creatorId);
+    const userGroupRelation = group.grupo_user.find((gu: any) =>
+      (gu.id_user || gu.id_utilizador) == currentUserId
+    );
+    return userGroupRelation?.criador === true;
   }
 
   async deleteGroup(group: any) {
@@ -248,6 +269,10 @@ export class GereGrupoPage implements OnInit {
     return 0;
   }
 
+  getOwnedGroupsCount(): number {
+    return this.groups.filter(group => this.isGroupOwner(group)).length;
+  }
+
   private async showToast(message: string, color: string = 'primary') {
     const toast = await this.toastCtrl.create({
       message,
@@ -260,5 +285,203 @@ export class GereGrupoPage implements OnInit {
 
   goToCreateGroup() {
     this.router.navigate(['/cria-grupo']);
+  }
+
+  private async annotateGroupOngoingRoutes(groups: any[]) {
+    try {
+      const grupoPercursos = await this.httpApi.getAll('grupo-percurso');
+      const records = Array.isArray(grupoPercursos) ? grupoPercursos : [];
+      for (const group of groups) {
+        group.ongoingRoute = records.find((gp: any) =>
+          gp.id_grupo === group.id_grupo &&
+          (Number(gp.id_estado) === 2 || Number(gp.estado) === 2)
+        ) || null;
+      }
+    } catch (error) {
+      console.error('Error annotating ongoing routes:', error);
+      for (const group of groups) {
+        group.ongoingRoute = null;
+      }
+    }
+  }
+
+  async hasOngoingRoute(group: any): Promise<boolean> {
+    if (group?.ongoingRoute) return true;
+    try {
+      const grupoPercursos = await this.httpApi.getAll('grupo-percurso');
+      return grupoPercursos.some((gp: any) => gp.id_grupo === group.id_grupo && (Number(gp.id_estado) === 2 || Number(gp.estado) === 2));
+    } catch (error) {
+      console.error('Error checking ongoing routes:', error);
+      return false;
+    }
+  }
+
+  async stopRouteForGroup(group: any) {
+    const ongoing = group.ongoingRoute || await this.getOngoingRouteForGroup(group);
+    if (!ongoing) {
+      this.showToast(this.t.translate('no_ongoing_route'), 'warning');
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: this.t.translate('stop_route'),
+      message: this.t.translate('stop_route_confirm').replace('{{groupName}}', group.nome),
+      buttons: [
+        { text: this.t.translate('cancel'), role: 'cancel' },
+        {
+          text: this.t.translate('stop_route'),
+          role: 'destructive',
+          handler: async () => {
+            await this.performStopRoute(group, ongoing);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async getOngoingRouteForGroup(group: any): Promise<any | null> {
+    try {
+      const grupoPercursos = await this.httpApi.getAll('grupo-percurso');
+      const records = Array.isArray(grupoPercursos) ? grupoPercursos : [];
+      const ongoing = records.find((gp: any) =>
+        gp.id_grupo === group.id_grupo &&
+        (Number(gp.id_estado) === 2 || Number(gp.estado) === 2)
+      );
+      group.ongoingRoute = ongoing || null;
+      return ongoing || null;
+    } catch (error) {
+      console.error('Error getting ongoing route for group:', error);
+      return null;
+    }
+  }
+
+  private async performStopRoute(group: any, ongoingRoute: any) {
+    this.loading = true;
+    try {
+      const id_grupo = ongoingRoute.id_grupo ?? group.id_grupo;
+      const id_percurso = ongoingRoute.id_percurso;
+      if (!id_grupo || !id_percurso) {
+        throw new Error('Missing id_grupo or id_percurso');
+      }
+      const updates: any = {
+        id_grupo,
+        id_percurso,
+        estado: 5,
+        data_hora_fim: new Date().toISOString()
+      };
+      await this.httpApi.update('grupo-percurso', updates);
+      group.ongoingRoute = null;
+      this.showToast(this.t.translate('route_stopped'), 'success');
+      await this.loadGroups();
+    } catch (error) {
+      console.error('Error stopping route:', error);
+      this.showToast(this.t.translate('error_stopping_route'), 'danger');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async startRouteForGroup(group: any) {
+    const hasOngoing = await this.hasOngoingRoute(group);
+    if (hasOngoing) {
+      this.showToast(this.t.translate('ongoing_route_exists'), 'warning');
+      return;
+    }
+
+    const modal = await this.modalCtrl.create({
+      component: StartRouteModalComponent,
+      componentProps: {
+        group: group
+      }
+    });
+
+    modal.onDidDismiss().then(async (result) => {
+      console.log('[GereGrupo] startRoute modal dismissed:', result);
+      const route = result?.data?.route || result?.data;
+      const groupResult = result?.data?.group || group;
+      if (route) {
+        await this.confirmStartRoute(groupResult, route);
+      }
+    });
+
+    await modal.present();
+  }
+
+  async confirmStartRoute(group: any, route: any) {
+    const alert = await this.alertCtrl.create({
+      header: this.t.translate('start_route'),
+      message: this.t.translate('start_route_confirm')
+        .replace('{{routeName}}', route.nome)
+        .replace('{{groupName}}', group.nome),
+      buttons: [
+        { text: this.t.translate('cancel'), role: 'cancel' },
+        {
+          text: this.t.translate('start_route'),
+          handler: async () => {
+            await this.performStartRoute(group, route);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async performStartRoute(group: any, route: any) {
+    this.loading = true;
+    try {
+      console.log('[GereGrupo] performStartRoute called for group:', group?.id_grupo, 'route:', route?.id_percurso);
+      try {
+        const groupInfo: any = await this.httpApi.get(`grupo/${group.id_grupo}`);
+        const targetMembers = (groupInfo?.members || []).map((m: any) => m.id_utilizador || m.id || null).filter((x: any) => x != null);
+        if (targetMembers.length) {
+          const allGp: any = await this.httpApi.getAll('grupo-percurso');
+          const allGrupoPercursos = Array.isArray(allGp) ? allGp : (allGp?.data || []);
+          const ongoing = allGrupoPercursos.filter((g: any) => Number(g.id_estado) === 2 || Number(g.estado) === 2);
+          for (const og of ongoing) {
+            try {
+              const ogGroup: any = await this.httpApi.get(`grupo/${og.id_grupo}`);
+              const ogMembers = ogGroup?.members || [];
+              for (const m of ogMembers) {
+                const mid = m.id_utilizador || m.id || null;
+                if (mid && targetMembers.includes(mid)) {
+                  console.log('[GereGrupo] Blocking start; overlapping member id:', mid, 'with ongoing grupo-percurso', og);
+                  this.showToast(this.t.translate('ongoing_route_exists') || 'Someone in your group is already in a route', 'warning');
+                  this.loading = false;
+                  return;
+                }
+              }
+            } catch (e) {  }
+          }
+        }
+      } catch (e) { console.warn('Error checking existing member routes', e); }
+
+      const grupoPercursoData = {
+        id_grupo: group.id_grupo,
+        id_percurso: route.id_percurso,
+        id_percrso: route.id_percurso,
+        estado: 2,
+        data_hora_inicio: new Date().toISOString()
+      };
+
+      const created: any = await this.httpApi.create('grupo-percurso', grupoPercursoData);
+      console.log('[GereGrupo] grupo-percurso created:', created);
+      this.showToast(this.t.translate('route_started'), 'success');
+      
+      setTimeout(() => {
+        this.router.navigate(['/mapa'], { 
+          queryParams: { 
+            routeId: route.id_percurso,
+            groupId: group.id_grupo 
+          }
+        });
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error starting route:', error);
+      this.showToast(this.t.translate('error_starting_route'), 'danger');
+    } finally {
+      this.loading = false;
+    }
   }
 }

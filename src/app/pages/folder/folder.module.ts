@@ -8,13 +8,15 @@ import { FolderPageRoutingModule } from './folder-routing.module';
 
 import { FolderPage } from './folder.page';
 import { ForecastModalComponent } from '../../components/forecast-modal/forecast-modal.component';
+import { ReviewModalComponent } from '../../components/review-modal/review-modal.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    FolderPageRoutingModule
+    FolderPageRoutingModule,
+    ReviewModalComponent
   ],
   declarations: [FolderPage, ForecastModalComponent]
 })

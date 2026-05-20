@@ -25,6 +25,18 @@ const userSchema = new mongoose.Schema({
 const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
 const User = mongoose.model('User', userSchema);
 
+const reviewSchema = new mongoose.Schema({
+  locationId: { type: String, required: true }, 
+  userId: { type: Number, required: false },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
+  photos: { type: [String], default: [] }, 
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Review = mongoose.model('Review', reviewSchema);
+
 class MongoService {
   async saveChatMessage(data) {
     const message = new ChatMessage(data);
@@ -54,6 +66,15 @@ class MongoService {
 
   async getUserById(id) {
     return await User.findOne({ id_utilizador: id });
+  }
+
+  async saveReview(data) {
+    const r = new Review(data);
+    return await r.save();
+  }
+
+  async getReviewsByLocation(locationId, limit = 50) {
+    return await Review.find({ locationId }).sort({ createdAt: -1 }).limit(limit).lean();
   }
 }
 

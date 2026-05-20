@@ -1,0 +1,38 @@
+ion-content {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: calc(56px + env(safe-area-inset-top));
+  --padding-bottom: 0;
+  position: relative;
+  height: 100vh;
+}
+
+ion-content > .form-wrapper {
+  padding-top: 16px;
+}
+
+.map-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+.save-button-container {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.save-button-container ion-button {
+  width: 100%;
+}

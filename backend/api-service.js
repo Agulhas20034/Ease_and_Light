@@ -57,13 +57,14 @@ class ApiService {
     const requiredFields = {
       users: ['email', 'nome', 'telefone', 'id_tipo', 'estado'],
       empresa_transportes: ['nome', 'telefone', 'email', 'estado'],
-      estabelecimento: ['nome', 'telefone', 'email', 'hora_abertura', 'hora_fecho', 'link_google', 'rua', 'codigo_postal', 'id_tipo_estabelecimento', 'estado'],
+      estabelecimento: ['nome', 'telefone', 'email', 'hora_abertura', 'hora_fecho', 'link', 'cod_postal', 'tipo', 'estado'],
+      estabelecimento_minimal: ['nome', 'lat', 'lon', 'tipo', 'estado'],
       veiculos: ['matricula', 'vin', 'marca', 'modelo', 'cor', 'id_tipo', 'id_empresa', 'estado'],
       entregas_recolhas: ['id_estabelecimento_r', 'id_estabelecimento_e', 'id_mochila', 'id_empresa', 'data_hora_recolha'],
       mochilas: ['peso', 'cor', 'id_user'],
-      percurso: ['nome', 'descricao', 'distancia', 'duracao_estimada', 'id_dificuldade', 'id_estado'],
+      percurso: ['nome', 'descr', 'id_dificuldade'],
       grupo: ['nome', 'descr', 'hora_criacao', 'estado'],
-      etapas: ['nome', 'descricao', 'coordenadas'],
+      etapas: ['id_estabelecimento'],
       grupo_user: ['id_grupo', 'id_user', 'criador', 'status_convite', 'Data_Convite'],
       etapas_percurso: ['id_percurso', 'id_etapa'],
       users_empresa_transportes: ['id_utilizador', 'id_empresa'],
@@ -74,6 +75,7 @@ class ApiService {
       estado_entrega_recolha: ['estado'],
       estado_grupo: ['estado'],
       estado_percurso: ['estado'],
+      grupo_percurso: ['id_grupo', 'id_percurso', 'estado', 'data_hora_inicio'],
       estado_conta: ['estado'],
       estado_empresa: ['estado'],
       estado_estabelecimento: ['estado'],
@@ -413,9 +415,22 @@ class ApiService {
       }
     }
 
-    if (data.codigo_postal) {
-      data.codigo_postal = this.trimString(data.codigo_postal);
-      if (!this.validateCodigoPostal(data.codigo_postal)) {
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
+        throw new Error('Código postal must be in 0000-000 format');
+      }
+    }
+
+    return await this.supabase.createEstabelecimento(data);
+  }
+
+  async createEstabelecimentoMinimal(data) {
+    this.validateRequiredFields(data, 'estabelecimento_minimal', false);
+
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
         throw new Error('Código postal must be in 0000-000 format');
       }
     }
@@ -467,9 +482,9 @@ class ApiService {
       }
     }
 
-    if (data.codigo_postal) {
-      data.codigo_postal = this.trimString(data.codigo_postal);
-      if (!this.validateCodigoPostal(data.codigo_postal)) {
+    if (data.cod_postal) {
+      data.cod_postal = this.trimString(data.cod_postal);
+      if (!this.validateCodigoPostal(data.cod_postal)) {
         throw new Error('Código postal must be in 0000-000 format');
       }
     }
@@ -657,6 +672,77 @@ class ApiService {
     return await this.supabase.deletePercurso(id);
   }
 
+  async createGrupoPercurso(data) {
+    this.validateRequiredFields(data, 'grupo_percurso', false);
+    try {
+      return await this.supabase.insertOne('grupo_percurso', data);
+    } catch (error) {
+      const message = error?.message || error?.error?.message || error?.details || String(error || '');
+      console.warn('createGrupoPercurso insert error', { error, message });
+      const fallbackData = { ...data };
+      const missingColumn = message.match(/Could not find the '([^']+)' column of 'grupo_percurso'/)?.[1];
+      if (missingColumn) {
+        delete fallbackData[missingColumn];
+      }
+      if ((message.includes("'id_percurso'") || message.includes('id_percurso')) && fallbackData.id_percurso !== undefined) {
+        fallbackData.id_percrso = fallbackData.id_percurso;
+        delete fallbackData.id_percurso;
+      }
+      if ((message.includes("'id_percrso'") || message.includes('id_percrso')) && fallbackData.id_percrso !== undefined) {
+        fallbackData.id_percurso = fallbackData.id_percrso;
+        delete fallbackData.id_percrso;
+      }
+      if ((message.includes("'id_estado'") || message.includes('id_estado')) && fallbackData.id_estado !== undefined) {
+        fallbackData.estado = fallbackData.id_estado;
+        delete fallbackData.id_estado;
+      }
+      if ((message.includes("'estado'") || message.includes('estado')) && fallbackData.estado === undefined && fallbackData.id_estado !== undefined) {
+        fallbackData.estado = fallbackData.id_estado;
+        delete fallbackData.id_estado;
+      }
+      if ((message.includes("'data_inicio'") || message.includes('data_inicio')) && fallbackData.data_inicio !== undefined) {
+        fallbackData.data_hora_inicio = fallbackData.data_inicio;
+        delete fallbackData.data_inicio;
+      }
+      if ((message.includes("'data_hora_inicio'") || message.includes('data_hora_inicio')) && fallbackData.data_hora_inicio !== undefined) {
+        fallbackData.data_inicio = fallbackData.data_hora_inicio;
+        delete fallbackData.data_hora_inicio;
+      }
+      if (JSON.stringify(fallbackData) !== JSON.stringify(data)) {
+        return await this.supabase.insertOne('grupo_percurso', fallbackData);
+      }
+      throw error;
+    }
+  }
+
+  async updateGrupoPercurso(id, data) {
+    this.validateRequiredFields(data, 'grupo_percurso', true);
+    return await this.supabase.updateOne('grupo_percurso', { id_grupo_percurso: id }, data);
+  }
+
+  async updateGrupoPercursoByKeys(keys, data) {
+    if (!keys || keys.id_grupo === undefined || keys.id_percurso === undefined) {
+      throw new Error('Missing id_grupo or id_percurso for grupo_percurso update');
+    }
+    this.validateRequiredFields(data, 'grupo_percurso', true);
+    const updates = { ...data };
+    delete updates.id_grupo;
+    delete updates.id_percurso;
+    return await this.supabase.updateOne('grupo_percurso', { id_grupo: keys.id_grupo, id_percurso: keys.id_percurso }, updates);
+  }
+
+  async getAllGrupoPercurso() {
+    return await this.supabase.fetchAll('grupo_percurso');
+  }
+
+  async getGrupoPercurso(id) {
+    return await this.supabase.fetchByPk('grupo_percurso', 'id_grupo_percurso', id);
+  }
+
+  async deleteGrupoPercurso(id) {
+    return await this.supabase.deleteByPk('grupo_percurso', 'id_grupo_percurso', id);
+  }
+
   async createGrupo(data) {
     this.validateRequiredFields(data, 'grupo', false);
     return await this.supabase.createGrupo(data);
@@ -730,7 +816,6 @@ class ApiService {
 
   async createEtapasPercurso(data) {
     this.validateRequiredFields(data, 'etapas_percurso', false);
-    data.created_at = new Date().toISOString();
     return await this.supabase.insertOne('etapas_percurso', data);
   }
 
@@ -1069,6 +1154,21 @@ class ApiService {
 
   async getChatMessages(groupId, limit) {
     return await this.mongo.getChatMessages(groupId, limit);
+  }
+
+  // Reviews , MongoDB
+  async createReview(data) {
+    if (!data || !data.locationId) throw new Error('locationId is required');
+    if (!data.rating || typeof data.rating !== 'number' || data.rating < 1 || data.rating > 5) throw new Error('rating must be a number between 1 and 5');
+    if (data.userId) {
+      try { await this.mongo.createOrUpdateUser({ id_utilizador: data.userId }); } catch (e) {}
+    }
+    return await this.mongo.saveReview(data);
+  }
+
+  async getReviewsByLocation(locationId, limit = 50) {
+    if (!locationId) return [];
+    return await this.mongo.getReviewsByLocation(locationId, limit);
   }
 }
 

@@ -1,0 +1,63 @@
+.photos-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px;
+}
+.photo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.photo-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.photo-item img.enlarged {
+  width: 190px;
+  height: 190px;
+  transform: scale(1.02);
+}
+.photo-remove-button {
+  --border-radius: 16px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+}
+
+.star-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 6px;
+}
+.star {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.star ion-icon {
+  font-size: 26px;
+  color: var(--ion-color-medium);
+}
+.star.active {
+  background-color: rgba(255, 193, 7, 0.16);
+}
+.star.active ion-icon {
+  color: #ffc107;
+}
+
+.fancy-button {
+  --border-radius: 18px;
+  --box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
