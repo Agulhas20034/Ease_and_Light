@@ -41,7 +41,7 @@ export class StartRouteModalComponent implements OnInit {
   }
 
   selectRoute(route: any) {
-    this.modalCtrl.dismiss(route);
+    this.modalCtrl.dismiss({ action: 'start', route, group: this.group });
   }
 
   dismiss() {

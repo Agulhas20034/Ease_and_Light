@@ -456,6 +456,26 @@ app.post('/api/grupo-percurso', async (req, res) => {
   }
 });
 
+app.put('/api/grupo-percurso', async (req, res) => {
+  try {
+    const { id_grupo, id_percurso, ...updates } = req.body || {};
+    const result = await apiService.updateGrupoPercursoByKeys({ id_grupo, id_percurso }, updates);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/grupo-percurso/:id_grupo/:id_percurso', async (req, res) => {
+  try {
+    const { id_grupo, id_percurso } = req.params;
+    const result = await apiService.updateGrupoPercursoByKeys({ id_grupo, id_percurso }, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/grupo-percurso/:id', async (req, res) => {
   try {
     const result = await apiService.updateGrupoPercurso(req.params.id, req.body);

@@ -75,7 +75,7 @@ class ApiService {
       estado_entrega_recolha: ['estado'],
       estado_grupo: ['estado'],
       estado_percurso: ['estado'],
-      grupo_percurso: ['id_grupo', 'id_percurso', 'id_estado', 'data_inicio'],
+      grupo_percurso: ['id_grupo', 'id_percurso', 'estado', 'data_hora_inicio'],
       estado_conta: ['estado'],
       estado_empresa: ['estado'],
       estado_estabelecimento: ['estado'],
@@ -674,12 +674,61 @@ class ApiService {
 
   async createGrupoPercurso(data) {
     this.validateRequiredFields(data, 'grupo_percurso', false);
-    return await this.supabase.insertOne('grupo_percurso', data);
+    try {
+      return await this.supabase.insertOne('grupo_percurso', data);
+    } catch (error) {
+      const message = error?.message || error?.error?.message || error?.details || String(error || '');
+      console.warn('createGrupoPercurso insert error', { error, message });
+      const fallbackData = { ...data };
+      const missingColumn = message.match(/Could not find the '([^']+)' column of 'grupo_percurso'/)?.[1];
+      if (missingColumn) {
+        delete fallbackData[missingColumn];
+      }
+      if ((message.includes("'id_percurso'") || message.includes('id_percurso')) && fallbackData.id_percurso !== undefined) {
+        fallbackData.id_percrso = fallbackData.id_percurso;
+        delete fallbackData.id_percurso;
+      }
+      if ((message.includes("'id_percrso'") || message.includes('id_percrso')) && fallbackData.id_percrso !== undefined) {
+        fallbackData.id_percurso = fallbackData.id_percrso;
+        delete fallbackData.id_percrso;
+      }
+      if ((message.includes("'id_estado'") || message.includes('id_estado')) && fallbackData.id_estado !== undefined) {
+        fallbackData.estado = fallbackData.id_estado;
+        delete fallbackData.id_estado;
+      }
+      if ((message.includes("'estado'") || message.includes('estado')) && fallbackData.estado === undefined && fallbackData.id_estado !== undefined) {
+        fallbackData.estado = fallbackData.id_estado;
+        delete fallbackData.id_estado;
+      }
+      if ((message.includes("'data_inicio'") || message.includes('data_inicio')) && fallbackData.data_inicio !== undefined) {
+        fallbackData.data_hora_inicio = fallbackData.data_inicio;
+        delete fallbackData.data_inicio;
+      }
+      if ((message.includes("'data_hora_inicio'") || message.includes('data_hora_inicio')) && fallbackData.data_hora_inicio !== undefined) {
+        fallbackData.data_inicio = fallbackData.data_hora_inicio;
+        delete fallbackData.data_hora_inicio;
+      }
+      if (JSON.stringify(fallbackData) !== JSON.stringify(data)) {
+        return await this.supabase.insertOne('grupo_percurso', fallbackData);
+      }
+      throw error;
+    }
   }
 
   async updateGrupoPercurso(id, data) {
     this.validateRequiredFields(data, 'grupo_percurso', true);
     return await this.supabase.updateOne('grupo_percurso', { id_grupo_percurso: id }, data);
+  }
+
+  async updateGrupoPercursoByKeys(keys, data) {
+    if (!keys || keys.id_grupo === undefined || keys.id_percurso === undefined) {
+      throw new Error('Missing id_grupo or id_percurso for grupo_percurso update');
+    }
+    this.validateRequiredFields(data, 'grupo_percurso', true);
+    const updates = { ...data };
+    delete updates.id_grupo;
+    delete updates.id_percurso;
+    return await this.supabase.updateOne('grupo_percurso', { id_grupo: keys.id_grupo, id_percurso: keys.id_percurso }, updates);
   }
 
   async getAllGrupoPercurso() {

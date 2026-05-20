@@ -67,9 +67,10 @@
             </ion-label>
             <ion-button
               slot="end"
-              (click)="startRouteForGroup(group)">
-              <ion-icon name="play"></ion-icon>
-              <ion-label>{{ t.translate('start_route') }}</ion-label>
+              [color]="group.ongoingRoute ? 'danger' : 'success'"
+              (click)="group.ongoingRoute ? stopRouteForGroup(group) : startRouteForGroup(group)">
+              <ion-icon [name]="group.ongoingRoute ? 'stop' : 'play'"></ion-icon>
+              <span>{{ t.translate(group.ongoingRoute ? 'stop_route' : 'start_route') }}</span>
             </ion-button>
           </ion-item>
         </ng-container>

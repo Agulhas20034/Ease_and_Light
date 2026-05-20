@@ -32,21 +32,19 @@ export class LocationService {
     return new Promise<LocationResult>((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error('No geolocation available'));
 
-      const IGNORE_COARSE = 100000; 
-      const ACCEPTABLE_FALLBACK = 1000; 
+      const IGNORE_COARSE = 100000;
       const samples: Array<{ lat: number; lng: number; acc: number; ts: number }> = [];
-      const start = Date.now();
 
       function onPos(pos: GeolocationPosition) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const acc = pos.coords.accuracy;
-        if (acc != null && acc > IGNORE_COARSE) {
-          console.warn('Discarding very coarse browser position:', acc);
+        const acc = pos.coords.accuracy ?? 0;
+        if (acc > IGNORE_COARSE) {
+          console.warn('Discarding extremely coarse browser position:', acc);
           return;
         }
-        samples.push({ lat, lng, acc: acc ?? 0, ts: Date.now() });
-        if (acc != null && acc <= 100) {
+        samples.push({ lat, lng, acc, ts: Date.now() });
+        if (acc <= 200) {
           cleanup();
           resolve({ lat, lng, acc, source: 'browser' });
         }
@@ -61,17 +59,15 @@ export class LocationService {
       try {
         navigator.geolocation.getCurrentPosition(onPos, onErr, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
       } catch (e) {
-        
       }
 
       const timer = setTimeout(() => {
         if (samples.length) {
           const best = samples.reduce((b, s) => (s.acc < b.acc ? s : b), samples[0]);
-          if (best.acc <= ACCEPTABLE_FALLBACK) {
-            cleanup();
-            resolve({ lat: best.lat, lng: best.lng, acc: best.acc, source: 'browser' });
-            return;
-          }
+          cleanup();
+          console.warn('Browser geolocation fallback using best available sample:', best);
+          resolve({ lat: best.lat, lng: best.lng, acc: best.acc, source: 'browser' });
+          return;
         }
         cleanup();
         reject(new Error('No acceptable position'));
