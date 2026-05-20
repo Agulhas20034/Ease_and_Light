@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t('edit_profile') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ t('edit_profile') }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-list lines="full">
+    <ion-item>
+      <ion-label position="stacked">{{ t('name') }}</ion-label>
+      <ion-input [(ngModel)]="user.nome" type="text"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t('email') }}</ion-label>
+      <ion-input [value]="user.email" type="email" readonly></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t('phone') }}</ion-label>
+      <ion-input [(ngModel)]="user.telefone" type="text"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t('nif') }}</ion-label>
+      <ion-input [(ngModel)]="user.nif" type="text"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ t('passport') }}</ion-label>
+      <ion-input [(ngModel)]="user.passaporte" type="text"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <div class="actions">
+    <ion-button expand="block" color="primary" (click)="save()" [disabled]="saving">{{ t('save') }}</ion-button>
+  </div>
+
+</ion-content>

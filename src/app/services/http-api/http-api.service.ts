@@ -89,6 +89,10 @@ export class HttpApiService {
     return this.create('estabelecimento', data);
   }
 
+  async createEstabelecimentoMinimal(data: any): Promise<any> {
+    return this.create('estabelecimento/minimal', data);
+  }
+
   async updateEstabelecimento(id: number, data: any): Promise<any> {
     return this.update(`estabelecimento/${id}`, data);
   }
@@ -168,6 +172,17 @@ export class HttpApiService {
 
   async deletePercurso(id: number): Promise<any> {
     return this.delete(`percurso/${id}`);
+  }
+
+  // Reviews
+  async createReview(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/reviews`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getReviewsByLocation(locationId: string): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/reviews/${encodeURIComponent(locationId)}`).toPromise() as any;
+    return response?.data;
   }
 
   // Grupo

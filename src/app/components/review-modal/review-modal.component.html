@@ -1,0 +1,47 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ tkey('leave_review') }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">{{ tkey('close') || 'Close' }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">{{ tkey('rating') }}</ion-label>
+      <div class="star-row">
+        <button type="button" class="star" *ngFor="let s of [1,2,3,4,5]; let i = index" [class.active]="(i+1) <= rating" (click)="rating = i + 1" [attr.aria-label]="'Rate '+(i+1)">
+          <ion-icon [name]="(i+1) <= rating ? 'star' : 'star-outline'"></ion-icon>
+        </button>
+      </div>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ tkey('review_title') }}</ion-label>
+      <ion-input [(ngModel)]="title"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ tkey('review_description') }}</ion-label>
+      <ion-textarea [(ngModel)]="description"></ion-textarea>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">{{ tkey('review_photos') }}</ion-label>
+      <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" />
+    </ion-item>
+
+    <div class="photos-preview" *ngIf="photos.length">
+      <div *ngFor="let p of photos; let i = index" class="photo-item">
+        <img [src]="p" [class.enlarged]="expandedPhotoIndex === i" (click)="togglePhotoSize(i)" />
+        <ion-button size="small" color="danger" fill="solid" class="photo-remove-button" (click)="removePhoto(i)">{{ tkey('remove_photo') }}</ion-button>
+      </div>
+    </div>
+
+    <ion-item lines="none">
+      <ion-button expand="block" fill="solid" color="primary" class="fancy-button" (click)="submit()" [disabled]="saving">{{ tkey('submit_review') }}</ion-button>
+    </ion-item>
+  </ion-list>
+</ion-content>

@@ -75,12 +75,6 @@ const routes: Routes = [
     data: { requiredRole: 'Peregrino', titleKey: 'create_route' }
   },
   {
-    path: 'gere-percurso',
-    loadChildren: () => import('./pages/Peregrino/gere-percurso/gere-percurso.module').then( m => m.GerePercursoPageModule),
-    canActivate: [RoleGuard],
-    data: { requiredRole: 'Peregrino', titleKey: 'manage_routes' }
-  },
-  {
     path: 'gere-grupo',
     loadChildren: () => import('./pages/Peregrino/gere-grupo/gere-grupo.module').then( m => m.GereGrupoPageModule),
     canActivate: [RoleGuard],
@@ -220,6 +214,18 @@ const routes: Routes = [
     canActivate: [RoleGuard],
     data: { requiredRole: '*', titleKey: 'edit_group' }
   },
+  {
+    path: 'peregrino/cria-localizacao',
+    loadChildren: () => import('./pages/Peregrino/cria-localizacao/cria-localizacao.module').then( m => m.CriaLocalizacaoPageModule)
+  },
+  {
+    path: 'edita-info',
+    loadChildren: () => import('./pages/Peregrino/edita-info/edita-info.module').then( m => m.EditaInfoPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: '*', titleKey: 'edit_profile' }
+  },
+
+
 
 
 ];

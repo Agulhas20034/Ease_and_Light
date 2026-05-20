@@ -8,8 +8,8 @@
   <ion-list>
     <ion-item>
       <ion-label position="stacked">{{ t.translate('type') }}</ion-label>
-      <ion-select [(ngModel)]="tipo" interface="popover" placeholder="{{ t.translate('select_type') }}">
-        <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo">{{ tp.descr || tp.descricao || tp.description || tp.descricao_tipo || tp.nome || tp.tipo || tp.name }}</ion-select-option>
+      <ion-select [(ngModel)]="id_tipo_estabelecimento" interface="popover" placeholder="{{ t.translate('select_type') }}">
+        <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo_estabelecimento || tp.id_tipo">{{ tp.descr || tp.descricao || tp.description || tp.descricao_tipo || tp.nome || tp.tipo || tp.name }}</ion-select-option>
       </ion-select>
     </ion-item>
 

@@ -1,0 +1,57 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/inbox" *ngIf="mode === 'map'"></ion-back-button>
+      <ion-button (click)="backToMap()" *ngIf="mode === 'form'">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ mode === 'map' ? 'Select Location' : t.translate('create_location') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="mode === 'map'" class="map-wrapper">
+    <div #mapContainer id="map"></div>
+    <div class="save-button-container">
+      <ion-button expand="block" (click)="savePinLocation()" color="primary" [disabled]="!hasPin">
+        {{ hasPin ? ('Save Location (' + selectedLat?.toFixed(6) + ', ' + selectedLng?.toFixed(6) + ')') : 'Tap the map to place a pin' }}
+      </ion-button>
+    </div>
+  </div>
+
+  <div *ngIf="mode === 'form'" class="form-wrapper">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('type') }}</ion-label>
+        <ion-select [(ngModel)]="id_tipo_estabelecimento" interface="popover" placeholder="{{ t.translate('select_type') }}">
+          <ion-select-option *ngFor="let tp of tipos" [value]="tp.id_tipo_estabelecimento || tp.id_tipo">{{ tp.descr || tp.descricao || tp.description || tp.descricao_tipo || tp.nome || tp.tipo || tp.name }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('name') }}</ion-label>
+        <ion-input [(ngModel)]="nome"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Lat</ion-label>
+        <ion-input [(ngModel)]="lat" type="number" readonly></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Lon</ion-label>
+        <ion-input [(ngModel)]="lon" type="number" readonly></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">{{ t.translate('postal_code') }}</ion-label>
+        <ion-input [(ngModel)]="cod_postal" placeholder="1234-456"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-button expand="block" (click)="createLocation()" [disabled]="loading">{{ t.translate('save') }}</ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+</ion-content>

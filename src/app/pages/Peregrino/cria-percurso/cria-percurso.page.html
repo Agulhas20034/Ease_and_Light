@@ -1,11 +1,142 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ t('create_route') }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-    </ion-toolbar>
-  </ion-header>
+  
+
+  <div class="container">
+    <form [formGroup]="percursoForm" (ngSubmit)="submitForm()">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>{{ t('route_details') }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item>
+            <ion-label position="floating">{{ t('route_name') }}*</ion-label>
+            <ion-input 
+              formControlName="nome" 
+              type="text"
+              [placeholder]="t('route_name_placeholder')">
+            </ion-input>
+          </ion-item>
+          <ion-text color="danger" *ngIf="percursoForm.get('nome')?.invalid && percursoForm.get('nome')?.touched">
+            <p class="ion-padding-start ion-text-wrap">
+              <small *ngIf="percursoForm.get('nome')?.errors?.['required']">{{ t('route_name_required') }}</small>
+              <small *ngIf="percursoForm.get('nome')?.errors?.['minlength']">{{ t('route_name_min_length') }}</small>
+            </p>
+          </ion-text>
+
+          <ion-item>
+            <ion-label position="floating">{{ t('route_description') }}*</ion-label>
+            <ion-textarea 
+              formControlName="descr" 
+              [placeholder]="t('route_description_placeholder')"
+              rows="4">
+            </ion-textarea>
+          </ion-item>
+          <ion-text color="danger" *ngIf="percursoForm.get('descr')?.invalid && percursoForm.get('descr')?.touched">
+            <p class="ion-padding-start ion-text-wrap">
+              <small *ngIf="percursoForm.get('descr')?.errors?.['required']">{{ t('route_description_required') }}</small>
+              <small *ngIf="percursoForm.get('descr')?.errors?.['minlength']">{{ t('route_description_min_length') }}</small>
+            </p>
+          </ion-text>
+
+          <ion-item>
+            <ion-label position="floating">{{ t('difficulty_level') }}*</ion-label>
+            <ion-select 
+              formControlName="id_dificuldade"
+              [placeholder]="t('select_difficulty')">
+              <ion-select-option *ngFor="let dif of dificuldades" [value]="dif.id_dificuldade">
+                {{ dif.nome }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-text color="danger" *ngIf="percursoForm.get('id_dificuldade')?.invalid && percursoForm.get('id_dificuldade')?.touched">
+            <p class="ion-padding-start ion-text-wrap">
+              <small>{{ t('select_difficulty_required') }}</small>
+            </p>
+          </ion-text>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card *ngIf="selectedEtapas.length > 0">
+        <ion-card-header>
+          <ion-card-title>{{ t('selected_locations') }} ({{ selectedEtapas.length }})</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item *ngFor="let etapa of selectedEtapas">
+              <ion-icon name="location" slot="start" color="primary"></ion-icon>
+              <ion-label>
+                <h2>{{ etapa.nome }}</h2>
+                <p>{{ etapa.descricao }}</p>
+              </ion-label>
+              <ion-button 
+                fill="clear" 
+                color="danger" 
+                slot="end"
+                (click)="removeEtapa(etapa.id_estabelecimento)">
+                <ion-icon name="trash"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>{{ t('select_locations') }}</ion-card-title>
+          <ion-card-subtitle *ngIf="estabelecimentos.length === 0">
+            {{ t('loading_locations') }}
+          </ion-card-subtitle>
+          <ion-card-subtitle *ngIf="estabelecimentos.length > 0">
+            {{ availableEstabelecimentos.length }} {{ t('locations_available') }}
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div *ngIf="estabelecimentos.length > 0">
+            <ion-item>
+              <ion-label position="floating">{{ t('choose_stage') }}</ion-label>
+              <ion-select
+                [value]="selectedEstabelecimentoId"
+                [placeholder]="t('select_location')"
+                (ionChange)="addEtapa($event.detail.value)"
+                [disabled]="availableEstabelecimentos.length === 0"
+              >
+                <ion-select-option
+                  *ngFor="let est of availableEstabelecimentos"
+                  [value]="est.id_estabelecimento"
+                >
+                  {{ est.nome }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <p class="ion-text-wrap ion-margin-top" *ngIf="availableEstabelecimentos.length === 0">
+              {{ t('all_locations_added') }}
+            </p>
+          </div>
+          <div *ngIf="estabelecimentos.length === 0" class="ion-text-center ion-padding">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>{{ t('loading_locations') }}</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="button-group ion-padding">
+        <ion-button expand="block" type="submit" [disabled]="isSubmitting || selectedEtapas.length === 0">
+          <ion-spinner name="crescent" *ngIf="isSubmitting"></ion-spinner>
+          {{ isSubmitting ? t('creating') : t('create_route_btn') }}
+        </ion-button>
+        <ion-button expand="block" fill="outline" type="button" (click)="clearForm()" [disabled]="isSubmitting">
+          {{ t('clear') }}
+        </ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>
