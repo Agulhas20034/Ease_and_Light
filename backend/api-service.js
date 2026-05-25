@@ -680,17 +680,21 @@ class ApiService {
       const message = error?.message || error?.error?.message || error?.details || String(error || '');
       console.warn('createGrupoPercurso insert error', { error, message });
       const fallbackData = { ...data };
+      if (fallbackData.id_percrso !== undefined && fallbackData.id_percurso === undefined) {
+        fallbackData.id_percurso = fallbackData.id_percrso;
+        delete fallbackData.id_percrso;
+      }
+      if (fallbackData.id_estado !== undefined && fallbackData.estado === undefined) {
+        fallbackData.estado = fallbackData.id_estado;
+        delete fallbackData.id_estado;
+      }
+      if (fallbackData.data_inicio !== undefined && fallbackData.data_hora_inicio === undefined) {
+        fallbackData.data_hora_inicio = fallbackData.data_inicio;
+        delete fallbackData.data_inicio;
+      }
       const missingColumn = message.match(/Could not find the '([^']+)' column of 'grupo_percurso'/)?.[1];
       if (missingColumn) {
         delete fallbackData[missingColumn];
-      }
-      if ((message.includes("'id_percurso'") || message.includes('id_percurso')) && fallbackData.id_percurso !== undefined) {
-        fallbackData.id_percrso = fallbackData.id_percurso;
-        delete fallbackData.id_percurso;
-      }
-      if ((message.includes("'id_percrso'") || message.includes('id_percrso')) && fallbackData.id_percrso !== undefined) {
-        fallbackData.id_percurso = fallbackData.id_percrso;
-        delete fallbackData.id_percrso;
       }
       if ((message.includes("'id_estado'") || message.includes('id_estado')) && fallbackData.id_estado !== undefined) {
         fallbackData.estado = fallbackData.id_estado;

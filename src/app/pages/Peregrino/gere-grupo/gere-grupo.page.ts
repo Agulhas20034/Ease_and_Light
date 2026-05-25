@@ -459,7 +459,6 @@ export class GereGrupoPage implements OnInit {
       const grupoPercursoData = {
         id_grupo: group.id_grupo,
         id_percurso: route.id_percurso,
-        id_percrso: route.id_percurso,
         estado: 2,
         data_hora_inicio: new Date().toISOString()
       };
