@@ -48,15 +48,18 @@ export class LoginPage {
 
       // apenas permitir utilizadores com estado === 1
       if (typeof user.estado !== 'undefined' && Number(user.estado) !== 1) {
-        this.showToast(this.t('account_inactive') || 'Account is not active', 'warning');
+        const message = Number(user.estado) === 2
+          ? (this.t('account_restitution_contact_admin') || "Email Admin at 'admin account email' for account restitution")
+          : (this.t('account_inactive') || 'Account is not active');
+        this.showToast(message, 'warning');
         this.loading = false;
         return;
       }
 
-      const userWithProfile = { 
-        ...user, 
-        profileType: this.getProfileTypeName(user.id_tipo), 
-        id_tipo: user.id_tipo 
+      const userWithProfile = {
+        ...user,
+        profileType: this.getProfileTypeName(user.id_tipo),
+        id_tipo: user.id_tipo
       };
       localStorage.setItem('currentUser', JSON.stringify(userWithProfile));
       this.showToast(this.t('login_successful') || 'Login successful!', 'success');

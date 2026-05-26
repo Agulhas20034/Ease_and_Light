@@ -43,7 +43,11 @@ export class HttpApiService {
   }
 
   async register(email: string, password: string, nome: string, additionalData?: any): Promise<any> {
-    const response = await this.http.post(`${this.apiUrl}/api/auth/register`, { email, password, nome, ...additionalData }).toPromise() as any;
+    const payload: any = { email, password, nome, ...additionalData };
+    if (typeof payload.estado === 'undefined') {
+      payload.estado = 1;
+    }
+    const response = await this.http.post(`${this.apiUrl}/api/auth/register`, payload).toPromise() as any;
     return response?.data;
   }
 
@@ -52,7 +56,11 @@ export class HttpApiService {
   }
 
   async createUser(data: any): Promise<any> {
-    return this.create('users', data);
+    const payload: any = { ...data };
+    if (typeof payload.estado === 'undefined') {
+      payload.estado = 1;
+    }
+    return this.create('users', payload);
   }
 
   async updateUser(id: number, data: any): Promise<any> {

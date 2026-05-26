@@ -103,6 +103,14 @@ export class EditaContaPage implements OnInit {
     this.passwordIsValid = feedback.length === 0;
   }
 
+  toggleEstado() {
+    if (typeof this.estado !== 'number') {
+      this.estado = 2;
+    } else {
+      this.estado = this.estado === 1 ? 2 : 1;
+    }
+  }
+
   async save() {
     if (!this.id) return;
     this.loading = true;
@@ -111,13 +119,6 @@ export class EditaContaPage implements OnInit {
       if (this.newPassword) {
         if (this.newPassword !== this.confirmPassword) {
           const t = await this.toastCtrl.create({ message: this.t.translate('passwords_not_match'), duration: 2000, color: 'warning' });
-          t.present();
-          this.loading = false;
-          return;
-        }
-       
-      if (!this.newPassword) {
-          const t = await this.toastCtrl.create({ message: this.t.translate('pw_len'), duration: 2000, color: 'warning' });
           t.present();
           this.loading = false;
           return;
@@ -144,6 +145,9 @@ export class EditaContaPage implements OnInit {
       const passCur = (this.passaporte ?? '').toString();
       const passOrig = (this.origPassaporte ?? '').toString();
       if (passCur !== passOrig) updates.passaporte = this.passaporte;
+      if (typeof this.estado === 'number') {
+        updates.estado = this.estado;
+      }
       await this.httpApi.updateUser(this.id, updates);
       const t = await this.toastCtrl.create({ message: this.t.translate('edit_saved'), duration: 1500, color: 'success' });
       t.present();
