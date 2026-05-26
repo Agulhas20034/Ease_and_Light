@@ -94,6 +94,7 @@ export class ReviewModalComponent {
       await this.httpApi.createReview(payload);
       const toast = await this.toastCtrl.create({ message: this.t.translate('review_saved'), duration: 1500, color: 'success' });
       toast.present();
+      try { localStorage.setItem('refreshMapAfterReview', '1'); } catch (ignore) {}
       this.dismiss({ saved: true });
     } catch (e) {
       console.error('Save review failed', e);

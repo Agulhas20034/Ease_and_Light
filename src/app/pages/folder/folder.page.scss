@@ -103,3 +103,57 @@ ion-fab.fab-create {
 ion-fab.fab-refresh {
   top: calc(50% + 40px);
 }
+
+.leaflet-popup-content .review-btn,
+.leaflet-popup-content .add-review-btn,
+.leaflet-popup-content .view-reviews-btn {
+  background: #ff8c00; 
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.leaflet-popup-content .review-btn:active,
+.leaflet-popup-content .review-btn:focus {
+  transform: translateY(1px);
+}
+
+.leaflet-popup-content .reviews-carousel {
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scroll-snap-type: x mandatory;
+}
+
+.leaflet-popup-content .reviews-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.leaflet-popup-content .reviews-carousel::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.leaflet-popup-content .rev-thumb {
+  flex: 0 0 auto;
+  width: 120px; 
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+
+.leaflet-popup-content .rev-thumb.expanded {
+  transform: scale(1.5);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  z-index: 9999;
+}

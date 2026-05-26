@@ -75,6 +75,14 @@ export class FolderPage implements OnInit {
   ionViewDidEnter() {
     this.initializeMap();
     this.startWeatherTimer();
+    try {
+      if (localStorage.getItem('refreshMapAfterReview')) {
+        localStorage.removeItem('refreshMapAfterReview');
+        this.refreshLocationMarkers().catch((e) => console.warn('refresh after return to map failed', e));
+      }
+    } catch (e) {
+      console.warn('Could not read refresh flag', e);
+    }
     try { if (this.routeCheckTimer) clearInterval(this.routeCheckTimer); } catch (e) {}
     this.routeCheckTimer = setInterval(() => { this.checkAndDrawOngoingRoute(); }, 60000);
 
@@ -351,7 +359,27 @@ export class FolderPage implements OnInit {
     }
   }
 
+  private clearLocationMarkers() {
+    try {
+      if (this.locationMarkers.length && this.map) {
+        for (const marker of this.locationMarkers) {
+          try { this.map.removeLayer(marker); } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to clear location markers', e);
+    } finally {
+      this.locationMarkers = [];
+    }
+  }
+
+  private async refreshLocationMarkers() {
+    this.clearLocationMarkers();
+    await this.loadAllLocationMarkers();
+  }
+
   private async loadAllLocationMarkers() {
+    this.clearLocationMarkers();
     try {
       const data: any = await this.httpApi.getAllLocalizacoes();
       const rows = Array.isArray(data) ? data : (data?.data || []);
@@ -363,9 +391,43 @@ export class FolderPage implements OnInit {
         const marker = L.marker([lat, lon]).addTo(this.map!);
         const popupHtml = this.getLocationPopupHtml(r, title);
         marker.bindPopup(popupHtml);
-        marker.on('popupopen', (ev: any) => {
+        marker.on('popupopen', async (ev: any) => {
           try {
             ev.popup.setContent(this.getLocationPopupHtml(r, title));
+
+            try {
+              const locId = String(r.id_estabelecimento || r.id || r.id_localizacao || r.id_estabelecimento_supabase || '');
+              const resp: any = await this.httpApi.getReviewsByLocation(locId);
+              const reviews = Array.isArray(resp) ? resp : (resp?.data || []);
+              let reviewsHtml = '';
+              if (reviews && reviews.length) {
+                const avg = Math.round((reviews.reduce((s: number, x: any) => s + (x.rating || 0), 0) / reviews.length) * 10) / 10;
+                const photos: string[] = [];
+                for (const rev of reviews) {
+                  if (Array.isArray(rev.photos)) {
+                    for (const p of rev.photos) {
+                      if (p) photos.push(p);
+                    }
+                  }
+                }
+                reviewsHtml += `<div style="margin-top:6px"><strong>${this.t('reviews')}:</strong> ${avg} / 5 (${reviews.length})</div>`;
+                if (photos.length) {
+                  reviewsHtml += '<div class="reviews-carousel" style="display:flex;gap:6px;margin-top:6px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;">';
+                  for (const ph of photos) {
+                    const src = (typeof ph === 'string' && ph.startsWith('data:')) ? ph : ph;
+                    reviewsHtml += `<img class="rev-thumb" src="${src}" style="scroll-snap-align:center;" />`;
+                  }
+                  reviewsHtml += '</div>';
+                }
+
+                const base = this.getLocationPopupHtml(r, title);
+                const updated = base.replace('<div style="margin-top:8px">', reviewsHtml + '<div style="margin-top:8px">');
+                ev.popup.setContent(updated);
+              }
+            } catch (revErr) {
+              console.warn('Could not load reviews for popup', revErr);
+            }
+
             const el = ev.popup.getElement();
             if (!el) return;
             const addBtn = el.querySelector('.add-review-btn');
@@ -382,6 +444,17 @@ export class FolderPage implements OnInit {
                 try { this.openReviewsListModal(r); } catch (e) { console.warn(e); }
               });
             }
+
+            try {
+              const thumbs = Array.from(el.querySelectorAll('.rev-thumb')) as any[];
+              thumbs.forEach((img: any) => {
+                img.addEventListener('click', (evt: any) => {
+                  evt.preventDefault(); evt.stopPropagation();
+                  try { img.classList.toggle('expanded'); } catch (e) {}
+                });
+              });
+            } catch (e) {}
+
           } catch (e) { console.warn('popupopen handler error', e); }
         });
         this.locationMarkers.push(marker);
@@ -394,7 +467,8 @@ export class FolderPage implements OnInit {
   getLocationPopupHtml(r: any, title: string) {
     const addLabel = this.t('add_review');
     const viewLabel = this.t('view_reviews');
-    return `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal + '<br/>' : ''}<div style="margin-top:8px"><button class="add-review-btn" data-loc="${r.id_estabelecimento || r.id}">${addLabel}</button> <button class="view-reviews-btn" data-loc="${r.id_estabelecimento || r.id}">${viewLabel}</button></div></div>`;
+    const buttonStyle = 'background:#ff8c00;color:#ffffff;border:none;padding:8px 12px;border-radius:18px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.14);margin-right:6px;';
+    return `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal + '<br/>' : ''}<div style="margin-top:8px"><button class="add-review-btn" style="${buttonStyle}" data-loc="${r.id_estabelecimento || r.id}">${addLabel}</button><button class="view-reviews-btn" style="${buttonStyle}" data-loc="${r.id_estabelecimento || r.id}">${viewLabel}</button></div></div>`;
   }
 
   async openReviewModalForLocation(location: any) {
@@ -406,6 +480,7 @@ export class FolderPage implements OnInit {
     await modal.present();
     const res = await modal.onDidDismiss();
     if (res?.data?.saved) {
+      await this.refreshLocationMarkers();
     }
   }
 

@@ -95,14 +95,12 @@
         <ion-label>{{ t.translate('manage_invites') }}</ion-label>
         <ion-badge color="danger" *ngIf="unreadInvitesCount > 0">{{ unreadInvitesCount }}</ion-badge>
       </ion-tab-button>
+      <ion-tab-button tab="create-group" (click)="goToCreateGroup()">
+        <ion-icon name="add"></ion-icon>
+        <ion-label>{{ t.translate('create_group') }}</ion-label>
+      </ion-tab-button>
     </ion-tab-bar>
   </ion-tabs>
 
   <ion-loading [isOpen]="loading" [message]="t.translate('loading')"></ion-loading>
-
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
-    <ion-fab-button (click)="goToCreateGroup()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>
