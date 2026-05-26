@@ -1,0 +1,82 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t.translate('route_reviews') }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-tabs (ionChange)="tabChanged($event)">
+    <ion-tab tab="view-routes">
+      <ion-list *ngIf="routes.length > 0">
+        <ion-item *ngFor="let route of routes">
+          <ion-label>
+            <h2>{{ route.nome || route.name }}</h2>
+            <p>{{ route.descr || route.description }}</p>
+          </ion-label>
+          <ion-button slot="end" (click)="previewRoute(route)" color="primary">
+            <ion-icon name="map"></ion-icon>
+            {{ t.translate('preview_route') }}
+          </ion-button>
+        </ion-item>
+      </ion-list>
+      <ion-text *ngIf="routes.length === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_routes_available') }}</p>
+      </ion-text>
+    </ion-tab>
+
+    <ion-tab tab="view-route-reviews">
+      <ion-list *ngIf="routeReviews.length > 0">
+        <ng-container *ngFor="let review of routeReviews">
+          <ion-item-divider>
+            <ion-label>
+              {{ getRouteById((review.locationId || '').replace('route-', ''))?.nome || 'Route ' + (review.locationId || '').replace('route-', '') }}
+            </ion-label>
+          </ion-item-divider>
+          <ion-item *ngFor="let rev of getReviewsForRoute((review.locationId || '').replace('route-', ''))">
+            <ion-label>
+              <h3>{{ rev.title || t.translate('no_title') }}</h3>
+              <p>{{ rev.description }}</p>
+              <ion-note>
+                <ion-icon name="star"></ion-icon>
+                {{ rev.rating }} / 5
+              </ion-note>
+            </ion-label>
+          </ion-item>
+        </ng-container>
+      </ion-list>
+      <ion-text *ngIf="routeReviews.length === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_route_reviews') }}</p>
+      </ion-text>
+    </ion-tab>
+
+    <ion-tab-bar slot="bottom">
+      <ion-tab-button tab="view-routes">
+        <ion-icon name="map"></ion-icon>
+        <ion-label>{{ t.translate('view_routes') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button tab="view-route-reviews">
+        <ion-icon name="star"></ion-icon>
+        <ion-label>{{ t.translate('view_route_reviews') }}</ion-label>
+      </ion-tab-button>
+    </ion-tab-bar>
+  </ion-tabs>
+
+  <ion-modal [isOpen]="selectedRoute !== null" (ionModalDidDismiss)="closePreview()">
+    <ng-template>
+      <ion-header [translucent]="true">
+        <ion-toolbar>
+          <ion-title>{{ selectedRoute?.nome || selectedRoute?.name }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closePreview()">{{ t.translate('close') }}</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <div id="preview-map" style="width: 100%; height: 100%;"></div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-loading [isOpen]="loading" [message]="t.translate('loading')"></ion-loading>
+</ion-content>
+

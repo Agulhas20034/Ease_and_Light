@@ -223,7 +223,11 @@ const routes: Routes = [
     loadChildren: () => import('./pages/Peregrino/edita-info/edita-info.module').then( m => m.EditaInfoPageModule),
     canActivate: [RoleGuard],
     data: { requiredRole: '*', titleKey: 'edit_profile' }
+  },  {
+    path: 'reviews-percurso',
+    loadChildren: () => import('./pages/Peregrino/reviews-percurso/reviews-percurso.module').then( m => m.ReviewsPercursoPageModule)
   },
+
 
 
 

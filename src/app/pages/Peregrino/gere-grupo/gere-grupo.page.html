@@ -86,18 +86,22 @@
         <ion-icon name="folder"></ion-icon>
         <ion-label>{{ t.translate('manage_groups') }}</ion-label>
       </ion-tab-button>
-      <ion-tab-button tab="start-route">
-        <ion-icon name="play"></ion-icon>
-        <ion-label>{{ t.translate('start_route') }}</ion-label>
+      <ion-tab-button tab="create-group" (click)="goToCreateGroup()">
+        <ion-icon name="add"></ion-icon>
+        <ion-label>{{ t.translate('create_group') }}</ion-label>
       </ion-tab-button>
       <ion-tab-button tab="invites">
         <ion-icon name="mail"></ion-icon>
         <ion-label>{{ t.translate('manage_invites') }}</ion-label>
         <ion-badge color="danger" *ngIf="unreadInvitesCount > 0">{{ unreadInvitesCount }}</ion-badge>
       </ion-tab-button>
-      <ion-tab-button tab="create-group" (click)="goToCreateGroup()">
-        <ion-icon name="add"></ion-icon>
-        <ion-label>{{ t.translate('create_group') }}</ion-label>
+      <ion-tab-button tab="start-route">
+        <ion-icon name="play"></ion-icon>
+        <ion-label>{{ t.translate('start_route') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button (click)="goToReviewsPercurso()">
+        <ion-icon name="star"></ion-icon>
+        <ion-label>{{ t.translate('route_reviews') }}</ion-label>
       </ion-tab-button>
     </ion-tab-bar>
   </ion-tabs>

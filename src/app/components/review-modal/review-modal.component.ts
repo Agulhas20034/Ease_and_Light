@@ -16,6 +16,8 @@ import { TranslationService } from '../../services/translations/translation.serv
 export class ReviewModalComponent {
   @Input() location: any;
   @Input() locationId: string | null = null;
+  @Input() reviewType: 'location' | 'route' = 'location';
+  @Input() routeId: string | null = null;
 
   rating = 5;
   title = '';
@@ -23,6 +25,21 @@ export class ReviewModalComponent {
   photos: string[] = [];
   saving = false;
   expandedPhotoIndex: number | null = null;
+
+  get isRouteReview(): boolean {
+    return this.reviewType === 'route' || String(this.locationId || '').startsWith('route-');
+  }
+
+  get headerTitle(): string {
+    return this.isRouteReview ? this.t.translate('review_route') : this.t.translate('leave_review');
+  }
+
+  get targetName(): string {
+    if (this.isRouteReview) {
+      return this.routeId || String(this.locationId || '').replace(/^route-/, '');
+    }
+    return this.location?.nome || this.location?.name || this.t.translate('leave_review');
+  }
 
   constructor(private modalCtrl: ModalController, private httpApi: HttpApiService, private toastCtrl: ToastController, private t: TranslationService) {}
 
@@ -92,7 +109,11 @@ export class ReviewModalComponent {
       };
 
       await this.httpApi.createReview(payload);
-      const toast = await this.toastCtrl.create({ message: this.t.translate('review_saved'), duration: 1500, color: 'success' });
+      const toast = await this.toastCtrl.create({
+        message: this.t.translate(this.isRouteReview ? 'route_review_saved' : 'review_saved'),
+        duration: 1500,
+        color: 'success'
+      });
       toast.present();
       try { localStorage.setItem('refreshMapAfterReview', '1'); } catch (ignore) {}
       this.dismiss({ saved: true });
