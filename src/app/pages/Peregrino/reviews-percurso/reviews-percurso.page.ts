@@ -13,6 +13,14 @@ import * as L from 'leaflet';
 export class ReviewsPercursoPage implements OnInit {
   routes: any[] = [];
   routeReviews: any[] = [];
+  routeReviewsByRouteId: Record<string, any[]> = {};
+  selectedReviewRouteId: string | null = null;
+  reviewModalOpen = false;
+  selectedRouteReviews: any[] = [];
+  selectedRouteAvg: number | null = null;
+  selectedImageKey: string | null = null;
+  selectedImageSrc: string | null = null;
+  private _domImageOverlay: HTMLElement | null = null;
   loading = false;
   selectedRoute: any = null;
   previewMap: L.Map | null = null;
@@ -26,6 +34,7 @@ export class ReviewsPercursoPage implements OnInit {
 
   ngOnInit() {
     this.loadRoutes();
+    this.loadRouteReviews();
   }
 
   async loadRoutes() {
@@ -47,14 +56,139 @@ export class ReviewsPercursoPage implements OnInit {
       const data: any = await this.httpApi.getAll('reviews');
       const allReviews = Array.isArray(data) ? data : (data?.data || []);
       this.routeReviews = allReviews.filter((r: any) => 
-        String(r.locationId || '').startsWith('route-')
+        String(r.locationId || '').trim().startsWith('route-')
       );
-      console.log('[ReviewsPercurso] Loaded route reviews:', this.routeReviews.length);
+      this.routeReviewsByRouteId = this.groupRouteReviewsByRouteId(this.routeReviews);
+      const distinctKeys = Object.keys(this.routeReviewsByRouteId);
+      console.log('[ReviewsPercurso] Loaded route reviews:', this.routeReviews.length, 'distinct route keys:', distinctKeys);
+      if (!distinctKeys.includes('6')) {
+        console.warn('[ReviewsPercurso] route-6 not found among review keys:', distinctKeys.slice(0, 20));
+      }
     } catch (error) {
       console.warn('Error loading route reviews', error);
     } finally {
       this.loading = false;
     }
+  }
+
+  private groupRouteReviewsByRouteId(reviews: any[]): Record<string, any[]> {
+    const groups: Record<string, any[]> = {};
+    for (const review of reviews) {
+      let routeId = String(review.locationId || '').replace(/^route-/, '');
+      routeId = routeId.trim();
+      if (!routeId) {
+        continue;
+      }
+      if (!groups[routeId]) {
+        groups[routeId] = [];
+      }
+      groups[routeId].push(review);
+    }
+    return groups;
+  }
+
+  getRouteId(route: any): string {
+    return String(route?.id_percurso ?? route?.id ?? '').trim();
+  }
+
+  hasRouteReviews(routeId: string): boolean {
+    return Array.isArray(this.routeReviewsByRouteId[routeId]) && this.routeReviewsByRouteId[routeId].length > 0;
+  }
+
+  getReviewsForRoute(routeId: string | number): any[] {
+    return this.routeReviewsByRouteId[String(routeId)] || [];
+  }
+
+  selectReviewRoute(routeId: string) {
+    if (!this.hasRouteReviews(routeId)) return;
+    this.selectedReviewRouteId = routeId;
+    this.selectedRouteReviews = this.getReviewsForRoute(routeId);
+    if (this.selectedRouteReviews.length) {
+      const sum = this.selectedRouteReviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+      this.selectedRouteAvg = Math.round((sum / this.selectedRouteReviews.length) * 10) / 10; 
+    } else {
+      this.selectedRouteAvg = null;
+    }
+    this.reviewModalOpen = true;
+  }
+
+  closeReviewModal() {
+    this.reviewModalOpen = false;
+    this.selectedReviewRouteId = null;
+    this.selectedRouteReviews = [];
+    this.selectedRouteAvg = null;
+    this.selectedImageKey = null;
+    this.selectedImageSrc = null;
+    this.removeDomImageOverlay();
+  }
+
+  getImageKey(routeId: string | null, reviewIdx: number, imgIdx: number) {
+    return `${routeId ?? ''}_${reviewIdx}_${imgIdx}`;
+  }
+
+  isImageSelected(key: string | null) {
+    return this.selectedImageKey === key;
+  }
+
+  toggleImage(key: string | null, src?: string) {
+    if (!key) {
+      this.selectedImageKey = null;
+      this.selectedImageSrc = null;
+      this.removeDomImageOverlay();
+      return;
+    }
+
+    if (this.selectedImageKey === key) {
+      this.selectedImageKey = null;
+      this.selectedImageSrc = null;
+      this.removeDomImageOverlay();
+    } else {
+      this.selectedImageKey = key;
+      this.selectedImageSrc = src || null;
+      this.showDomImageOverlay(this.selectedImageSrc);
+    }
+  }
+
+  private showDomImageOverlay(src: string | null) {
+    this.removeDomImageOverlay();
+    if (!src || typeof document === 'undefined') return;
+    const overlay = document.createElement('div');
+    overlay.className = 'reviews-image-dom-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(0,0,0,0.8)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '2147483647';
+    overlay.style.cursor = 'pointer';
+
+    overlay.addEventListener('click', () => {
+      this.toggleImage(null);
+    });
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.style.maxWidth = '92%';
+    img.style.maxHeight = '92%';
+    img.style.borderRadius = '8px';
+    img.style.boxShadow = '0 8px 30px rgba(0,0,0,0.6)';
+    img.style.objectFit = 'contain';
+    overlay.appendChild(img);
+
+    document.body.appendChild(overlay);
+    this._domImageOverlay = overlay;
+  }
+
+  private removeDomImageOverlay() {
+    try {
+      if (this._domImageOverlay && this._domImageOverlay.parentElement) {
+        this._domImageOverlay.parentElement.removeChild(this._domImageOverlay);
+      }
+    } catch (e) {
+    }
+    this._domImageOverlay = null;
   }
 
   async previewRoute(route: any) {
@@ -209,19 +343,13 @@ export class ReviewsPercursoPage implements OnInit {
 
   tabChanged(event: any) {
     const tab = event.detail.value;
-    if (tab === 'view-route-reviews' && this.routeReviews.length === 0) {
+    if (tab === 'view-route-reviews') {
       this.loadRouteReviews();
     }
   }
 
   getRouteById(routeId: string | number): any {
     return this.routes.find((r: any) => String(r.id_percurso) === String(routeId));
-  }
-
-  getReviewsForRoute(routeId: string | number): any[] {
-    return this.routeReviews.filter((r: any) => 
-      String(r.locationId || '').replace('route-', '') === String(routeId)
-    );
   }
 
   closePreview() {

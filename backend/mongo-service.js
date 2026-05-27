@@ -76,6 +76,10 @@ class MongoService {
   async getReviewsByLocation(locationId, limit = 50) {
     return await Review.find({ locationId }).sort({ createdAt: -1 }).limit(limit).lean();
   }
+
+  async getAllReviews(limit = 1000) {
+    return await Review.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+  }
 }
 
 module.exports = new MongoService();

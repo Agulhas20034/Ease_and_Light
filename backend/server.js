@@ -425,6 +425,16 @@ app.get('/api/reviews/:locationId', async (req, res) => {
   }
 });
 
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 1000;
+    const result = await apiService.getAllReviews(limit);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/percurso/:id', async (req, res) => {
   try {
     const result = await apiService.getPercurso(req.params.id);

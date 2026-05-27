@@ -124,6 +124,7 @@ export class TranslationService {
     preview_route: { pt: 'Pré-visualizar', en: 'Preview' },
     no_routes_available: { pt: 'Nenhum percurso disponível', en: 'No routes available' },
     no_route_reviews: { pt: 'Nenhuma avaliação de percurso', en: 'No route reviews' },
+    select_route_to_view_reviews: { pt: 'Selecione um percurso para ver avaliações', en: 'Select a route to view reviews' },
     route_reviews: { pt: 'Avaliações do Percurso', en: 'Route Reviews' },
 
     /* Cria Percurso Form */

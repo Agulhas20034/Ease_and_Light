@@ -25,27 +25,75 @@
     </ion-tab>
 
     <ion-tab tab="view-route-reviews">
-      <ion-list *ngIf="routeReviews.length > 0">
-        <ng-container *ngFor="let review of routeReviews">
-          <ion-item-divider>
-            <ion-label>
-              {{ getRouteById((review.locationId || '').replace('route-', ''))?.nome || 'Route ' + (review.locationId || '').replace('route-', '') }}
-            </ion-label>
-          </ion-item-divider>
-          <ion-item *ngFor="let rev of getReviewsForRoute((review.locationId || '').replace('route-', ''))">
-            <ion-label>
-              <h3>{{ rev.title || t.translate('no_title') }}</h3>
-              <p>{{ rev.description }}</p>
-              <ion-note>
-                <ion-icon name="star"></ion-icon>
-                {{ rev.rating }} / 5
-              </ion-note>
-            </ion-label>
-          </ion-item>
-        </ng-container>
+      <ion-list *ngIf="routes.length > 0">
+        <ion-item *ngFor="let route of routes"
+                  button
+                  [disabled]="!hasRouteReviews(getRouteId(route))"
+                  (click)="selectReviewRoute(getRouteId(route))">
+          <ion-label>
+            <h2>{{ route.nome || route.name }}</h2>
+            <p>{{ route.descr || route.description }}</p>
+            <p *ngIf="hasRouteReviews(getRouteId(route))">
+              {{ getReviewsForRoute(getRouteId(route)).length }} {{ t.translate('route_reviews') }}
+            </p>
+            <p *ngIf="!hasRouteReviews(getRouteId(route))" class="ion-text-muted">
+              {{ t.translate('no_route_reviews') }}
+            </p>
+          </ion-label>
+          <ion-icon slot="end" name="chevron-forward" *ngIf="hasRouteReviews(getRouteId(route))"></ion-icon>
+        </ion-item>
       </ion-list>
-      <ion-text *ngIf="routeReviews.length === 0" color="medium">
-        <p style="text-align: center; padding: 20px;">{{ t.translate('no_route_reviews') }}</p>
+
+      <ion-text *ngIf="routes.length === 0" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('no_routes_available') }}</p>
+      </ion-text>
+
+      <ion-modal [isOpen]="reviewModalOpen" (ionModalDidDismiss)="closeReviewModal()">
+        <ng-template>
+          <ion-header>
+            <ion-toolbar>
+              <ion-title>
+                {{ getRouteById(selectedReviewRouteId || '')?.nome || getRouteById(selectedReviewRouteId || '')?.name || ('Route ' + (selectedReviewRouteId || '')) }}
+              </ion-title>
+              <ion-buttons slot="end">
+                <ion-button (click)="closeReviewModal()">{{ t.translate('close') }}</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+            <ion-toolbar>
+              <ion-title size="small">
+                <ion-icon name="star"></ion-icon>
+                <strong *ngIf="selectedRouteAvg !== null">{{ selectedRouteAvg }} / 5</strong>
+                <span *ngIf="selectedRouteAvg === null">{{ t.translate('no_reviews') }}</span>
+              </ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content>
+            <ion-list>
+                  <ion-item *ngFor="let rev of selectedRouteReviews; let i = index">
+                    <ion-label>
+                      <h3>{{ rev.title || t.translate('no_title') }}</h3>
+                      <p>{{ rev.description }}</p>
+                      <ion-note>
+                        <ion-icon name="star"></ion-icon>
+                        {{ rev.rating }} / 5
+                      </ion-note>
+                      <div class="review-photos" *ngIf="rev.photos && rev.photos.length">
+                        <img *ngFor="let photo of rev.photos; let j = index"
+                             [src]="photo"
+                             [alt]="rev.title || (t.translate('no_title'))"
+                             class="review-photo"
+                             (click)="toggleImage(getImageKey(selectedReviewRouteId, i, j), photo)" />
+                      </div>
+                    </ion-label>
+                  </ion-item>
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-modal>
+
+
+      <ion-text *ngIf="routes.length > 0 && !selectedReviewRouteId" color="medium">
+        <p style="text-align: center; padding: 20px;">{{ t.translate('select_route_to_view_reviews') }}</p>
       </ion-text>
     </ion-tab>
 

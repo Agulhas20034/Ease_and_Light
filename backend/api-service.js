@@ -1170,6 +1170,10 @@ class ApiService {
     if (!locationId) return [];
     return await this.mongo.getReviewsByLocation(locationId, limit);
   }
+
+  async getAllReviews(limit = 1000) {
+    return await this.mongo.getAllReviews(limit);
+  }
 }
 
 module.exports = ApiService;
