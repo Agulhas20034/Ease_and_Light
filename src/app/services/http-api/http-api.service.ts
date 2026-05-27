@@ -193,6 +193,27 @@ export class HttpApiService {
     return response?.data;
   }
 
+  // Notes (MongoDB)
+  async createNote(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/notes`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getNotesByUser(userId: number): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/notes/user/${encodeURIComponent(String(userId))}`).toPromise() as any;
+    return response?.data;
+  }
+
+  async updateNote(id: string, data: any): Promise<any> {
+    const response = await this.http.put(`${this.apiUrl}/api/notes/${encodeURIComponent(id)}`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async deleteNote(id: string): Promise<any> {
+    const response = await this.http.delete(`${this.apiUrl}/api/notes/${encodeURIComponent(id)}`).toPromise() as any;
+    return response?.data;
+  }
+
   // Grupo
   async getAllGrupo(): Promise<any> {
     return this.getAll('grupo');

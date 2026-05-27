@@ -1,0 +1,79 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ t('itinerary') || 'Itinerario' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ t('itinerary') || 'Itinerario' }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-card *ngIf="loadingRoute">
+    <ion-card-content>{{ t('loading') || 'Loading...' }}</ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="!loadingRoute && routeStops && routeStops.length">
+    <ion-card-header>
+      <ion-card-title>{{ t('active_route_locations') || 'Active Route Locations' }}</ion-card-title>
+    </ion-card-header>
+    <ion-list>
+      <ion-item *ngFor="let s of routeStops">
+        <ion-label>
+          <h3>{{ s.title }}</h3>
+          <p *ngIf="s.locId">{{ 'ID: ' + s.locId }}</p>
+          <p *ngIf="s.lat && s.lon">{{ s.lat + ', ' + s.lon }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <ion-card *ngIf="!loadingRoute && (!routeStops || !routeStops.length)">
+    <ion-card-content>{{ t('no_active_route') || 'No active route currently' }}</ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ t('notes') || 'Notes' }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input placeholder="Title" [(ngModel)]="newNoteTitle"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea placeholder="Write a note..." [(ngModel)]="newNoteText"></ion-textarea>
+      </ion-item>
+      <ion-button expand="full" (click)="addNote()">{{ t('add_note') || 'Add Note' }}</ion-button>
+
+      <ion-list *ngIf="notes && notes.length">
+        <ion-item *ngFor="let n of notes">
+          <div *ngIf="n.isEditing" class="note-editing">
+            <ion-item>
+              <ion-input placeholder="Title" [(ngModel)]="n.editTitle"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-textarea placeholder="Edit note..." [(ngModel)]="n.editContent"></ion-textarea>
+            </ion-item>
+            <ion-button expand="full" color="primary" (click)="saveNote(n)">{{ t('save') || 'Save' }}</ion-button>
+            <ion-button expand="full" fill="outline" (click)="cancelEdit(n)">{{ t('cancel') || 'Cancel' }}</ion-button>
+          </div>
+          <div *ngIf="!n.isEditing" class="note-view">
+            <ion-label>
+              <h3>{{ n.title || (n.content | slice:0:30) }}</h3>
+              <p>{{ n.content }}</p>
+              <small>{{ n.updatedAt | date:'short' }}</small>
+            </ion-label>
+            <ion-button fill="clear" color="medium" (click)="editNote(n)">{{ t('edit') || 'Edit' }}</ion-button>
+            <ion-button fill="clear" color="danger" (click)="deleteNote(n)">{{ t('delete') || 'Delete' }}</ion-button>
+          </div>
+        </ion-item>
+      </ion-list>
+      <div *ngIf="!notes || !notes.length">
+        <small>{{ t('no_notes') || 'No notes yet' }}</small>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

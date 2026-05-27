@@ -227,6 +227,10 @@ const routes: Routes = [
     path: 'reviews-percurso',
     loadChildren: () => import('./pages/Peregrino/reviews-percurso/reviews-percurso.module').then( m => m.ReviewsPercursoPageModule)
   },
+  {
+    path: 'itinerario',
+    loadChildren: () => import('./pages/Peregrino/itinerario/itinerario.module').then( m => m.ItinerarioPageModule)
+  },
 
 
 

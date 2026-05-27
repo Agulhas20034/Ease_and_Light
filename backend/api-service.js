@@ -1174,6 +1174,27 @@ class ApiService {
   async getAllReviews(limit = 1000) {
     return await this.mongo.getAllReviews(limit);
   }
+
+  // Notes 
+  async createNote(data) {
+    if (!data || typeof data.userId === 'undefined') throw new Error('userId is required');
+    return await this.mongo.createNote(data);
+  }
+
+  async getNotesByUser(userId, limit = 1000) {
+    if (typeof userId === 'undefined' || userId === null) return [];
+    return await this.mongo.getNotesByUser(Number(userId), limit);
+  }
+
+  async updateNote(id, data) {
+    if (!id) throw new Error('Note id is required');
+    return await this.mongo.updateNote(id, data);
+  }
+
+  async deleteNote(id) {
+    if (!id) throw new Error('Note id is required');
+    return await this.mongo.deleteNote(id);
+  }
 }
 
 module.exports = ApiService;

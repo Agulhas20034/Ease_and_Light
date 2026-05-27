@@ -39,6 +39,12 @@
                 <ion-label>{{ t('my_backpacks') }}</ion-label>
               </ion-item>
             </ion-menu-toggle>
+            <ion-menu-toggle auto-hide="false">
+              <ion-item routerDirection="root" routerLink="/itinerario" lines="none" detail="false" routerLinkActive="selected">
+                <ion-icon aria-hidden="true" slot="start" ios="document-text-outline" md="document-text-sharp"></ion-icon>
+                <ion-label>{{ t('itinerary') || 'Itinerario' }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
           </div>
 
           <!-- Groups Section -->

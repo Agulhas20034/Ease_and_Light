@@ -37,6 +37,16 @@ const reviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model('Review', reviewSchema);
 
+const noteSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  title: { type: String, default: '' },
+  content: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
 class MongoService {
   async saveChatMessage(data) {
     const message = new ChatMessage(data);
@@ -79,6 +89,26 @@ class MongoService {
 
   async getAllReviews(limit = 1000) {
     return await Review.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+  }
+
+  // Notes
+  async createNote(data) {
+    const noteData = { ...data, updatedAt: Date.now() };
+    const note = new Note(noteData);
+    return await note.save();
+  }
+
+  async getNotesByUser(userId, limit = 1000) {
+    return await Note.find({ userId }).sort({ updatedAt: -1 }).limit(limit).lean();
+  }
+
+  async updateNote(id, data) {
+    data.updatedAt = Date.now();
+    return await Note.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async deleteNote(id) {
+    return await Note.findByIdAndDelete(id);
   }
 }
 
