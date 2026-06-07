@@ -1199,6 +1199,17 @@ class ApiService {
     if (!id) throw new Error('Note id is required');
     return await this.mongo.deleteNote(id);
   }
+
+  async createNotification(data) {
+    if (!data || typeof data.userId === 'undefined') throw new Error('userId is required');
+    if (!data.title) throw new Error('Notification title is required');
+    return await this.mongo.createNotification(data);
+  }
+
+  async getNotificationsByUser(userId, limit = 1000) {
+    if (typeof userId === 'undefined' || userId === null) return [];
+    return await this.mongo.getNotificationsByUser(Number(userId), limit);
+  }
 }
 
 module.exports = ApiService;

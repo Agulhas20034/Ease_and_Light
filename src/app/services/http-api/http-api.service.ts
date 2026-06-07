@@ -219,6 +219,16 @@ export class HttpApiService {
     return response?.data;
   }
 
+  async createNotification(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/notifications`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getNotificationsByUser(userId: number): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/notifications/user/${encodeURIComponent(String(userId))}`).toPromise() as any;
+    return response?.data;
+  }
+
   // Grupo
   async getAllGrupo(): Promise<any> {
     return this.getAll('grupo');

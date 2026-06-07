@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { TranslationService } from '../../services/translations/translation.service';
+import { HttpApiService } from '../../services/http-api/http-api.service';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -24,7 +25,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    public tService: TranslationService
+    public tService: TranslationService,
+    private httpApi: HttpApiService
   ) {}
 
   ngOnInit() {
@@ -141,13 +143,35 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  openNotifications(event: Event) {
+  async openNotifications(event: Event) {
     this.notificationPopoverEvent = event;
+    await this.loadNotifications();
     this.showNotificationsPopover = true;
   }
 
   closeNotifications() {
     this.showNotificationsPopover = false;
     this.notificationPopoverEvent = undefined;
+  }
+
+  private async loadNotifications() {
+    const raw = localStorage.getItem('currentUser');
+    const user = raw ? JSON.parse(raw) : null;
+    const userId = Number(user?.id_utilizador || user?.id || user?.id_user || 0);
+    if (!userId) {
+      this.notifications = [];
+      return;
+    }
+    try {
+      const notes = await this.httpApi.getNotificationsByUser(userId);
+      this.notifications = (Array.isArray(notes) ? notes : []).map((note: any) => ({
+        title: note.title || '',
+        body: note.description || note.content || '',
+        time: note.createdAt ? new Date(note.createdAt).toLocaleString() : ''
+      }));
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+      this.notifications = [];
+    }
   }
 }

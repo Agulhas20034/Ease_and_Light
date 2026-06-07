@@ -87,6 +87,23 @@ export class CriaEntregaEstafetaPage implements OnInit {
             const updates: any = { tipo: 2, estado: 3 };
             await this.httpApi.updateEntregaRecolha(Number(id), updates);
             this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
+            try {
+              const ordem: any = await this.httpApi.getEntregaRecolha(Number(id));
+              const requesterId = Number(ordem?.id_user || ordem?.id_utilizador || ordem?.id_cliente || 0);
+              const raw = localStorage.getItem('currentUser');
+              const user = raw ? JSON.parse(raw) : null;
+              const courierName = user?.nome || user?.email || '';
+              if (requesterId) {
+                await this.httpApi.createNotification({
+                  userId: requesterId,
+                  title: this.tKey('picked_up_by_courier_title') || 'Backpack Picked Up',
+                  description: (this.tKey('picked_up_by_courier_message') || 'Your backpack has been picked up by {{courierName}} and is on its way.').replace('{{courierName}}', courierName || 'the courier'),
+                  createdAt: new Date().toISOString()
+                });
+              }
+            } catch (notifyErr) {
+              console.warn('Could not notify requester about pickup', notifyErr);
+            }
             this.entregas = (this.entregas || []).filter((e: any) => {
               const eid = e.id_entrega_recolha || e.id || e.id_entrega || e.id_recolha;
               return Number(eid) !== Number(id);

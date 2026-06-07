@@ -48,6 +48,15 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note', noteSchema);
 
+const notificationSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Notification = mongoose.model('Notification', notificationSchema);
+
 class MongoService {
   async saveChatMessage(data) {
     const message = new ChatMessage(data);
@@ -110,6 +119,15 @@ class MongoService {
 
   async deleteNote(id) {
     return await Note.findByIdAndDelete(id);
+  }
+
+  async createNotification(data) {
+    const notification = new Notification(data);
+    return await notification.save();
+  }
+
+  async getNotificationsByUser(userId, limit = 1000) {
+    return await Notification.find({ userId }).sort({ createdAt: -1 }).limit(limit).lean();
   }
 }
 

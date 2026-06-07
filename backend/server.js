@@ -475,6 +475,28 @@ app.delete('/api/notes/:id', async (req, res) => {
   }
 });
 
+// Notifications endpoints (MongoDB)
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await apiService.createNotification(payload);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('POST /api/notifications error:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/notifications/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await apiService.getNotificationsByUser(userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/percurso/:id', async (req, res) => {
   try {
     const result = await apiService.getPercurso(req.params.id);

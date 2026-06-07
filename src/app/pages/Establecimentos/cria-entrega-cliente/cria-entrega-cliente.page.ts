@@ -89,6 +89,33 @@ export class CriaEntregaClientePage implements OnInit {
                   const updates: any = { tipo: 2, estado: 4, data_hora_entrega: now };
                   await this.httpApi.updateEntregaRecolha(Number(id), updates);
                   this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
+                  try {
+                    const ordem: any = await this.httpApi.getEntregaRecolha(Number(id));
+                    const requesterId = Number(ordem?.id_user || ordem?.id_utilizador || ordem?.id_cliente || 0);
+                    let locName = ordem?.estab_nome_e || ordem?.estab_nome_r || ordem?.local_entrega || '';
+                    if (!locName) {
+                      const locId = Number(ordem?.id_estabelecimento_e || ordem?.id_localizacao_entrega || ordem?.id_estab_e || 0);
+                      if (locId) {
+                        try {
+                          const locRec: any = await this.httpApi.getLocalizacao(locId);
+                          const locObj = Array.isArray(locRec) ? locRec[0] : locRec;
+                          locName = locObj?.nome || locObj?.nome_rua || locObj?.name || '';
+                        } catch (e) {
+                          // ignore
+                        }
+                      }
+                    }
+                    if (requesterId) {
+                      await this.httpApi.createNotification({
+                        userId: requesterId,
+                        title: this.tKey('delivered_to_location_title') || 'Delivered to Location',
+                        description: `${this.tKey('delivered_to_location_message')?.replace('{{locationName}}', locName || 'the location') || `Your backpack has been delivered to ${locName || 'the location'}.`}`,
+                        createdAt: new Date().toISOString()
+                      });
+                    }
+                  } catch (notifyErr) {
+                    console.warn('Could not notify requester about delivery', notifyErr);
+                  }
                   this.entregas = (this.entregas || []).filter((e: any) => {
                     const eid = e.id_entrega_recolha;
                     return Number(eid) !== Number(id);

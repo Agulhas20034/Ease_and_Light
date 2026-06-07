@@ -181,6 +181,53 @@ export class CriaRecolhaClientePage implements OnInit {
       if (!created) throw lastErr || new Error('Falha ao criar recolha');
       this.showToast(this.tKey('create_collection_client') || 'Recolha criada', 'success');
       try {
+        const raw = localStorage.getItem('currentUser');
+        const currentUser = raw ? JSON.parse(raw) : null;
+        const userId = Number(currentUser?.id_utilizador || currentUser?.id || currentUser?.id_user || 0);
+        if (userId) {
+          const userName = currentUser?.nome || currentUser?.email || 'A user';
+          const backpackId = this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '';
+          const locationName = this.selectedEstabelecimento?.nome || this.selectedEstabelecimento?.nome_rua || this.selectedEstabelecimento?.name || (localStorage.getItem('currentLocationName') || 'the location');
+          await this.httpApi.createNotification({
+            userId,
+            title: this.tKey('collection_registered_notification') || 'Collection Registered',
+            description: `${userName} requested a collection for backpack ${backpackId} at ${locationName}.`,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.warn('Could not save notification', e);
+      }
+      try {
+        const empresaId = this.selectedEmpresa ? (this.selectedEmpresa.id_empresa || this.selectedEmpresa.id) : null;
+        if (empresaId) {
+          const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
+          const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
+          const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(empresaId));
+          const allUsers: any = await this.httpApi.getAllUsers();
+          const userRows = Array.isArray(allUsers) ? allUsers : (allUsers?.data || []);
+          const raw2 = localStorage.getItem('currentUser');
+          const currentUser2 = raw2 ? JSON.parse(raw2) : null;
+          const requesterName = currentUser2?.nome || currentUser2?.email || 'A user';
+          const backpackId = this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '';
+          const locationName = this.selectedEstabelecimento?.nome || this.selectedEstabelecimento?.nome_rua || this.selectedEstabelecimento?.name || (localStorage.getItem('currentLocationName') || 'the location');
+          for (const a of assigned) {
+            const u = userRows.find((usr: any) => Number(usr.id_utilizador) === Number(a.id_utilizador));
+            const uid = Number(u?.id_utilizador || u?.id || u?.id_user || 0);
+            if (uid) {
+              await this.httpApi.createNotification({
+                userId: uid,
+                title: this.tKey('collection_created_company_title') || 'New Collection Request',
+                description: `${requesterName} requested a collection for backpack ${backpackId} at ${locationName}.`,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+      } catch (notifyCompanyErr) {
+        console.warn('Could not notify company users about collection', notifyCompanyErr);
+      }
+      try {
         const mid = String(this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '');
         this.mochilas = (this.mochilas || []).filter((m: any) => String(m.id_mochila ?? m.id ?? '') !== mid);
         this.selectedMochila = null;
