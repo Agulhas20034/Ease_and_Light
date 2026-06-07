@@ -17,6 +17,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private langSub: Subscription | null = null;
   public logoutLabel: string = '';
   public backLabel: string = '';
+  public showNotificationsPopover = false;
+  public notificationPopoverEvent?: Event;
+  public notifications: Array<{ title: string; body: string; time: string }> = [];
 
   constructor(
     private router: Router,
@@ -62,7 +65,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         return;
       }
       let url = this.router.url || '';
-      // strip query and fragment so titles don't include ?id=123 or #anchor
       url = String(url).split('?')[0].split('#')[0];
       const parts = url.split('/').filter(p => !!p);
       if (parts.length) {
@@ -137,5 +139,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   logout() {
     localStorage.removeItem('currentUser');
     this.router.navigate(['/login']);
+  }
+
+  openNotifications(event: Event) {
+    this.notificationPopoverEvent = event;
+    this.showNotificationsPopover = true;
+  }
+
+  closeNotifications() {
+    this.showNotificationsPopover = false;
+    this.notificationPopoverEvent = undefined;
   }
 }

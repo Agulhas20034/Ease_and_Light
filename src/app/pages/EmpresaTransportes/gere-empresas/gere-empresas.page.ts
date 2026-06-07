@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpApiService } from '../../../services/http-api/http-api.service';
 import { Router } from '@angular/router';
-import { ToastController, AlertController } from '@ionic/angular';
+import { ToastController, AlertController, ModalController } from '@ionic/angular';
 import { TranslationService } from '../../../services/translations/translation.service';
+import { DeliveryHistoryModalComponent } from '../../../components/delivery-history-modal/delivery-history-modal.component';
 
 @Component({
   selector: 'app-gere-empresas',
@@ -19,6 +20,7 @@ export class GereEmpresasPage implements OnInit {
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
+    private modalCtrl: ModalController,
     public t: TranslationService
   ) {}
 
@@ -26,14 +28,8 @@ export class GereEmpresasPage implements OnInit {
     this.loadCompanies();
   }
 
-  /**
-   * Enriquecer cada empresa com o email do utilizador associado (quando a empresa
-   * não tem um campo de email próprio). Procura na tabela de relação
-   * `users_empresa_transportes` e no `users` para obter o primeiro email encontrado.
-   */
   private async enrichCompaniesWithOwnerEmail(companies: any[]) {
     try {
-      // carregar todas as relações e utilizadores (pode ser otimizado para grandes conjuntos)
       const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
       const users: any = await this.httpApi.fetchAll('users');
@@ -44,15 +40,13 @@ export class GereEmpresasPage implements OnInit {
         if (u && u.id_utilizador) usersById[String(u.id_utilizador)] = u;
       }
 
-      // para cada empresa, se não tiver email, procurar o primeiro utilizador ligado
       for (const comp of companies) {
         if (!comp) continue;
-        if (comp.email) continue; // já tem email
+        if (comp.email) continue; 
         const id = comp.id_empresa || comp['id'] || comp.idEmpresa;
         if (!id) continue;
         const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(id));
         if (assigned && assigned.length > 0) {
-          // pegar o primeiro utilizador associado e usar o seu email
           const first = assigned[0];
           const user = usersById[String(first.id_utilizador)];
           if (user && user.email) comp.email = user.email;
@@ -70,14 +64,12 @@ export class GereEmpresasPage implements OnInit {
   async loadCompanies() {
     this.loading = true;
     try {
-      // Restringe as empresas: administradores vêem todas, donos vêem só as suas
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
       const role = (user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '');
       if (role === 'Administrador') {
         const data: any = await this.httpApi.getAllEmpresaTransportes();
         const rawCompanies = Array.isArray(data) ? data : (data?.data || []);
-        // normalizar campos e marcar como não expandido
         this.companies = rawCompanies.map((c: any) => ({
           ...(c || {}),
           nome: c.nome,
@@ -85,10 +77,8 @@ export class GereEmpresasPage implements OnInit {
           email: c.email,
           _expanded: false
         }));
-        // tentar enriquecer com email do utilizador associado quando a empresa não tem email
         await this.enrichCompaniesWithOwnerEmail(this.companies);
       } else if (user && user.id_utilizador) {
-        // buscar linhas de relação e mapear para os registos das empresas
         const rels: any = await this.httpApi.getUserEmpresas(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const ids = relRows.map((r: any) => Number(r.id_empresa)).filter((v: any) => !!v);
@@ -101,7 +91,6 @@ export class GereEmpresasPage implements OnInit {
             console.warn('Failed to load company', id, e);
           }
         }
-        // normalizar campos e marcar cada empresa como não expandida por defeito
         this.companies = companies.map((c: any) => ({
           ...(c || {}),
           nome: c.nome || c.name || c.nome_empresa || c.razao_social || '',
@@ -109,7 +98,6 @@ export class GereEmpresasPage implements OnInit {
           email: c.email || c.email_empresa || c.emailEmpresa || null,
           _expanded: false
         }));
-        // enriquecer com email do utilizador associado se não existir email na empresa
         await this.enrichCompaniesWithOwnerEmail(this.companies);
       } else {
         this.companies = [];
@@ -131,25 +119,18 @@ export class GereEmpresasPage implements OnInit {
     this.router.navigate(['/edita-empresa'], { queryParams: { id: c.id_empresa || c['id'] || c.idEmpresa } });
   }
   
-  /**
-   * Alterna o estado expandido do cartão da empresa.
-   * Ao expandir, os botões de ação aparecem abaixo dos dados da empresa.
-   */
+
   toggleExpand(c: any) {
     c._expanded = !c._expanded;
   }
 
-  /**
-   * Redireciona para a gestão de veículos da empresa.
-   */
+  
   goToVehicles(c: any) {
     const id = c.id_empresa;
     this.router.navigate(['/gere-veiculos'], { queryParams: { id } });
   }
 
-  /**
-   * Redireciona para a gestão de pedidos da empresa.
-   */
+  
   goToOrders(c: any) {
     const id = c.id_empresa || c['id'] || c.idEmpresa;
     this.router.navigate(['/gere-pedidos'], { queryParams: { id } });
@@ -179,18 +160,15 @@ export class GereEmpresasPage implements OnInit {
     try {
       const newEstado = activate ? 1 : 2;
       await this.httpApi.updateEmpresaTransportes(Number(id), { estado: newEstado });
-      // obter as relações e atualizar os utilizadores associados
       const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
       const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
       const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(id));
       for (const a of assigned) {
         const userId = Number(a.id_utilizador);
         try {
-          // obter o utilizador para saber o tipo de perfil; pular os donos (Dono Empresa Transportes / id_tipo == 2)
           const uRaw: any = await this.httpApi.getUser(userId);
           const user = uRaw || (uRaw?.data && uRaw.data[0]) || null;
           const userType = user && (user.profileType || user.id_tipo);
-          // se o utilizador for dono, não alterar o seu estado
           if (userType === 'Dono Empresa Transportes' || Number(userType) === 2) {
             continue;
           }
@@ -210,4 +188,18 @@ export class GereEmpresasPage implements OnInit {
     }
   }
 
+
+  async viewDeliveryHistory(c: any) {
+    const modal = await this.modalCtrl.create({
+      component: DeliveryHistoryModalComponent,
+      componentProps: {
+        company: c
+      },
+      breakpoints: [0, 0.5, 1],
+      initialBreakpoint: 0.9
+    });
+    await modal.present();
+  }
+
 }
+

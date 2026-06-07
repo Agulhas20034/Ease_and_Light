@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { GereEmpresasPageRoutingModule } from './gere-empresas-routing.module';
 
 import { GereEmpresasPage } from './gere-empresas.page';
+import { DeliveryHistoryModalComponent } from '../../../components/delivery-history-modal/delivery-history-modal.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    GereEmpresasPageRoutingModule
+    GereEmpresasPageRoutingModule,
+    DeliveryHistoryModalComponent
   ],
   declarations: [GereEmpresasPage]
 })

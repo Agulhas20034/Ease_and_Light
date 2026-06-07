@@ -50,7 +50,7 @@ export class AtribuiPedidoPage implements OnInit {
         }
       }
 
-      // carregar empresas se admin (ou para popular select)
+      // carregar empresas se admin 
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
       const role = user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '';

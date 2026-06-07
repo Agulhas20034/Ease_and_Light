@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ tkey('delivery_company_reviews') || 'Delivery Company Reviews' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <ion-row>
+      <ion-col size="12" class="ion-text-center" *ngIf="avg !== null">
+        <ion-icon name="star" class="avg-star"></ion-icon>
+        {{ tkey('average_rating') || 'Average Rating' }}: {{ avg }}
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="loading">
+      <ion-col size="12" class="ion-text-center">
+        <ion-spinner name="crescent"></ion-spinner>
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="!loading && reviews.length === 0">
+      <ion-col size="12" class="ion-text-center">
+        {{ tkey('no_reviews') || 'No reviews yet' }}
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngFor="let review of reviews; let ri = index; trackBy: trackByReview">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ review.title || (tkey('no_title') || 'No title') }}</ion-card-title>
+            <ion-card-subtitle>
+              <strong>{{ review.companyName }}</strong>
+            </ion-card-subtitle>
+            <ion-card-subtitle>
+              <span *ngFor="let s of [1,2,3,4,5]; let i = index" [class.filled]="(i+1) <= (review.rating || 0)">
+                <ion-icon [name]="(i+1) <= (review.rating || 0) ? 'star' : 'star-outline'"></ion-icon>
+              </span>
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p>{{ review.description }}</p>
+            <div class="photos" *ngIf="review.photos && review.photos.length">
+              <img *ngFor="let photo of review.photos; let pi = index"
+                   [src]="photo"
+                   [class.enlarged]="isPhotoExpanded(review, pi)"
+                   (click)="togglePhoto(review, pi)"
+                   alt="Review photo" />
+            </div>
+            <div class="review-meta">
+              <small>{{ review.createdAt ? (review.createdAt | date:'short') : '' }}</small>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

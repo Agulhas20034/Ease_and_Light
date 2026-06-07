@@ -46,7 +46,6 @@ export class LoginPage {
     try {
       const user: any = await this.httpApi.login(this.email, this.password);
 
-      // apenas permitir utilizadores com estado === 1
       if (typeof user.estado !== 'undefined' && Number(user.estado) !== 1) {
         const message = Number(user.estado) === 2
           ? (this.t('account_restitution_contact_admin') || "Email Admin at 'admin account email' for account restitution")

@@ -16,7 +16,9 @@ import { TranslationService } from '../../services/translations/translation.serv
 export class ReviewModalComponent {
   @Input() location: any;
   @Input() locationId: string | null = null;
-  @Input() reviewType: 'location' | 'route' = 'location';
+  @Input() companyId: string | null = null;
+  @Input() companyName: string | null = null;
+  @Input() reviewType: 'location' | 'route' | 'company' = 'location';
   @Input() routeId: string | null = null;
 
   rating = 5;
@@ -31,10 +33,16 @@ export class ReviewModalComponent {
   }
 
   get headerTitle(): string {
+    if (this.reviewType === 'company') {
+      return this.t.translate('review_company');
+    }
     return this.isRouteReview ? this.t.translate('review_route') : this.t.translate('leave_review');
   }
 
   get targetName(): string {
+    if (this.reviewType === 'company') {
+      return this.companyName || this.companyId || this.t.translate('review_company');
+    }
     if (this.isRouteReview) {
       return this.routeId || String(this.locationId || '').replace(/^route-/, '');
     }
@@ -100,12 +108,13 @@ export class ReviewModalComponent {
       try { userId = currentUser ? JSON.parse(currentUser)?.id_utilizador : null; } catch(e) {}
 
       const payload: any = {
-        locationId: this.locationId || this.getLocationId(this.location),
+        locationId: this.reviewType === 'company' && this.companyId ? `company-${this.companyId}` : (this.locationId || this.getLocationId(this.location)),
         userId: userId,
         rating: Number(this.rating),
         title: this.title,
         description: this.description,
-        photos: this.photos
+        photos: this.photos,
+        reviewType: this.reviewType
       };
 
       await this.httpApi.createReview(payload);

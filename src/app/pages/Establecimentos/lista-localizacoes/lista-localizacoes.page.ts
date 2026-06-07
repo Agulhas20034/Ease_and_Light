@@ -30,9 +30,6 @@ export class ListaLocalizacoesPage implements OnInit {
     this.loadLocations();
   }
 
-  /**
-   * Carregar localizações: administradores veem todas, donos veem só as suas
-   */
   async loadLocations() {
     this.loading = true;
     try {
@@ -46,7 +43,6 @@ export class ListaLocalizacoesPage implements OnInit {
         const rows = Array.isArray(data) ? data : (data?.data || []);
         this.locais = rows.map((r: any) => ({ ...(r||{}), estado: Number(r.estado), _expanded: false }));
       } else if (user && user.id_utilizador) {
-        // obter os estabelecimentos associados ao utilizador e buscar localizacoes
         const rels: any = await this.httpApi.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
 
@@ -78,7 +74,6 @@ export class ListaLocalizacoesPage implements OnInit {
 
   create() { this.router.navigate(['/cria-localizacao']); }
 
-  // Usar id_estabelecimento como identificador principal para ações
   edit(l: any) {
     const estabId = l.id_estabelecimento ?? l.id_estab ?? l.id;
     this.router.navigate(['/edita-localizacao'], { queryParams: { id: estabId } });

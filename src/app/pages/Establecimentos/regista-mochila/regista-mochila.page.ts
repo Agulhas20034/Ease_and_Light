@@ -72,7 +72,6 @@ export class RegistaMochilaPage implements OnInit {
   }
 
   async submit() {
-    // Assegura que o proprietário está selecionado
     if (!this.selectedOwner) {
       if (this.selectedOwnerId) {
         this.selectedOwner = this.peregrinoUsers.find(u => u.id_utilizador === this.selectedOwnerId) || null;
@@ -98,7 +97,6 @@ export class RegistaMochilaPage implements OnInit {
     try {
       await this.httpApi.createMochila(rec);
       alert(this.t.translate('backpack_created'));
-      // reset
       this.selectedOwner = null;
       this.weight = null;
       this.color = '';

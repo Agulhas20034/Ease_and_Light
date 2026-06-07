@@ -193,6 +193,11 @@ export class HttpApiService {
     return response?.data;
   }
 
+  async getAllReviews(): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/reviews`).toPromise() as any;
+    return response?.data || response;
+  }
+
   // Notes (MongoDB)
   async createNote(data: any): Promise<any> {
     const response = await this.http.post(`${this.apiUrl}/api/notes`, data).toPromise() as any;
@@ -299,6 +304,10 @@ export class HttpApiService {
 
   async getAllEstadoEntregaRecolha(): Promise<any> {
     return this.getAll('estado_entrega_recolha');
+  }
+
+  async getEstadoEntregaRecolha(id: number): Promise<any> {
+    return this.get(`estado_entrega_recolha/${id}`);
   }
 
   async createEstadoEntregaRecolha(data: any): Promise<any> {

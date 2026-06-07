@@ -108,7 +108,7 @@ export class EditaFuncionarioPage implements OnInit {
   }
 
   passwordValid(p: string) {
-    const res = { isValid: true, feedback: '' };  // Backend will validate
+    const res = { isValid: true, feedback: '' };  
     return res.isValid;
   }
 

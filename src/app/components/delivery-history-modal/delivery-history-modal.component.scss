@@ -1,0 +1,44 @@
+ion-item-divider {
+  ion-label {
+    margin: 0;
+  }
+}
+
+ion-card {
+  margin: 8px 0;
+}
+
+ion-grid {
+  padding: 0;
+}
+
+ion-row {
+  padding: 8px 0;
+}
+
+ion-col {
+  font-size: 0.9rem;
+}
+
+strong {
+  color: var(--ion-color-primary, #3880ff);
+}
+
+ion-badge {
+  font-weight: 600;
+}
+
+.ion-padding {
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+ion-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}

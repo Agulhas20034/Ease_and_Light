@@ -28,6 +28,7 @@ const User = mongoose.model('User', userSchema);
 const reviewSchema = new mongoose.Schema({
   locationId: { type: String, required: true }, 
   userId: { type: Number, required: false },
+  reviewType: { type: String, default: 'location' },
   rating: { type: Number, required: true, min: 1, max: 5 },
   title: { type: String, default: '' },
   description: { type: String, default: '' },

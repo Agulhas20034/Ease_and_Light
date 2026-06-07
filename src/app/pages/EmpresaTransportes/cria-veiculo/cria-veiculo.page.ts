@@ -37,7 +37,6 @@ export class CriaVeiculoPage implements OnInit {
     this.loadTipoVeiculos();
   }
 
-  /** Se não houver `id_empresa` nos query params, tentar inferir a partir do utilizador logado */
   private async inferEmpresaFromUserIfMissing() {
     if (this.id_empresa) return;
     try {
@@ -59,12 +58,10 @@ export class CriaVeiculoPage implements OnInit {
     }
   }
 
-  /** Carregar opções de tipo de veículo da tabela `tipo_veiculo` */
   private async loadTipoVeiculos() {
     try {
       const data: any = await this.httpApi.getAllTipoVeiculo();
       const rows = Array.isArray(data) ? data : (data?.data || []);
-      // Normalizar um campo de exibição para o template; preferir `descr` quando existir
       this.tipos = rows.map((tp: any) => ({
         ...(tp || {}),
         displayName: tp.descr || tp.descricao || tp.nome || tp.nome_tipo || tp.tipo || tp.name || tp.tipo_veiculo || (`Tipo ${tp.id_tipo}`)
@@ -74,13 +71,10 @@ export class CriaVeiculoPage implements OnInit {
     }
   }
 
-  /** Valida e cria o veículo na base de dados */
   async save() {
     this.loading = true;
     try {
-      // garantir que temos id_empresa (tentar inferir a partir do user se estiver ausente)
       await this.inferEmpresaFromUserIfMissing();
-      // validações
       const matRegex = /^[A-Za-z0-9]{2}-[A-Za-z0-9]{2}-[A-Za-z0-9]{2}$/;
       if (!matRegex.test((this.matricula || '').trim())) {
         const toast = await this.toastCtrl.create({ message: this.t.translate('provide_all_fields') + ' (' + this.t.translate('invalid_registration') + ')', duration: 2200, color: 'warning' });
@@ -117,7 +111,6 @@ export class CriaVeiculoPage implements OnInit {
         cor: this.cor.trim() || null,
         estado: 1
       };
-      // Verifica unicidade de matrícula e VIN
       try {
         const existingMat = await this.httpApi.getVeiculo(rec.matricula);
         if (existingMat) {

@@ -29,7 +29,6 @@ export class CriaEntregaClientePage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Lista items com tipo=1 e estado=6 e aplica filtro por estabelecimento/role
   async loadEntregas() {
     this.loading = true;
     try {
@@ -41,7 +40,6 @@ export class CriaEntregaClientePage implements OnInit {
       const rows = Array.isArray(all) ? all : (all?.data || []);
       console.debug('cria-entrega-cliente: fetched rows', Array.isArray(rows) ? rows.length : 0, rows);
 
-      // Filtrar por tipo = 1 e estado = 6
       let filtered = (rows || []).filter((r: any) => {
         const tipo = r.id_tipo_entrega_recolha ?? r.tipo ?? r.tipo_entrega;
         const estado = r.id_estado_entrega_recolha ?? r.estado ?? r.status;
@@ -78,7 +76,6 @@ export class CriaEntregaClientePage implements OnInit {
     await t.present();
   }
 
-  // Converte item para entrega cliente: define tipo=2 e estado=4
   async convertToEntrega(entrega: any) {
     const id = entrega.id_entrega_recolha;
     const confirm = await this.alertCtrl.create({
@@ -92,14 +89,11 @@ export class CriaEntregaClientePage implements OnInit {
                   const updates: any = { tipo: 2, estado: 4, data_hora_entrega: now };
                   await this.httpApi.updateEntregaRecolha(Number(id), updates);
                   this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
-                  // remove localmente pra manter a lista atualizada
                   this.entregas = (this.entregas || []).filter((e: any) => {
                     const eid = e.id_entrega_recolha;
                     return Number(eid) !== Number(id);
                   });
-                  // recarrega dados do backend
                   await this.loadEntregas();
-                  // redirect to inbox
                   this.router.navigateByUrl('/folder/inbox');
                 } catch (e) {
                   console.error('Falha ao atualizar entrega', e);

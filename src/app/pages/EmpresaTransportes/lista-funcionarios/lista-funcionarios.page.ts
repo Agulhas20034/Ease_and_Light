@@ -30,7 +30,6 @@ export class ListaFuncionariosPage implements OnInit {
         this.empresaId = Number(params['id']);
         this.loadEmployees();
       } else {
-        // tentar inferir a partir das empresas do utilizador atual
         const raw = localStorage.getItem('currentUser');
         if (raw) {
           try {

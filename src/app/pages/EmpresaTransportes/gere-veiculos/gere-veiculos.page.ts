@@ -30,7 +30,6 @@ export class GereVeiculosPage implements OnInit {
 
   ionViewWillEnter() {
     const q = this.route.snapshot.queryParams || {};
-    // detectar qual a chave usada (manter o nome usado pelo remetente)
     const keys = ['id', 'id_empresa', 'companyId'];
     let foundKey: string | null = null;
     for (const k of keys) {
@@ -39,12 +38,10 @@ export class GereVeiculosPage implements OnInit {
     this.companyParamKey = foundKey || 'id';
     const id = foundKey ? q[foundKey] : null;
     this.companyId = id ? Number(id) : null;
-    // carregar nome da empresa para mostrar no título (evitar mostrar name+id)
     if (this.companyId) this.loadCompanyName(this.companyId);
     this.loadVehicles(this.companyId);
   }
 
-  /** Busca o registo da empresa e extrai o nome para exibição no cabeçalho */
   private async loadCompanyName(id: number) {
     try {
       const data: any = await this.httpApi.getEmpresaTransportes(Number(id));
@@ -56,10 +53,7 @@ export class GereVeiculosPage implements OnInit {
     }
   }
 
-  /**
-   * Carrega os veículos da empresa (por id de empresa). Se não houver id,
-   * apresenta uma mensagem e mantém a lista vazia.
-   */
+  
   async loadVehicles(companyId: number | null) {
     this.loading = true;
     try {
@@ -70,7 +64,6 @@ export class GereVeiculosPage implements OnInit {
         return;
       }
 
-      // carregar veículos e tipos para mostrar a descrição do tipo
       const [data, tiposData]: any = await Promise.all([
         this.httpApi.getVeiculosByEmpresa(Number(companyId)),
         this.httpApi.getAllTipoVeiculo()
@@ -108,12 +101,10 @@ export class GereVeiculosPage implements OnInit {
     this.router.navigate(['/edita-veiculo'], { queryParams: { matricula: key } });
   }
 
-  /** Alterna o estado expandido de um veículo para mostrar ações */
   toggleExpand(v: any) {
     v._expanded = !v._expanded;
   }
 
-  /** Confirmação e ação para alternar ativo/inativo (1 <-> 2) */
   async confirmToggleVehicle(v: any) {
     const matricula = v.matricula || v['matricula'];
     const isActive = v.estado === 1;
@@ -131,7 +122,6 @@ export class GereVeiculosPage implements OnInit {
     await alert.present();
   }
 
-  /** Confirmação e ação para descontinuar (estado -> 3). Após 3, ações não aparecem. */
   async confirmDescontinueVehicle(v: any) {
     const matricula = v.matricula || v['matricula'];
     const alert = await this.alertCtrl.create({
@@ -145,7 +135,6 @@ export class GereVeiculosPage implements OnInit {
     await alert.present();
   }
 
-  /** Atualiza o estado do veículo na base de dados e recarrega a lista */
   private async updateVehicleEstado(matricula: any, newEstado: number) {
     try {
       await this.httpApi.updateVeiculo(matricula, { estado: newEstado });

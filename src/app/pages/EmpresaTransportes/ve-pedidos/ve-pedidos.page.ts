@@ -15,6 +15,7 @@ export class VePedidosPage implements OnInit {
   public loading = false;
   public userRole: string = '';
   public userName: string = '';
+  private estadoDescrCache: Record<number, string> = {};
 
   constructor(
     private httpApi: HttpApiService,
@@ -80,6 +81,7 @@ export class VePedidosPage implements OnInit {
       });
 
       await this.enrichPedidosWithDetails(this.pedidos);
+      await this.loadEstadoDescriptions(this.pedidos);
 
     } catch (e) {
       console.error('Erro ao carregar pedidos', e);
@@ -94,19 +96,23 @@ export class VePedidosPage implements OnInit {
     }
   }
 
-  getEstadoLabel(estado: any): string {
-    const e = Number(estado);
+  getEstadoLabel(pedido: any): string {
+    if (pedido?.estadoDescr) {
+      return pedido.estadoDescr;
+    }
+
+    const estadoId = Number(pedido.id_estado_entrega_recolha ?? pedido.id_estado ?? pedido.estado ?? pedido.status ?? 0);
     const labels: { [key: number]: string } = {
       1: this.t.translate('pending') || 'Pendente',
       2: this.t.translate('assigned') || 'Atribuído',
       3: this.t.translate('in_progress') || 'Em Andamento',
       4: this.t.translate('delivered') || 'Entregue'
     };
-    return labels[e] || `Estado ${e}`;
+    return labels[estadoId] || (estadoId ? `Estado ${estadoId}` : this.t.translate('unknown') || 'Unknown');
   }
 
-  getEstadoColor(estado: any): string {
-    const e = Number(estado);
+  getEstadoColor(pedido: any): string {
+    const e = Number(pedido.id_estado_entrega_recolha ?? pedido.id_estado ?? pedido.estado ?? pedido.status ?? 0);
     const colors: { [key: number]: string } = {
       1: 'warning',
       2: 'primary',
@@ -134,6 +140,34 @@ export class VePedidosPage implements OnInit {
     const id = pedido.id_entrega_recolha || pedido.id;
     if (id) {
       this.router.navigate(['/atribui-pedido'], { queryParams: { id } });
+    }
+  }
+
+  private async loadEstadoDescriptions(pedidos: any[]) {
+    const estadoIds = new Set<number>();
+    for (const pedido of pedidos) {
+      const id = Number(pedido.id_estado_entrega_recolha ?? pedido.id_estado ?? pedido.estado ?? pedido.status ?? 0);
+      if (id) estadoIds.add(id);
+    }
+
+    for (const id of Array.from(estadoIds)) {
+      if (this.estadoDescrCache[id]) {
+        continue;
+      }
+      try {
+        const record: any = await this.httpApi.getEstadoEntregaRecolha(id);
+        this.estadoDescrCache[id] = record?.descr ?? record?.descricao ?? record?.description ?? record?.estado ?? record?.nome ?? record?.name ?? `Estado ${id}`;
+      } catch (err) {
+        console.warn(`Failed to load estado_entrega_recolha ${id}`, err);
+        this.estadoDescrCache[id] = `Estado ${id}`;
+      }
+    }
+
+    for (const pedido of pedidos) {
+      const id = Number(pedido.id_estado_entrega_recolha ?? pedido.id_estado ?? pedido.estado ?? pedido.status ?? 0);
+      if (id) {
+        pedido.estadoDescr = this.estadoDescrCache[id];
+      }
     }
   }
 

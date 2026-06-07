@@ -1,0 +1,38 @@
+.avg-star {
+  color: var(--ion-color-warning);
+  margin-right: 6px;
+}
+
+.photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.photos img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.photos img.enlarged {
+  width: 100%;
+  height: auto;
+}
+
+.review-meta {
+  margin-top: 12px;
+  color: var(--ion-color-medium);
+}
+
+ion-card-subtitle span {
+  margin-right: 2px;
+}
+
+ion-card-subtitle span.filled ion-icon {
+  color: var(--ion-color-warning);
+}

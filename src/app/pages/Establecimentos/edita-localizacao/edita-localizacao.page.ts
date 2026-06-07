@@ -54,7 +54,6 @@ export class EditaLocalizacaoPage implements OnInit {
 
   async loadLocalizacao() {
     try {
-      // Carregar pela relação id_estabelecimento — pode devolver várias localizações, usamos a primeira
       const list: any = await this.httpApi.getLocalizacoesByEstabelecimento(Number(this.id));
       const rows = Array.isArray(list) ? list : (list?.data || []);
       const rec = rows && rows.length > 0 ? rows[0] : null;
@@ -89,7 +88,6 @@ export class EditaLocalizacaoPage implements OnInit {
           return;
         }
         const originalClean = (this.originalNif || '').replace(/\D/g, '');
-        // Se o NIF não mudou em relação ao original, não validar unicidade
         if (nifClean !== originalClean) {
           const locIdNum = this.locId ? Number(this.locId) : NaN;
           const taken = this.locId ? await this.httpApi.isLocalizacaoNifTakenByOther(nifClean, locIdNum) : await this.httpApi.isLocalizacaoNifTaken(nifClean);

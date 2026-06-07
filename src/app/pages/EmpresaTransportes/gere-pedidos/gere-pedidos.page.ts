@@ -41,14 +41,12 @@ export class GerePedidosPage implements OnInit {
       const all: any = await this.httpApi.getAllEntregasRecolhas();
       const rows = Array.isArray(all) ? all : (all?.data || []);
 
-      // selecionar entregas que têm id_empresa e não têm veiculo/estafeta atribuídos
       let filtered = (rows || []).filter((r: any) => {
         const hasEmpresa = r.id_empresa ?? r.empresa_id ?? r.id_emp ?? null;
         const hasVeiculo = r.id_veiculo ?? r.id_veiculo_entrega ?? r.id_veiculo_e ?? r.veiculo_id ?? null;
         const hasEstafeta = r.id_estafeta ?? r.id_entregador ?? r.id_estafeta_e ?? r.id_estafeta_entrega ?? null;
         const estado = r.id_estado_entrega_recolha ?? r.estado ?? r.status ?? null;
         const empresaMatches = empresaFilterId ? Number(hasEmpresa) === Number(empresaFilterId) : (hasEmpresa !== null && hasEmpresa !== undefined);
-        // Excluir pedidos já entregues (estado == 4)
         const notDelivered = estado === null || Number(estado) !== 4;
         return empresaMatches && (hasVeiculo === null || hasVeiculo === undefined) && (hasEstafeta === null || hasEstafeta === undefined) && notDelivered;
       });
@@ -65,7 +63,6 @@ export class GerePedidosPage implements OnInit {
           this.pedidos = [];
         }
       } else {
-        // empresaFilterId present -> admins and owners see only that company's pedidos
         this.pedidos = filtered;
       }
 

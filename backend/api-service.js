@@ -926,6 +926,10 @@ class ApiService {
     return await this.supabase.getAllEstadoEntregaRecolha();
   }
 
+  async getEstadoEntregaRecolha(id) {
+    return await this.supabase.getEstadoEntregaRecolha(id);
+  }
+
   async deleteEstadoEntregaRecolha(id) {
     return await this.supabase.deleteEstadoEntregaRecolha(id);
   }

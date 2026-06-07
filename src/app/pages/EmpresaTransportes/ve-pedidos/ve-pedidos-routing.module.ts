@@ -6,7 +6,8 @@ import { VePedidosPage } from './ve-pedidos.page';
 const routes: Routes = [
   {
     path: '',
-    component: VePedidosPage
+    component: VePedidosPage,
+    data: { titleKey: 'view_orders' }
   }
 ];
 

@@ -87,6 +87,12 @@ const routes: Routes = [
     data: { requiredRole: 'Peregrino', titleKey: 'list_backpacks' }
   },
   {
+    path: 'delivery-company-reviews',
+    loadChildren: () => import('./pages/Peregrino/delivery-company-reviews/delivery-company-reviews.module').then( m => m.DeliveryCompanyReviewsPageModule),
+    canActivate: [RoleGuard],
+    data: { requiredRole: 'Peregrino', titleKey: 'delivery_company_reviews' }
+  },
+  {
     path: 'cria-recolha-cliente',
     loadChildren: () => import('./pages/Establecimentos/cria-recolha-cliente/cria-recolha-cliente.module').then( m => m.CriaRecolhaClientePageModule),
     canActivate: [RoleGuard],
@@ -223,7 +229,8 @@ const routes: Routes = [
     loadChildren: () => import('./pages/Peregrino/edita-info/edita-info.module').then( m => m.EditaInfoPageModule),
     canActivate: [RoleGuard],
     data: { requiredRole: '*', titleKey: 'edit_profile' }
-  },  {
+  },
+  {
     path: 'reviews-percurso',
     loadChildren: () => import('./pages/Peregrino/reviews-percurso/reviews-percurso.module').then( m => m.ReviewsPercursoPageModule)
   },

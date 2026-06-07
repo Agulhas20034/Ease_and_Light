@@ -28,7 +28,6 @@ export class CriaRecolhaEstafetaPage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Carrega entregas com estado 3 (em transporte) e filtra por papel/estabelecimento
   async loadEntregas() {
     this.loading = true;
     try {
@@ -71,7 +70,6 @@ export class CriaRecolhaEstafetaPage implements OnInit {
     await t.present();
   }
 
-  // Ao clicar no botão converte entrega para recolha (tipo=1, estado=6)
   async convertToRecolha(entrega: any) {
     const id = entrega.id_entrega_recolha;
     const confirm = await this.alertCtrl.create({

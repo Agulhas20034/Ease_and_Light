@@ -971,6 +971,18 @@ app.get('/api/estado-entrega-recolha', async (req, res) => {
   }
 });
 
+app.get('/api/estado-entrega-recolha/:id', async (req, res) => {
+  try {
+    const result = await apiService.getEstadoEntregaRecolha(req.params.id);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Estado not found' });
+    }
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.delete('/api/estado-entrega-recolha/:id', async (req, res) => {
   try {
     const result = await apiService.deleteEstadoEntregaRecolha(req.params.id);

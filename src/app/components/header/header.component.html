@@ -8,8 +8,39 @@
     <ion-title>{{ pageTitle || 'Ease & Light' }}</ion-title>
 
     <ion-buttons slot="end">
+      <ion-button fill="clear" size="small" title="{{ tService.translate('notifications') || 'Notifications' }}" (click)="openNotifications($event)">
+        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
+      </ion-button>
       <ion-button (click)="toggleLang()">{{ langCode }}</ion-button>
       <ion-button (click)="logout()">{{ logoutLabel }}</ion-button>
     </ion-buttons>
+
+    <ion-popover
+      [isOpen]="showNotificationsPopover"
+      [event]="notificationPopoverEvent"
+      side="bottom"
+      arrow="top"
+      backdropDismiss="true"
+      (didDismiss)="closeNotifications()"
+    >
+      <ion-content class="notifications-popover">
+        <ion-list *ngIf="notifications.length; else emptyNotifications">
+          <ion-list-header>{{ tService.translate('notifications') || 'Notifications' }}</ion-list-header>
+          <ion-item *ngFor="let note of notifications" lines="none">
+            <ion-label>
+              <h3>{{ note.title }}</h3>
+              <p>{{ note.body }}</p>
+              <small>{{ note.time }}</small>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <ng-template #emptyNotifications>
+          <div class="notifications-empty">
+            {{ tService.translate('no_notifications') || 'No notifications yet' }}
+          </div>
+        </ng-template>
+      </ion-content>
+    </ion-popover>
   </ion-toolbar>
 </ion-header>
