@@ -128,24 +128,23 @@ export class HttpApiService {
 
   // Entregas Recolhas
   async getAllEntregasRecolhas(): Promise<any> {
-    return this.getAll('entregas_recolhas');
+    return this.getAll('entregas-recolhas');
   }
 
   async getEntregaRecolha(id: number): Promise<any> {
-    const response = await this.http.get(`${this.apiUrl}/api/entregas_recolhas/${id}`).toPromise() as any;
-    return response?.data;
+    return this.get(`entregas-recolhas/${id}`);
   }
 
   async createEntregaRecolha(data: any): Promise<any> {
-    return this.create('entregas_recolhas', data);
+    return this.create('entregas-recolhas', data);
   }
 
   async updateEntregaRecolha(id: number, data: any): Promise<any> {
-    return this.update(`entregas_recolhas/${id}`, data);
+    return this.update(`entregas-recolhas/${id}`, data);
   }
 
   async deleteEntregaRecolha(id: number): Promise<any> {
-    return this.delete(`entregas_recolhas/${id}`);
+    return this.delete(`entregas-recolhas/${id}`);
   }
 
   // Mochilas
@@ -487,14 +486,18 @@ export class HttpApiService {
 
   async getUsersByEstabelecimento(estabId: number): Promise<any[]> {
     try {
-      const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_estabelecimento=${estabId}`).toPromise() as any;
+      const response = await this.http.get(`${this.apiUrl}/api/users-estabelecimento/estabelecimento/${estabId}`).toPromise() as any;
       const relations = response?.data || [];
       const relationArray = Array.isArray(relations) ? relations : [];
       
+      if (relationArray.length === 0) {
+        return [];
+      }
+
       const allUsers = await this.getAllUsers();
-      const userIds = relationArray.map((r: any) => r.id_utilizador);
+      const userIds = relationArray.map((r: any) => Number(r.id_utilizador)).filter((v: any) => !Number.isNaN(v));
       
-      return allUsers.filter((u: any) => userIds.includes(u.id_utilizador));
+      return allUsers.filter((u: any) => userIds.includes(Number(u.id_utilizador ?? u.id ?? u.id_user ?? 0)));
     } catch (err) {
       console.error('Error fetching users by estabelecimento:', err);
       return [];
@@ -571,13 +574,13 @@ export class HttpApiService {
   
   
   async getUserEstabelecimentos(userId: number): Promise<any[]> {
-    const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_utilizador=${userId}`).toPromise() as any;
+    const response = await this.http.get(`${this.apiUrl}/api/users-estabelecimento?id_utilizador=${userId}`).toPromise() as any;
     const data = response?.data || [];
     return Array.isArray(data) ? data : [];
   }
 
   async addUserEstabelecimento(userId: number, estabId: number): Promise<any> {
-    return this.create('users_estabelecimento', { id_utilizador: userId, id_estabelecimento: estabId });
+    return this.create('users-estabelecimento', { id_utilizador: userId, id_estabelecimento: estabId });
   }
 
   async isTelefoneTaken(telefone: string): Promise<boolean> {

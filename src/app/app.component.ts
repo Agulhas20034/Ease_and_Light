@@ -100,7 +100,10 @@ export class AppComponent implements OnInit {
 
     const modal = await this.modalCtrl.create({
       component: DeliveryHistoryModalComponent,
-      componentProps: { userId }
+      componentProps: { userId },
+      cssClass: 'delivery-history-fullscreen-modal',
+      breakpoints: [1],
+      initialBreakpoint: 1
     });
 
     await modal.present();

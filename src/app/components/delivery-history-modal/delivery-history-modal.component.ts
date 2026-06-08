@@ -18,10 +18,19 @@ export class DeliveryHistoryModalComponent implements OnInit {
   @Input() userId?: number;
 
   deliveries: any[] = [];
+  filteredDeliveries: any[] = [];
   loading = false;
   estabelecimentos: Record<string, any> = {};
   empresas: Record<string, any> = {};
   estadoDescrCache: Record<number, string> = {};
+  filterStatus: number | null = null;
+  filterCompany: number | null = null;
+  filterPickupLocation: string | null = null;
+  filterDeliveryLocation: string | null = null;
+  statusOptions: any[] = [];
+  companyOptions: any[] = [];
+  pickupLocationOptions: any[] = [];
+  deliveryLocationOptions: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
@@ -81,6 +90,8 @@ export class DeliveryHistoryModalComponent implements OnInit {
       }
 
       await this.loadEstadoDescriptions(this.deliveries);
+      this.buildFilterOptions();
+      this.applyFilters();
     } catch (e) {
       console.error('Failed to load delivery history', e);
     } finally {
@@ -117,6 +128,72 @@ export class DeliveryHistoryModalComponent implements OnInit {
         delivery.estadoDescr = this.estadoDescrCache[id];
       }
     }
+  }
+
+  applyFilters() {
+    const status = this.filterStatus ? Number(this.filterStatus) : null;
+    const company = this.filterCompany ? String(this.filterCompany) : null;
+    const pickup = this.filterPickupLocation ? String(this.filterPickupLocation) : null;
+    const delivery = this.filterDeliveryLocation ? String(this.filterDeliveryLocation) : null;
+
+    this.filteredDeliveries = (this.deliveries || []).filter((deliveryItem: any) => {
+      if (status && Number(deliveryItem.id_estado_entrega_recolha ?? deliveryItem.id_estado ?? deliveryItem.estado ?? deliveryItem.status ?? 0) !== status) {
+        return false;
+      }
+      if (company && String(deliveryItem.id_empresa ?? deliveryItem.id_empresa_fk ?? deliveryItem.id_empresa_id ?? '') !== company) {
+        return false;
+      }
+      if (pickup) {
+        const pickupName = this.getEstabelecimentoName(deliveryItem.id_estabelecimento_r ?? deliveryItem.id_localizacao_recolha ?? deliveryItem.id_local_recolha ?? '');
+        if (pickupName !== pickup) {
+          return false;
+        }
+      }
+      if (delivery) {
+        const deliveryName = this.getEstabelecimentoName(deliveryItem.id_estabelecimento_e ?? deliveryItem.id_localizacao_entrega ?? deliveryItem.id_local_entrega ?? '');
+        if (deliveryName !== delivery) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  clearFilters() {
+    this.filterStatus = null;
+    this.filterCompany = null;
+    this.filterPickupLocation = null;
+    this.filterDeliveryLocation = null;
+    this.applyFilters();
+  }
+
+  private buildFilterOptions() {
+    const statusIds = new Set<number>();
+    const companyIds = new Set<string>();
+    const pickupLabels = new Set<string>();
+    const deliveryLabels = new Set<string>();
+
+    this.deliveries.forEach((delivery: any) => {
+      const estadoId = Number(delivery.id_estado_entrega_recolha ?? delivery.id_estado ?? delivery.estado ?? delivery.status ?? 0);
+      if (estadoId) statusIds.add(estadoId);
+
+      const companyId = String(delivery.id_empresa ?? delivery.id_empresa_fk ?? delivery.id_empresa_id ?? '');
+      if (companyId) companyIds.add(companyId);
+
+      const pickupId = delivery.id_estabelecimento_r ?? delivery.id_localizacao_recolha ?? delivery.id_local_recolha ?? '';
+      const pickupName = pickupId ? this.getEstabelecimentoName(pickupId) : '';
+      if (pickupName) pickupLabels.add(pickupName);
+
+      const deliveryId = delivery.id_estabelecimento_e ?? delivery.id_localizacao_entrega ?? delivery.id_local_entrega ?? '';
+      const deliveryName = deliveryId ? this.getEstabelecimentoName(deliveryId) : '';
+      if (deliveryName) deliveryLabels.add(deliveryName);
+    });
+
+    this.statusOptions = Array.from(statusIds).map((id) => ({ id, label: this.estadoDescrCache[id] ?? `Estado ${id}` }));
+    this.companyOptions = Array.from(companyIds).map((id) => ({ id, label: this.getEmpresaName(id) }));
+    this.pickupLocationOptions = Array.from(pickupLabels).map((label) => ({ id: label, label }));
+    this.deliveryLocationOptions = Array.from(deliveryLabels).map((label) => ({ id: label, label }));
+    this.filteredDeliveries = this.deliveries.slice();
   }
 
   getEmpresaName(id: string | number): string {

@@ -66,7 +66,7 @@ export class CriaRecolhaClientePage implements OnInit {
         const taken = new Set<string>();
         for (const er of (entRows || [])) {
           const estado = er.id_estado_entrega_recolha ?? er.estado ?? er.status;
-          if (Number(estado) !== 4) {
+          if (Number(estado) !== 4 && Number(estado) !== 7) {
             const mid = er.id_mochila ?? er.id_mochila_fk ?? er.id_mochila_id;
             if (mid !== undefined && mid !== null) taken.add(String(mid));
           }

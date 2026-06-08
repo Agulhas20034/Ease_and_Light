@@ -195,8 +195,9 @@ export class GereEmpresasPage implements OnInit {
       componentProps: {
         company: c
       },
-      breakpoints: [0, 0.5, 1],
-      initialBreakpoint: 0.9
+      cssClass: 'delivery-history-fullscreen-modal',
+      breakpoints: [1],
+      initialBreakpoint: 1
     });
     await modal.present();
   }

@@ -839,6 +839,28 @@ app.get('/api/users-estabelecimento', async (req, res) => {
   }
 });
 
+app.get('/api/users-estabelecimento/estabelecimento/:id', async (req, res) => {
+  try {
+    const estabId = Number(req.params.id);
+    if (!estabId) {
+      return res.status(400).json({ success: false, error: 'Invalid estabelecimento id' });
+    }
+
+    const { data, error } = await supabaseService.client
+      .from('users_estabelecimento')
+      .select('*')
+      .eq('id_estabelecimento', estabId);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/users-estabelecimento/:id_utilizador/:id_estabelecimento', async (req, res) => {
   try {
     const result = await apiService.updateUsersEstabelecimento(req.params.id_utilizador, req.params.id_estabelecimento, req.body);

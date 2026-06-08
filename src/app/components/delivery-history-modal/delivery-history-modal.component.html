@@ -10,14 +10,50 @@
 <ion-content>
   <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
 
-  <div *ngIf="!loading && deliveries.length === 0" class="ion-padding">
+  <ion-list *ngIf="!loading">
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_status') || 'Filter by Status' }}</ion-label>
+      <ion-select [(ngModel)]="filterStatus" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of statusOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_company') || 'Filter by Company' }}</ion-label>
+      <ion-select [(ngModel)]="filterCompany" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of companyOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_pickup_location') || 'Filter by Pickup Location' }}</ion-label>
+      <ion-select [(ngModel)]="filterPickupLocation" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of pickupLocationOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_delivery_location') || 'Filter by Delivery Location' }}</ion-label>
+      <ion-select [(ngModel)]="filterDeliveryLocation" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of deliveryLocationOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-button expand="full" fill="outline" (click)="clearFilters()">
+        {{ t.translate('clear_filters') || 'Clear Filters' }}
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!loading && filteredDeliveries.length === 0" class="ion-padding">
     <ion-text color="medium">
       {{ t.translate('no_deliveries') || 'No deliveries found' }}
     </ion-text>
   </div>
 
-  <ion-list *ngIf="!loading && deliveries.length > 0">
-    <ion-item-group *ngFor="let delivery of deliveries">
+  <ion-list *ngIf="!loading && filteredDeliveries.length > 0">
+    <ion-item-group *ngFor="let delivery of filteredDeliveries">
       <ion-item-divider sticky>
         <ion-label>
           <h3>{{ formatDate(delivery.data_hora_recolha) }}</h3>
@@ -70,7 +106,7 @@
                 #{{ delivery.id_mochila }}
               </ion-col>
             </ion-row>
-            <ion-row *ngIf="isFinished(delivery) && (delivery.id_empresa || delivery.id_empresa_fk || delivery.id_empresa_id)">
+            <ion-row *ngIf="!company && isFinished(delivery) && (delivery.id_empresa || delivery.id_empresa_fk || delivery.id_empresa_id)">
               <ion-col size="12" class="ion-text-right">
                 <ion-button fill="outline" size="small" color="primary" (click)="openCompanyReview(delivery)">
                   {{ t.translate('review_delivery_company') || 'Review Delivery Company' }}
