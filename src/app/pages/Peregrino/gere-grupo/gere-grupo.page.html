@@ -8,7 +8,7 @@
 <ion-content>
   <ion-tabs>
     <ion-tab tab="my-groups">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ion-item *ngFor="let group of groups">
           <ion-label (click)="goToGroup(group)" style="cursor: pointer;">
             <h2>{{ group.nome }}</h2>
@@ -37,7 +37,7 @@
     </ion-tab>
 
     <ion-tab tab="invites">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ion-item *ngFor="let invite of pendingInvites">
           <ion-label>
             <h2>{{ invite.nome }}</h2>
@@ -57,7 +57,7 @@
     </ion-tab>
 
     <ion-tab tab="start-route">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ng-container *ngFor="let group of groups">
           <ion-item *ngIf="isGroupOwner(group)">
             <ion-label>

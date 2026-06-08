@@ -576,12 +576,91 @@ class ApiService {
 
   async createEntregaRecolha(data) {
     this.validateRequiredFields(data, 'entregas_recolhas', false);
-    return await this.supabase.createEntregaRecolha(data);
+    const created = await this.supabase.createEntregaRecolha(data);
+
+    try {
+      const mochilaId = Number(data.id_mochila ?? data.id_mochila_fk ?? data.id_mochila_id ?? 0);
+      const pickupEstabId = Number(data.id_estabelecimento_r ?? data.id_localizacao_recolha ?? data.id_estab_r ?? 0);
+      if (mochilaId && pickupEstabId) {
+        const pilgrimUserId = await this.getMochilaOwnerId(mochilaId);
+        const pickupUserIds = await this.getEstabelecimentoUserIds(pickupEstabId);
+        if (pilgrimUserId) {
+          const pilgrimName = await this.getUserName(pilgrimUserId);
+          const locationName = await this.getEstabelecimentoName(pickupEstabId);
+          await this.createOrderGroup(
+            Number((Array.isArray(created) ? created[0] : created)?.id_entrega_recolha ?? 0),
+            'client-location',
+            `${pilgrimName} / ${locationName}`,
+            null,
+            [pilgrimUserId, ...pickupUserIds],
+            pickupEstabId
+          );
+        }
+      }
+    } catch (groupError) {
+      console.warn('Could not create order group for entrega/recolha:', groupError?.message || groupError);
+    }
+
+    return created;
   }
 
   async updateEntregaRecolha(id, data) {
     this.validateRequiredFields(data, 'entregas_recolhas', true);
-    return await this.supabase.updateEntregaRecolha(id, data);
+    const previous = await this.supabase.getEntregaRecolha(id);
+    const updated = await this.supabase.updateEntregaRecolha(id, data);
+
+    try {
+      const newState = Number(data.estado ?? previous?.estado ?? 0);
+      const previousState = Number(previous?.estado ?? 0);
+      const entrega = { ...previous, ...data };
+      const orderId = Number(id);
+
+      if (newState === 2 && previousState !== 2) {
+        const empresaId = Number(entrega.id_empresa ?? entrega.empresa_id ?? 0);
+        const mochilaId = Number(entrega.id_mochila ?? entrega.id_mochila_fk ?? entrega.id_mochila_id ?? 0);
+        const pickupEstabId = Number(entrega.id_estabelecimento_r ?? entrega.id_localizacao_recolha ?? entrega.id_estab_r ?? entrega.id_estabelecimento ?? 0);
+
+        if (empresaId && mochilaId) {
+          const pilgrimUserId = await this.getMochilaOwnerId(mochilaId);
+          const companyUserIds = await this.getEmpresaUserIds(empresaId);
+          const pickupUserIds = pickupEstabId ? await this.getEstabelecimentoUserIds(pickupEstabId) : [];
+
+          const pilgrimName = pilgrimUserId ? await this.getUserName(pilgrimUserId) : `Pilgrim ${mochilaId}`;
+          const companyName = await this.getEmpresaTransportesName(empresaId);
+          const locationName = pickupEstabId ? await this.getEstabelecimentoName(pickupEstabId) : `Location ${pickupEstabId}`;
+
+          if (pilgrimUserId && companyUserIds.length) {
+            await this.createOrderGroup(
+              orderId,
+              'company-pilgrim',
+              `${companyName} / ${pilgrimName}`,
+              companyUserIds[0],
+              [pilgrimUserId, ...companyUserIds],
+              pickupEstabId
+            );
+          }
+
+          if (companyUserIds.length && pickupEstabId) {
+            await this.createOrderGroup(
+              orderId,
+              'company-location',
+              `${companyName} / ${locationName}`,
+              companyUserIds[0],
+              [...new Set([pilgrimUserId, ...companyUserIds, ...pickupUserIds])],
+              pickupEstabId
+            );
+          }
+        }
+      }
+
+      if ((newState === 4 || newState === 7) && previousState !== newState) {
+        await this.closeOrderGroups(orderId);
+      }
+    } catch (groupError) {
+      console.warn('Error managing order groups for entrega/recolha update:', groupError?.message || groupError);
+    }
+
+    return updated;
   }
 
   async getAllEntregasRecolhas() {
@@ -594,6 +673,221 @@ class ApiService {
 
   async deleteEntregaRecolha(id) {
     return await this.supabase.deleteEntregaRecolha(id);
+  }
+
+  async getMochilaOwnerId(mochilaId) {
+    const mochila = await this.supabase.getMochila(mochilaId);
+    return Number(mochila?.id_user ?? mochila?.id_utilizador ?? 0);
+  }
+
+  async getUserName(userId) {
+    const user = await this.supabase.getUser(userId);
+    return String(user?.nome || user?.name || user?.nome_utilizador || user?.email || `User ${userId}`).trim();
+  }
+
+  async getEstabelecimentoName(estabId) {
+    const estab = await this.supabase.getEstabelecimento(estabId);
+    return String(estab?.nome || estab?.nome_rua || estab?.name || `Location ${estabId}`).trim();
+  }
+
+  async getEmpresaTransportesName(empresaId) {
+    const empresa = await this.supabase.getEmpresaTransportes(empresaId);
+    return String(empresa?.nome || empresa?.nome_empresa || empresa?.name || `Company ${empresaId}`).trim();
+  }
+
+  async getEstabelecimentoUserIds(estabId) {
+    const relations = await this.supabase.getUsersByEstabelecimento(estabId);
+    return Array.isArray(relations)
+      ? relations.map((r) => Number(r.id_utilizador ?? r.id_user ?? 0)).filter((n) => n > 0)
+      : [];
+  }
+
+  async getEmpresaUserIds(empresaId) {
+    const relations = await this.supabase.getUsersByEmpresa(empresaId);
+    return Array.isArray(relations)
+      ? relations.map((r) => Number(r.id_utilizador ?? r.id_user ?? 0)).filter((n) => n > 0)
+      : [];
+  }
+
+  async notifyUsers(userIds, title, description) {
+    const createdAt = new Date().toISOString();
+    const uniqueUserIds = Array.from(new Set((userIds || []).map((id) => Number(id)).filter((id) => id > 0)));
+    for (const userId of uniqueUserIds) {
+      try {
+        await this.createNotification({
+          userId,
+          title,
+          description,
+          createdAt
+        });
+      } catch (notifyError) {
+        console.warn(`Could not notify user ${userId}:`, notifyError?.message || notifyError);
+      }
+    }
+  }
+
+  async createOrderGroup(orderId, type, name, createdByUserId, memberUserIds, pickupEstabId) {
+    if (!orderId || !memberUserIds?.length || (type !== 'client-location' && !createdByUserId)) {
+      throw new Error('Invalid group creation arguments');
+    }
+
+    const uniqUserIds = Array.from(new Set(memberUserIds.filter((id) => Number(id) > 0)));
+    const groupData = {
+      nome: name,
+      descr: `order_entrega_recolha:${orderId};type:${type};pickup:${pickupEstabId || 0};title:${name}`,
+      estado: 1,
+      hora_criacao: new Date().toISOString()
+    };
+
+    if (type !== 'client-location' && createdByUserId) {
+      groupData.createdBy = createdByUserId;
+    }
+
+    console.log('Creating order group', { orderId, type, name, createdByUserId, memberUserIds: uniqUserIds, pickupEstabId });
+    const createdGroup = await this.createGroup(groupData);
+    const groupId = Number(createdGroup?.id_grupo ?? createdGroup?.id ?? 0);
+
+    if (!groupId) {
+      throw new Error('Could not create group record');
+    }
+
+    console.log('Created group', { groupId, orderId, type, name });
+
+    const additionalMemberIds = type === 'client-location'
+      ? uniqUserIds
+      : uniqUserIds.filter((id) => Number(id) !== Number(createdByUserId));
+
+    for (const userId of additionalMemberIds) {
+      try {
+        await this.createGrupoUser({
+          id_grupo: groupId,
+          id_user: Number(userId),
+          criador: false,
+          status_convite: 1,
+          Data_Convite: new Date().toISOString(),
+          Data_Entrada: new Date().toISOString()
+        });
+      } catch (addMemberError) {
+        console.warn(`Could not add member ${userId} to group ${groupId}:`, addMemberError?.message || addMemberError);
+      }
+    }
+
+    try {
+      await this.notifyUsers(
+        uniqUserIds,
+        `Group created: ${name}`,
+        `A new chat group has been created for order #${orderId}.`
+      );
+    } catch (notifyError) {
+      console.warn('Could not send group created notifications:', notifyError?.message || notifyError);
+    }
+
+    return createdGroup;
+  }
+
+  async findOrderGroups(orderId) {
+    return await this.supabase.getGroupsByEntregaRecolhaId(orderId);
+  }
+
+  async closeOrderGroups(orderId) {
+    const groups = await this.findOrderGroups(orderId);
+    if (!Array.isArray(groups) || groups.length === 0) {
+      return [];
+    }
+
+    const closedGroups = [];
+    for (const group of groups) {
+      const groupId = Number(group?.id_grupo ?? group?.id ?? 0);
+      if (!groupId) {
+        continue;
+      }
+
+      try {
+        await this.updateGroup(groupId, { estado: 2 });
+      } catch (e) {
+        console.warn(`Could not set estado for group ${groupId}:`, e?.message || e);
+      }
+
+      let memberUserIds = [];
+      try {
+        const groupDetails = await this.getGroupById(groupId);
+        memberUserIds = Array.isArray(groupDetails?.members)
+          ? groupDetails.members.map((m) => Number(m.id_utilizador ?? m.id_user ?? 0)).filter((id) => id > 0)
+          : [];
+      } catch (fetchError) {
+        console.warn(`Could not fetch group members for ${groupId}:`, fetchError?.message || fetchError);
+      }
+
+      try {
+        await this.updateAllGrupoUsersByGroup(groupId, { status_convite: 4 });
+      } catch (e) {
+        console.warn(`Could not mark members as left for group ${groupId}:`, e?.message || e);
+      }
+
+      try {
+        if (memberUserIds.length) {
+          await this.notifyUsers(
+            memberUserIds,
+            `Group closed: ${group?.nome || `Group ${groupId}`}`,
+            `The chat group for order #${orderId} has been closed.`
+          );
+        }
+      } catch (notifyError) {
+        console.warn(`Could not send group closed notifications for group ${groupId}:`, notifyError?.message || notifyError);
+      }
+
+      closedGroups.push(groupId);
+    }
+
+    return closedGroups;
+  }
+
+  async closeGroup(groupId) {
+    if (!groupId) return [];
+    const closed = [];
+    try {
+      try {
+        await this.updateGrupo(groupId, { estado: 2 });
+      } catch (e) {
+        console.warn(`Could not set estado for group ${groupId}:`, e?.message || e);
+      }
+
+      let memberUserIds = [];
+      let groupName = `Group ${groupId}`;
+      try {
+        const groupDetails = await this.getGroupById(groupId);
+        groupName = groupDetails?.nome || groupName;
+        memberUserIds = Array.isArray(groupDetails?.members)
+          ? groupDetails.members.map((m) => Number(m.id_utilizador ?? m.id_user ?? 0)).filter((id) => id > 0)
+          : [];
+      } catch (fetchError) {
+        console.warn(`Could not fetch group members for ${groupId}:`, fetchError?.message || fetchError);
+      }
+
+      try {
+        await this.updateAllGrupoUsersByGroup(groupId, { status_convite: 4 });
+      } catch (e) {
+        console.warn(`Could not mark members as left for group ${groupId}:`, e?.message || e);
+      }
+
+      try {
+        if (memberUserIds.length) {
+          await this.notifyUsers(
+            memberUserIds,
+            `Group closed: ${groupName}`,
+            `The chat group has been closed.`
+          );
+        }
+      } catch (notifyError) {
+        console.warn(`Could not send group closed notifications for group ${groupId}:`, notifyError?.message || notifyError);
+      }
+
+      closed.push(groupId);
+    } catch (err) {
+      console.warn(`Error closing group ${groupId}:`, err?.message || err);
+    }
+
+    return closed;
   }
 
   async createMochila(data) {
@@ -717,7 +1011,26 @@ class ApiService {
 
   async updateGrupoPercurso(id, data) {
     this.validateRequiredFields(data, 'grupo_percurso', true);
-    return await this.supabase.updateOne('grupo_percurso', { id_grupo_percurso: id }, data);
+    let original = null;
+    try {
+      original = await this.getGrupoPercurso(id);
+    } catch (e) { }
+
+    const updated = await this.supabase.updateOne('grupo_percurso', { id_grupo_percurso: id }, data);
+
+    try {
+      const newEstado = Number(data.estado ?? updated?.estado ?? original?.estado ?? 0);
+      if (newEstado === 5) {
+        const groupId = Number(data.id_grupo ?? updated?.id_grupo ?? original?.id_grupo ?? 0);
+        if (groupId) {
+          await this.closeGroup(groupId);
+        }
+      }
+    } catch (err) {
+      console.warn('Error handling grupo_percurso post-update actions:', err?.message || err);
+    }
+
+    return updated;
   }
 
   async updateGrupoPercursoByKeys(keys, data) {
@@ -728,7 +1041,17 @@ class ApiService {
     const updates = { ...data };
     delete updates.id_grupo;
     delete updates.id_percurso;
-    return await this.supabase.updateOne('grupo_percurso', { id_grupo: keys.id_grupo, id_percurso: keys.id_percurso }, updates);
+    const result = await this.supabase.updateOne('grupo_percurso', { id_grupo: keys.id_grupo, id_percurso: keys.id_percurso }, updates);
+    try {
+      const newEstado = Number(data.estado ?? result?.estado ?? 0);
+      if (newEstado === 5) {
+        const groupId = Number(keys.id_grupo);
+        if (groupId) await this.closeGroup(groupId);
+      }
+    } catch (err) {
+      console.warn('Error handling grupo_percursoByKeys post-update actions:', err?.message || err);
+    }
+    return result;
   }
 
   async getAllGrupoPercurso() {
