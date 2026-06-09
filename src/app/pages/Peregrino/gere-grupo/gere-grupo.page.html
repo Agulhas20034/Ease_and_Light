@@ -8,7 +8,7 @@
 <ion-content>
   <ion-tabs>
     <ion-tab tab="my-groups">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ion-item *ngFor="let group of groups">
           <ion-label (click)="goToGroup(group)" style="cursor: pointer;">
             <h2>{{ group.nome }}</h2>
@@ -37,7 +37,7 @@
     </ion-tab>
 
     <ion-tab tab="invites">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ion-item *ngFor="let invite of pendingInvites">
           <ion-label>
             <h2>{{ invite.nome }}</h2>
@@ -57,7 +57,7 @@
     </ion-tab>
 
     <ion-tab tab="start-route">
-      <ion-list>
+      <ion-list class="scrollable-list">
         <ng-container *ngFor="let group of groups">
           <ion-item *ngIf="isGroupOwner(group)">
             <ion-label>
@@ -86,23 +86,25 @@
         <ion-icon name="folder"></ion-icon>
         <ion-label>{{ t.translate('manage_groups') }}</ion-label>
       </ion-tab-button>
-      <ion-tab-button tab="start-route">
-        <ion-icon name="play"></ion-icon>
-        <ion-label>{{ t.translate('start_route') }}</ion-label>
+      <ion-tab-button tab="create-group" (click)="goToCreateGroup()">
+        <ion-icon name="add"></ion-icon>
+        <ion-label>{{ t.translate('create_group') }}</ion-label>
       </ion-tab-button>
       <ion-tab-button tab="invites">
         <ion-icon name="mail"></ion-icon>
         <ion-label>{{ t.translate('manage_invites') }}</ion-label>
         <ion-badge color="danger" *ngIf="unreadInvitesCount > 0">{{ unreadInvitesCount }}</ion-badge>
       </ion-tab-button>
+      <ion-tab-button tab="start-route">
+        <ion-icon name="play"></ion-icon>
+        <ion-label>{{ t.translate('start_route') }}</ion-label>
+      </ion-tab-button>
+      <ion-tab-button (click)="goToReviewsPercurso()">
+        <ion-icon name="star"></ion-icon>
+        <ion-label>{{ t.translate('route_reviews') }}</ion-label>
+      </ion-tab-button>
     </ion-tab-bar>
   </ion-tabs>
 
   <ion-loading [isOpen]="loading" [message]="t.translate('loading')"></ion-loading>
-
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
-    <ion-fab-button (click)="goToCreateGroup()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>

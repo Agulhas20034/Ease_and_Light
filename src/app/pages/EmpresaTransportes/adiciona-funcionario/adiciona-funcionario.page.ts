@@ -58,7 +58,6 @@ export class AdicionaFuncionarioPage implements OnInit {
   }
 
   onPasswordChange() {
-    // Client-side password validation - moved to local implementation
     const validation = this.validatePasswordLocal(this.password);
     this.passwordFeedback = validation.feedback;
     this.passwordIsValid = validation.isValid;
@@ -137,7 +136,6 @@ export class AdicionaFuncionarioPage implements OnInit {
           return;
         }
       }
-      // registerUser devolve a(s) linha(s) inserida(s); capturar o retorno para obter o novo ID com fiabilidade
       const createdRec: any = await this.httpApi.register(this.email, this.password, this.nome);
       let userId: number | null = null;
       if (Array.isArray(createdRec) && createdRec.length) {
@@ -146,7 +144,6 @@ export class AdicionaFuncionarioPage implements OnInit {
         userId = createdRec.id_utilizador;
       }
 
-      // Alternativa: procurar por email se não obtivemos um id
       if (!userId) {
         const looked = userId ? await this.httpApi.getUser(userId) : null;
         userId = looked?.id_utilizador || looked?.id || null;
@@ -164,13 +161,11 @@ export class AdicionaFuncionarioPage implements OnInit {
           });
         } catch (updateErr: any) {
           console.error('Failed to update created user fields', updateErr);
-          // Tentar reverter (rollback) o utilizador criado para não deixar uma conta parcialmente criada
           try {
             await this.httpApi.deleteUser(userId);
           } catch (delErr) {
             console.warn('Failed to rollback created user', delErr);
           }
-          // mostrar erro e abortar
           this.showToast((updateErr && updateErr.message) ? updateErr.message : this.tKey('save_error'), 'danger');
           this.loading = false;
           return;

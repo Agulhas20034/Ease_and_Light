@@ -11,7 +11,7 @@ import { TranslationService } from '../../../services/translations/translation.s
 })
 export class TestApiPage implements OnInit {
   selectedTable = '';
-  operation = 'create'; // create, read, update, delete (muda consoante escolha na dropbox)
+  operation = 'create'; 
   formData: any = {};
   selectedDeleteRow: any = null;
   result: any = null;
@@ -669,7 +669,6 @@ export class TestApiPage implements OnInit {
       return obj1.id === obj2.id;
     }
     
-    // Fallback
     return JSON.stringify(obj1) === JSON.stringify(obj2);
   }
 }

@@ -1,6 +1,6 @@
+@use "./theme/variables" as *;
 @import "@ionic/angular/css/core.css";
 @import "~leaflet/dist/leaflet.css";
-@import "./theme/variables.scss";
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
@@ -33,4 +33,11 @@ ion-app, html, body {
 
 body, ion-app, ion-content, .ion-page {
 	color: var(--ion-text-color) !important;
+}
+
+.delivery-history-fullscreen-modal .modal-wrapper {
+  height: 100% !important;
+  max-height: 100% !important;
+  width: 100% !important;
+  border-radius: 0 !important;
 }

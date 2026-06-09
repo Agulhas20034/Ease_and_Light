@@ -201,6 +201,33 @@ class SupabaseService {
   async updateEstadoGrupo(id, updates) { return this.updateByPk('estado_grupo', 'id_estado', { id, updates }); }
   async deleteEstadoGrupo(id) { return this.deleteByPk('estado_grupo', 'id_estado', id); }
 
+  async getUsersByEstabelecimento(estabelecimentoId) {
+    const { data, error } = await this.supabase
+      .from('users_estabelecimento')
+      .select('id_utilizador')
+      .eq('id_estabelecimento', Number(estabelecimentoId));
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getUsersByEmpresa(empresaId) {
+    const { data, error } = await this.supabase
+      .from('users_empresa_transportes')
+      .select('id_utilizador')
+      .eq('id_empresa', Number(empresaId));
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getGroupsByEntregaRecolhaId(entregaRecolhaId) {
+    const { data, error } = await this.supabase
+      .from('grupo')
+      .select('*')
+      .ilike('descr', `%order_entrega_recolha:${entregaRecolhaId}%`);
+    if (error) throw error;
+    return data || [];
+  }
+
   async getAllEstadoPercurso() { return this.fetchAll('estado_percurso'); }
   async getEstadoPercurso(id) { return this.fetchByPk('estado_percurso', 'id_estado', id); }
   async createEstadoPercurso(rec) { return this.insertOne('estado_percurso', rec); }

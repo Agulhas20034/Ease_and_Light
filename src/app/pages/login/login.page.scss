@@ -68,7 +68,6 @@ ion-input {
   color: inherit;
 }
 
-/* Respect system dark mode preference */
 @media (prefers-color-scheme: dark) {
   .login-container {
     background: var(--ion-color-step-900, #0b0b0b);

@@ -29,7 +29,6 @@ export class CriaEntregaClientePage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Lista items com tipo=1 e estado=6 e aplica filtro por estabelecimento/role
   async loadEntregas() {
     this.loading = true;
     try {
@@ -41,7 +40,6 @@ export class CriaEntregaClientePage implements OnInit {
       const rows = Array.isArray(all) ? all : (all?.data || []);
       console.debug('cria-entrega-cliente: fetched rows', Array.isArray(rows) ? rows.length : 0, rows);
 
-      // Filtrar por tipo = 1 e estado = 6
       let filtered = (rows || []).filter((r: any) => {
         const tipo = r.id_tipo_entrega_recolha ?? r.tipo ?? r.tipo_entrega;
         const estado = r.id_estado_entrega_recolha ?? r.estado ?? r.status;
@@ -78,7 +76,6 @@ export class CriaEntregaClientePage implements OnInit {
     await t.present();
   }
 
-  // Converte item para entrega cliente: define tipo=2 e estado=4
   async convertToEntrega(entrega: any) {
     const id = entrega.id_entrega_recolha;
     const confirm = await this.alertCtrl.create({
@@ -92,14 +89,38 @@ export class CriaEntregaClientePage implements OnInit {
                   const updates: any = { tipo: 2, estado: 4, data_hora_entrega: now };
                   await this.httpApi.updateEntregaRecolha(Number(id), updates);
                   this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
-                  // remove localmente pra manter a lista atualizada
+                  try {
+                    const ordem: any = await this.httpApi.getEntregaRecolha(Number(id));
+                    const requesterId = Number(ordem?.id_user || ordem?.id_utilizador || ordem?.id_cliente || 0);
+                    let locName = ordem?.estab_nome_e || ordem?.estab_nome_r || ordem?.local_entrega || '';
+                    if (!locName) {
+                      const locId = Number(ordem?.id_estabelecimento_e || ordem?.id_localizacao_entrega || ordem?.id_estab_e || 0);
+                      if (locId) {
+                        try {
+                          const locRec: any = await this.httpApi.getLocalizacao(locId);
+                          const locObj = Array.isArray(locRec) ? locRec[0] : locRec;
+                          locName = locObj?.nome || locObj?.nome_rua || locObj?.name || '';
+                        } catch (e) {
+                          // ignore
+                        }
+                      }
+                    }
+                    if (requesterId) {
+                      await this.httpApi.createNotification({
+                        userId: requesterId,
+                        title: this.tKey('delivered_to_location_title') || 'Delivered to Location',
+                        description: `${this.tKey('delivered_to_location_message')?.replace('{{locationName}}', locName || 'the location') || `Your backpack has been delivered to ${locName || 'the location'}.`}`,
+                        createdAt: new Date().toISOString()
+                      });
+                    }
+                  } catch (notifyErr) {
+                    console.warn('Could not notify requester about delivery', notifyErr);
+                  }
                   this.entregas = (this.entregas || []).filter((e: any) => {
                     const eid = e.id_entrega_recolha;
                     return Number(eid) !== Number(id);
                   });
-                  // recarrega dados do backend
                   await this.loadEntregas();
-                  // redirect to inbox
                   this.router.navigateByUrl('/folder/inbox');
                 } catch (e) {
                   console.error('Falha ao atualizar entrega', e);

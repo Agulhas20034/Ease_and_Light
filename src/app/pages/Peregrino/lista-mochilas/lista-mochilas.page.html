@@ -14,6 +14,7 @@
       <ion-label>
         <h3>{{ t.translate('backpack_owner') }}: {{ m.ownerEmail || m.id_user || m.id_utilizador }}</h3>
         <p>{{ t.translate('backpack_weight') }}: {{ m.peso }} kg — {{ t.translate('backpack_color') }}: {{ m.cor || '-' }}</p>
+        <p *ngIf="m.entregaStatus"><ion-badge color="secondary">Estado: {{ m.entregaStatus }}</ion-badge></p>
       </ion-label>
     </ion-item>
   </ion-list>

@@ -73,7 +73,6 @@ export class CriaEmpregadoPage implements OnInit {
     toast.present();
   }
 
-  // Cria um empregado, define id_tipo = 6 e associa ao estabelecimento
   async createEmployee() {
     console.log('createEmployee called, estabId:', this.estabId, 'form data:', {
       email: this.email,
@@ -135,7 +134,6 @@ export class CriaEmpregadoPage implements OnInit {
         }
       }
 
-      // Registar utilizador (usa registerUser para criar auth também)
       const createdRec: any = await this.httpApi.register(this.email, this.password, this.nome, {
         telefone: this.telefone,
         nif: this.nif,

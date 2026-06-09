@@ -67,7 +67,6 @@ export class EditaVeiculoPage implements OnInit {
     if (!this.matricula) return;
     this.loading = true;
     try {
-      // validations similar to create
       const matRegex = /^[A-Za-z0-9]{2}-[A-Za-z0-9]{2}-[A-Za-z0-9]{2}$/;
       if (!matRegex.test((this.matricula || '').trim())) {
         const toast = await this.toastCtrl.create({ message: this.t.translate('provide_all_fields') + ' (' + this.t.translate('invalid_registration') + ')', duration: 2200, color: 'warning' });

@@ -1,0 +1,121 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ t.translate('delivery_history') || 'Delivery History' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">{{ t.translate('close') || 'Close' }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+
+  <ion-list *ngIf="!loading">
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_status') || 'Filter by Status' }}</ion-label>
+      <ion-select [(ngModel)]="filterStatus" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of statusOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_company') || 'Filter by Company' }}</ion-label>
+      <ion-select [(ngModel)]="filterCompany" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of companyOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_pickup_location') || 'Filter by Pickup Location' }}</ion-label>
+      <ion-select [(ngModel)]="filterPickupLocation" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of pickupLocationOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">{{ t.translate('filter_delivery_location') || 'Filter by Delivery Location' }}</ion-label>
+      <ion-select [(ngModel)]="filterDeliveryLocation" interface="popover" (ionChange)="applyFilters()">
+        <ion-select-option [value]="null">{{ t.translate('all') || 'All' }}</ion-select-option>
+        <ion-select-option *ngFor="let option of deliveryLocationOptions" [value]="option.id">{{ option.label }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-button expand="full" fill="outline" (click)="clearFilters()">
+        {{ t.translate('clear_filters') || 'Clear Filters' }}
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!loading && filteredDeliveries.length === 0" class="ion-padding">
+    <ion-text color="medium">
+      {{ t.translate('no_deliveries') || 'No deliveries found' }}
+    </ion-text>
+  </div>
+
+  <ion-list *ngIf="!loading && filteredDeliveries.length > 0">
+    <ion-item-group *ngFor="let delivery of filteredDeliveries">
+      <ion-item-divider sticky>
+        <ion-label>
+          <h3>{{ formatDate(delivery.data_hora_recolha) }}</h3>
+        </ion-label>
+        <ion-badge [color]="getStatusColor(delivery)" slot="end">
+          {{ getStatusLabel(delivery) }}
+        </ion-badge>
+      </ion-item-divider>
+
+      <ion-card>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <strong>{{ t.translate('pickup_datetime') || 'Pickup Date/Time' }}:</strong>
+              </ion-col>
+              <ion-col size="6">
+                {{ formatDate(delivery.data_hora_recolha) }}
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="6">
+                <strong>{{ t.translate('pickup_location') || 'Pickup Location' }}:</strong>
+              </ion-col>
+              <ion-col size="6">
+                {{ getEstabelecimentoName(delivery.id_estabelecimento_r) }}
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="6">
+                <strong>{{ t.translate('delivery_location') || 'Delivery Location' }}:</strong>
+              </ion-col>
+              <ion-col size="6">
+                {{ getEstabelecimentoName(delivery.id_estabelecimento_e) }}
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="6">
+                <strong>{{ t.translate('completion_date') || 'Completion Date' }}:</strong>
+              </ion-col>
+              <ion-col size="6">
+                {{ delivery.data_hora_entrega ? formatDate(delivery.data_hora_entrega) : '-' }}
+              </ion-col>
+            </ion-row>
+            <ion-row *ngIf="delivery.id_mochila">
+              <ion-col size="6">
+                <strong>{{ t.translate('backpack') || 'Backpack' }}:</strong>
+              </ion-col>
+              <ion-col size="6">
+                #{{ delivery.id_mochila }}
+              </ion-col>
+            </ion-row>
+            <ion-row *ngIf="!company && isFinished(delivery) && (delivery.id_empresa || delivery.id_empresa_fk || delivery.id_empresa_id)">
+              <ion-col size="12" class="ion-text-right">
+                <ion-button fill="outline" size="small" color="primary" (click)="openCompanyReview(delivery)">
+                  {{ t.translate('review_delivery_company') || 'Review Delivery Company' }}
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </ion-item-group>
+  </ion-list>
+</ion-content>

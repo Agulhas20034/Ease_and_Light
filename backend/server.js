@@ -425,6 +425,78 @@ app.get('/api/reviews/:locationId', async (req, res) => {
   }
 });
 
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 1000;
+    const result = await apiService.getAllReviews(limit);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Notes endpoints (MongoDB)
+app.post('/api/notes', async (req, res) => {
+  try {
+    console.log('POST /api/notes payload:', req.body);
+    const result = await apiService.createNote(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('POST /api/notes error:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/notes/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await apiService.getNotesByUser(userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/notes/:id', async (req, res) => {
+  try {
+    const result = await apiService.updateNote(req.params.id, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/notes/:id', async (req, res) => {
+  try {
+    const result = await apiService.deleteNote(req.params.id);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Notifications endpoints (MongoDB)
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await apiService.createNotification(payload);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('POST /api/notifications error:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/notifications/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await apiService.getNotificationsByUser(userId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/percurso/:id', async (req, res) => {
   try {
     const result = await apiService.getPercurso(req.params.id);
@@ -767,6 +839,28 @@ app.get('/api/users-estabelecimento', async (req, res) => {
   }
 });
 
+app.get('/api/users-estabelecimento/estabelecimento/:id', async (req, res) => {
+  try {
+    const estabId = Number(req.params.id);
+    if (!estabId) {
+      return res.status(400).json({ success: false, error: 'Invalid estabelecimento id' });
+    }
+
+    const { data, error } = await supabaseService.client
+      .from('users_estabelecimento')
+      .select('*')
+      .eq('id_estabelecimento', estabId);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/users-estabelecimento/:id_utilizador/:id_estabelecimento', async (req, res) => {
   try {
     const result = await apiService.updateUsersEstabelecimento(req.params.id_utilizador, req.params.id_estabelecimento, req.body);
@@ -915,6 +1009,18 @@ app.put('/api/estado-entrega-recolha/:id', async (req, res) => {
 app.get('/api/estado-entrega-recolha', async (req, res) => {
   try {
     const result = await apiService.getAllEstadoEntregaRecolha();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/estado-entrega-recolha/:id', async (req, res) => {
+  try {
+    const result = await apiService.getEstadoEntregaRecolha(req.params.id);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Estado not found' });
+    }
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

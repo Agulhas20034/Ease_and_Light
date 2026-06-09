@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ tkey('leave_review') }}</ion-title>
+    <ion-title>{{ headerTitle }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="dismiss()">{{ tkey('close') || 'Close' }}</ion-button>
     </ion-buttons>
@@ -9,6 +9,10 @@
 
 <ion-content>
   <ion-list>
+    <ion-item *ngIf="isRouteReview">
+      <ion-label position="stacked">{{ tkey('review_route') }}</ion-label>
+      <ion-text>{{ targetName }}</ion-text>
+    </ion-item>
     <ion-item>
       <ion-label position="stacked">{{ tkey('rating') }}</ion-label>
       <div class="star-row">

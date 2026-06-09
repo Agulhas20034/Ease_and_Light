@@ -50,6 +50,37 @@ export class ListaMochilasPage implements OnInit {
           usersById[String(u.id_user)] = u.email || u.nome || '';
         }
       }
+      
+      let estadoMap: Record<number, string> = {};
+      try {
+        const estadosData: any = await this.httpApi.getAllEstadoEntregaRecolha();
+        const estados = Array.isArray(estadosData) ? estadosData : (estadosData?.data || []);
+        for (const e of estados) {
+          const estadoId = Number(e.id_estado ?? e.id_estado_entrega_recolha ?? e.id ?? 0);
+          const descr = e.descr ?? e.description ?? e.estado ?? e.nome ?? '';
+          if (estadoId && descr) {
+            estadoMap[estadoId] = descr;
+          }
+        }
+      } catch (eErr) {
+        console.warn('Could not load estado_entrega_recolha', eErr);
+      }
+      
+      let entregas: any[] = [];
+      try {
+        const entregasData: any = await this.httpApi.getAllEntregasRecolhas();
+        entregas = Array.isArray(entregasData) ? entregasData : (entregasData?.data || []);
+      } catch (eErr) {
+        console.warn('Could not load entregas_recolhas', eErr);
+      }
+      
+      const entregasByMochila: Record<string, any> = {};
+      for (const e of entregas) {
+        const mochilaId = String(e.id_mochila ?? e.mochila_id ?? '');
+        const estado = Number(e.id_estado_entrega_recolha ?? e.estado ?? 0);
+        entregasByMochila[mochilaId] = { ...e, estadoDescr: estadoMap[estado] || `Estado ${estado}` };
+      }
+      
       //Filtra mochilas a mostrar
       let filtered: any[] = [];
 
@@ -65,10 +96,16 @@ export class ListaMochilasPage implements OnInit {
         filtered = [];
       }
 
-      // Mapeia donos
+      // Mapeia donos e adiciona status de entrega
       this.mochilas = (filtered || []).map((m: any) => {
         const ownerId = String(m.id_user ?? m.id_utilizador ?? '');
-        return { ...m, ownerEmail: usersById[ownerId] || '' };
+        const mochilaId = String(m.id_mochila ?? m.id ?? '');
+        const entrega = entregasByMochila[mochilaId];
+        return {
+          ...m,
+          ownerEmail: usersById[ownerId] || '',
+          entregaStatus: entrega ? entrega.estadoDescr : null
+        };
       });
     } catch (err) {
       console.error('Error loading mochilas', err);

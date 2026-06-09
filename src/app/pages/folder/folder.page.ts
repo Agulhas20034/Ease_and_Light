@@ -41,6 +41,19 @@ export class FolderPage implements OnInit {
   private lastRouteString: string | null = null;
   private firstRouteDrawn = false;
   private lastRouteStartedAtUser = false;
+  private skippedRouteStopEtapaIds = new Set<number | string>();
+  private currentRouteStops: Array<{
+    lat: number;
+    lon: number;
+    title: string;
+    locId: string;
+    etapaId: number | string;
+    isLast: boolean;
+  }> = [];
+  private currentOngoingRoute: any | null = null;
+  private lastOngoingRouteIdentifier: string | null = null;
+  private lastOngoingRouteGroupId: string | null = null;
+  private routeRatingPromptedFor = new Set<string>();
   public lastLat: number | null = null;
   public lastLng: number | null = null;
   public accuracy: number | null = null;
@@ -75,6 +88,14 @@ export class FolderPage implements OnInit {
   ionViewDidEnter() {
     this.initializeMap();
     this.startWeatherTimer();
+    try {
+      if (localStorage.getItem('refreshMapAfterReview')) {
+        localStorage.removeItem('refreshMapAfterReview');
+        this.refreshLocationMarkers().catch((e) => console.warn('refresh after return to map failed', e));
+      }
+    } catch (e) {
+      console.warn('Could not read refresh flag', e);
+    }
     try { if (this.routeCheckTimer) clearInterval(this.routeCheckTimer); } catch (e) {}
     this.routeCheckTimer = setInterval(() => { this.checkAndDrawOngoingRoute(); }, 60000);
 
@@ -139,13 +160,40 @@ export class FolderPage implements OnInit {
       console.log('[FolderPage] Raw grupo-percurso data:', gpData);
       const grupoPercursos = Array.isArray(gpData) ? gpData : (gpData?.data || []);
       console.log('[FolderPage] Parsed grupo-percurso count:', grupoPercursos.length);
-      const ongoing = grupoPercursos.find((g: any) => Number(g.id_estado) === 2 || Number(g.estado) === 2 || (g.estado === undefined && !!g.data_hora_inicio) || (g.id_estado === undefined && !!g.data_inicio));
+      const ongoing = grupoPercursos.find((g: any) =>
+        Number(g.id_estado) === 2 || Number(g.estado) === 2 ||
+        (g.estado === undefined && !!g.data_hora_inicio) ||
+        (g.id_estado === undefined && !!g.data_inicio)
+      );
       console.log('[FolderPage] Ongoing found:', ongoing || 'none');
-      if (!ongoing) return;
+
+      if (!ongoing) {
+        const pendingRouteId = this.lastOngoingRouteIdentifier;
+        const pendingGroupId = this.lastOngoingRouteGroupId;
+        this.currentOngoingRoute = null;
+        this.lastOngoingRouteIdentifier = null;
+        this.lastOngoingRouteGroupId = null;
+        if (pendingRouteId && pendingGroupId) {
+          await this.maybePromptForEndedRoute(pendingGroupId, pendingRouteId);
+        }
+        return;
+      }
 
       const percursoId = ongoing.id_percurso || ongoing.id_percrso || ongoing.id_percrso || ongoing.id_percurso;
-      console.log('[FolderPage] Ongoing percurso id:', percursoId);
+      const groupId = ongoing.id_grupo || ongoing.id_gruo || ongoing.id_group || ongoing.idGrupo || ongoing.id_grupo;
+      console.log('[FolderPage] Ongoing percurso id:', percursoId, 'group id:', groupId);
       if (!percursoId) return;
+
+      const routeIdentifier = `${groupId || 'unknown'}:${percursoId}`;
+      if (this.lastOngoingRouteIdentifier && this.lastOngoingRouteIdentifier !== routeIdentifier) {
+        this.skippedRouteStopEtapaIds.clear();
+      }
+      this.lastOngoingRouteIdentifier = routeIdentifier;
+      this.lastOngoingRouteGroupId = String(groupId || '');
+      this.currentOngoingRoute = ongoing;
+
+      const skippedEtapas = Array.isArray(ongoing.etapas_puladas) ? ongoing.etapas_puladas : [];
+      this.skippedRouteStopEtapaIds = new Set(skippedEtapas.map((e: any) => e.id_etapa || e));
 
       const etapasPercursoData: any = await this.httpApi.getAll('etapas-percurso');
       const etapasPercurso = Array.isArray(etapasPercursoData) ? etapasPercursoData : (etapasPercursoData?.data || []);
@@ -172,7 +220,8 @@ export class FolderPage implements OnInit {
         .filter((ep: any) => ep.etapaId !== undefined && ep.etapaId !== null)
         .sort((a: any, b: any) => Number(a.etapaId) - Number(b.etapaId));
 
-      const coords: Array<[number, number]> = [];
+      const allStops: Array<{ lat: number; lon: number; title: string; locId: string; etapaId: number | string }> = [];
+      let currentIndex = 0;
       for (const epRef of orderedEtapasRefs) {
         const etapa = etapas.find((e: any) => String(e.id_etapa || e.id_etap) === String(epRef.etapaId));
         if (!etapa) {
@@ -199,18 +248,28 @@ export class FolderPage implements OnInit {
           continue;
         }
 
-        const last = coords[coords.length - 1];
-        if (!last || last[0] !== lat || last[1] !== lon) {
-          coords.push([lat, lon]);
+        const last = allStops[allStops.length - 1];
+        if (!last || last.lat !== lat || last.lon !== lon) {
+          const title = (estabelecimento.nome || estabelecimento.nome_rua || estabelecimento.nome_estabelecimento || estabelecimento.descr || estabelecimento.descricao || estabelecimento.name || `Ponto ${currentIndex + 1}`);
+          allStops.push({ lat, lon, title, locId: String(estabelecimento.id_estabelecimento || estabelecimento.id || estabelecimento.id_localizacao || estabelecimento.id_estabelecimento_supabase || `stop-${currentIndex}`), etapaId: epRef.etapaId });
+          currentIndex += 1;
         }
       }
 
-      if (!coords.length) {
+      if (!allStops.length) {
         console.log('[FolderPage] No establishment coordinates could be resolved for percurso', percursoId);
         return;
       }
 
-      const finalCoords = [...coords];
+      const routeStops = allStops.filter((stop) => !this.skippedRouteStopEtapaIds.has(stop.etapaId));
+      this.currentRouteStops = routeStops.map((stop, idx) => ({ ...stop, isLast: idx === routeStops.length - 1 }));
+      if (!this.currentRouteStops.length) {
+        console.log('[FolderPage] All route stops have been skipped for percurso', percursoId);
+        this.removeActiveRoute();
+        return;
+      }
+
+      const finalCoords: Array<[number, number]> = this.currentRouteStops.map((stop) => [stop.lat, stop.lon]);
       if (this.lastLat != null && this.lastLng != null) {
         const first = finalCoords[0];
         if (first[0] !== this.lastLat || first[1] !== this.lastLng) {
@@ -219,33 +278,15 @@ export class FolderPage implements OnInit {
       }
 
       let routeCoords = await this.getStreetRouteCoordinates(finalCoords);
-      
-      const startPoint = finalCoords[0];
-      const endPoint = finalCoords[finalCoords.length - 1];
-      
-      if (routeCoords.length === 0) {
-        routeCoords = finalCoords;
-      } else if (routeCoords.length === 1) {
-        routeCoords = [startPoint, endPoint];
-      } else {
-        if (routeCoords[0][0] !== startPoint[0] || routeCoords[0][1] !== startPoint[1]) {
-          routeCoords[0] = startPoint;
-        }
-        if (routeCoords[routeCoords.length - 1][0] !== endPoint[0] || routeCoords[routeCoords.length - 1][1] !== endPoint[1]) {
-          let closestIdx = routeCoords.length - 1;
-          let closestDist = this.getDistance(routeCoords[closestIdx], endPoint);
-          
-          for (let i = routeCoords.length - 2; i >= Math.max(0, routeCoords.length - 20); i--) {
-            const dist = this.getDistance(routeCoords[i], endPoint);
-            if (dist < closestDist) {
-              closestDist = dist;
-              closestIdx = i;
-            }
-          }
-          routeCoords = [...routeCoords.slice(0, closestIdx + 1), endPoint];
+      const lastStop = this.currentRouteStops[this.currentRouteStops.length - 1];
+      if (routeCoords.length > 0 && lastStop) {
+        const lastRoutePoint = routeCoords[routeCoords.length - 1];
+        if (lastRoutePoint[0] !== lastStop.lat || lastRoutePoint[1] !== lastStop.lon) {
+          console.warn('[FolderPage] forcing route end to last stop', lastRoutePoint, lastStop);
+          routeCoords = [...routeCoords, [lastStop.lat, lastStop.lon]];
         }
       }
-      
+
       const routeKey = JSON.stringify(routeCoords);
       if (routeKey === this.lastRouteString) {
         console.log('[FolderPage] Route unchanged, skipping redraw');
@@ -254,19 +295,45 @@ export class FolderPage implements OnInit {
       this.lastRouteString = routeKey;
       console.log('[FolderPage] Final street route coords to draw:', routeCoords);
       this.removeActiveRoute();
-      
+
       const line = L.polyline(routeCoords as any, { color: 'blue', weight: 5, opacity: 0.8, smoothFactor: 1 }).addTo(this.map!);
       const routeMarkers = L.layerGroup();
       if (routeCoords.length > 0) {
         routeMarkers.addLayer(L.circleMarker(routeCoords[0], { radius: 7, color: 'white', weight: 3, fillColor: 'blue', fillOpacity: 1 }).bindPopup('Start'));
-        if (routeCoords.length > 1) {
-          const lastPoint = routeCoords[routeCoords.length - 1];
-          routeMarkers.addLayer(L.circleMarker(lastPoint, { radius: 7, color: 'white', weight: 3, fillColor: 'red', fillOpacity: 1 }).bindPopup('End'));
-        }
+      }
+      for (const routeStop of this.currentRouteStops) {
+        const canRemove = !routeStop.isLast && this.lastLat != null && this.lastLng != null && this.isNear({ lat: routeStop.lat, lon: routeStop.lon }, { lat: this.lastLat, lon: this.lastLng }, 120);
+        const canEnd = routeStop.isLast && this.lastLat != null && this.lastLng != null && this.isNear({ lat: routeStop.lat, lon: routeStop.lon }, { lat: this.lastLat, lon: this.lastLng }, 120);
+        const marker = L.circleMarker([routeStop.lat, routeStop.lon], { radius: 8, color: 'white', weight: 3, fillColor: routeStop.isLast ? 'red' : 'orange', fillOpacity: 1 });
+        marker.bindPopup(this.getRouteStopPopupHtml(routeStop, canRemove, canEnd));
+        marker.on('popupopen', (ev: any) => {
+          try {
+            const el = ev.popup.getElement();
+            if (!el) return;
+            const removeBtn = el.querySelector('.remove-route-stop');
+            if (removeBtn) {
+              removeBtn.addEventListener('click', (evt: any) => {
+                evt.preventDefault(); evt.stopPropagation();
+                this.confirmRemoveRouteStop(routeStop.etapaId);
+              });
+            }
+            const endBtn = el.querySelector('.end-route');
+            if (endBtn) {
+              endBtn.addEventListener('click', (evt: any) => {
+                evt.preventDefault(); evt.stopPropagation();
+                this.confirmEndRoute();
+              });
+            }
+          } catch (innerErr) {
+            console.warn('Route popup open handler error', innerErr);
+          }
+        });
+        routeMarkers.addLayer(marker);
       }
       const routeLayer = L.layerGroup([line, routeMarkers]);
       routeLayer.addTo(this.map!);
       this.activeRouteLayer = routeLayer;
+
       try {
         const userPosition = (this.lastLat != null && this.lastLng != null) ? [this.lastLat, this.lastLng] as [number, number] : null;
         if (!this.firstRouteDrawn) {
@@ -470,6 +537,210 @@ export class FolderPage implements OnInit {
     return allSegments;
   }
 
+  private getRouteStopPopupHtml(stop: any, canRemove: boolean, canEnd: boolean) {
+    const btnStyle = 'background:#2f8cff;color:#ffffff;border:none;padding:8px 12px;border-radius:18px;font-weight:600;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.18);margin-top:8px;margin-right:6px;';
+    let html = `<div><strong>${stop.title}</strong><br/>`;
+    if (canRemove) {
+      html += `<button class="remove-route-stop" style="${btnStyle}">${this.t('remove_location_from_route')}</button>`;
+    }
+    if (canEnd) {
+      html += `<button class="end-route" style="${btnStyle}">${this.t('end_route')}</button>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  private async confirmRemoveRouteStop(etapaId: number | string) {
+    const alert = await this.alertCtrl.create({
+      header: this.t('remove_route_stop'),
+      message: this.t('remove_location_from_route'),
+      buttons: [
+        { text: this.t('cancel'), role: 'cancel' },
+        {
+          text: this.t('remove_route_stop'),
+          role: 'destructive',
+          handler: () => {
+            this.skipRouteStop(etapaId);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async skipRouteStop(etapaId: number | string) {
+    if (this.skippedRouteStopEtapaIds.has(etapaId)) return;
+    this.skippedRouteStopEtapaIds.add(etapaId);
+    
+    try {
+      if (this.currentOngoingRoute) {
+        const id_grupo = this.currentOngoingRoute.id_grupo ?? this.currentOngoingRoute.id_gruo ?? this.currentOngoingRoute.id_group;
+        const id_percurso = this.currentOngoingRoute.id_percurso ?? this.currentOngoingRoute.id_percrso;
+        
+        if (id_grupo && id_percurso) {
+          const etapasList = Array.from(this.skippedRouteStopEtapaIds).map((id) => ({ id_etapa: id }));
+          await this.httpApi.update('grupo-percurso', {
+            id_grupo,
+            id_percurso,
+            etapas_puladas: etapasList
+          });
+          console.log('[FolderPage] Saved skipped etapas to database:', etapasList);
+        }
+      }
+    } catch (saveError) {
+      console.warn('Error saving skipped etapa to database', saveError);
+    }
+    
+    try {
+      const toast = await this.alertCtrl.create({
+        header: '',
+        message: this.t('location_removed_from_route') || this.t('remove_location_from_route') || 'Location removed from route',
+        buttons: [this.t('ok') || 'OK']
+      });
+      await toast.present();
+    } catch (e) {}
+    await this.checkAndDrawOngoingRoute();
+  }
+
+  private async confirmEndRoute() {
+    if (!this.currentOngoingRoute) return;
+    const alert = await this.alertCtrl.create({
+      header: this.t('end_route'),
+      message: this.t('end_route_confirm'),
+      buttons: [
+        { text: this.t('cancel'), role: 'cancel' },
+        {
+          text: this.t('end_route'),
+          role: 'destructive',
+          handler: async () => {
+            await this.performEndRoute();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async performEndRoute() {
+    if (!this.currentOngoingRoute) return;
+    const ongoing = this.currentOngoingRoute;
+    const id_grupo = ongoing.id_grupo ?? ongoing.id_gruo ?? ongoing.id_group;
+    const id_percurso = ongoing.id_percurso ?? ongoing.id_percrso;
+    if (!id_grupo || !id_percurso) {
+      console.warn('Cannot end route, missing group or percurso id', ongoing);
+      return;
+    }
+
+    try {
+      await this.httpApi.update('grupo-percurso', {
+        id_grupo,
+        id_percurso,
+        estado: 5,
+        data_hora_fim: new Date().toISOString()
+      });
+      this.currentOngoingRoute = null;
+      this.lastOngoingRouteIdentifier = null;
+      this.lastOngoingRouteGroupId = null;
+      this.firstRouteDrawn = false;
+      this.lastRouteString = null;
+      await this.openRouteReviewModal(String(id_percurso));
+      try { this.routeRatingPromptedFor.add(`${id_grupo}:${id_percurso}`); } catch (e) {}
+    } catch (error) {
+      console.warn('Error ending route', error);
+      const errAlert = await this.alertCtrl.create({
+        header: this.t('error'),
+        message: this.t('error_stopping_route') || 'Could not end route',
+        buttons: [this.t('ok') || 'OK']
+      });
+      await errAlert.present();
+    }
+  }
+
+  private async maybePromptForEndedRoute(groupId: string, routeIdentifier: string) {
+    if (!groupId || !routeIdentifier) return;
+    if (this.routeRatingPromptedFor.has(routeIdentifier)) return;
+    try {
+      const storageKey = `routeRatingPrompted_${routeIdentifier}`;
+      if (localStorage.getItem(storageKey)) {
+        this.routeRatingPromptedFor.add(routeIdentifier);
+        return;
+      }
+      const userId = this.getCurrentUserId();
+      if (!userId) return;
+      const groupsData: any = await this.httpApi.getGroupsByUser(userId);
+      const groups = Array.isArray(groupsData) ? groupsData : (groupsData?.data || []);
+      const isMember = groups.some((group: any) => String(group.id_grupo || group.id || group.idGrupo) === String(groupId));
+      if (!isMember) return;
+
+      const alert = await this.alertCtrl.create({
+        header: this.t('rate_route_title'),
+        message: this.t('rate_route_message'),
+        buttons: [
+          { text: this.t('cancel'), role: 'cancel' },
+          {
+            text: this.t('route_review_button'),
+            handler: async () => {
+              const routeId = routeIdentifier.split(':')[1] || routeIdentifier;
+              await this.openRouteReviewModal(routeId);
+            }
+          }
+        ]
+      });
+      await alert.present();
+      localStorage.setItem(storageKey, '1');
+      this.routeRatingPromptedFor.add(routeIdentifier);
+    } catch (error) {
+      console.warn('Could not prompt for ended route review', error);
+    }
+  }
+
+  private async openRouteReviewModal(routeId: string) {
+    const modal = await this.modalCtrl.create({
+      component: ReviewModalComponent,
+      componentProps: {
+        reviewType: 'route',
+        routeId,
+        locationId: `route-${routeId}`
+      }
+    });
+    await modal.present();
+    const res = await modal.onDidDismiss();
+    if (res?.data?.saved) {
+      const toast = await this.alertCtrl.create({
+        header: this.t('route_review_saved') || this.t('review_saved'),
+        buttons: [this.t('ok') || 'OK']
+      });
+      await toast.present();
+    }
+  }
+
+  private isNear(point: { lat: number; lon: number }, position: { lat: number; lon: number }, thresholdMeters = 120) {
+    return this.distanceBetweenPoints(point.lat, point.lon, position.lat, position.lon) <= thresholdMeters;
+  }
+
+  private distanceBetweenPoints(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const toRad = (value: number) => value * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const earthRadius = 6371000;
+    return earthRadius * c;
+  }
+
+  private getCurrentUserId(): number | null {
+    try {
+      const currentUser = localStorage.getItem('currentUser');
+      if (currentUser) {
+        const parsed = JSON.parse(currentUser);
+        return parsed?.id_utilizador ?? null;
+      }
+    } catch (e) {}
+    return null;
+  }
+
   removeActiveRoute() {
     try {
       if (this.activeRouteLayer && this.map) {
@@ -481,7 +752,27 @@ export class FolderPage implements OnInit {
     }
   }
 
+  private clearLocationMarkers() {
+    try {
+      if (this.locationMarkers.length && this.map) {
+        for (const marker of this.locationMarkers) {
+          try { this.map.removeLayer(marker); } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to clear location markers', e);
+    } finally {
+      this.locationMarkers = [];
+    }
+  }
+
+  private async refreshLocationMarkers() {
+    this.clearLocationMarkers();
+    await this.loadAllLocationMarkers();
+  }
+
   private async loadAllLocationMarkers() {
+    this.clearLocationMarkers();
     try {
       const data: any = await this.httpApi.getAllLocalizacoes();
       const rows = Array.isArray(data) ? data : (data?.data || []);
@@ -493,9 +784,43 @@ export class FolderPage implements OnInit {
         const marker = L.marker([lat, lon]).addTo(this.map!);
         const popupHtml = this.getLocationPopupHtml(r, title);
         marker.bindPopup(popupHtml);
-        marker.on('popupopen', (ev: any) => {
+        marker.on('popupopen', async (ev: any) => {
           try {
             ev.popup.setContent(this.getLocationPopupHtml(r, title));
+
+            try {
+              const locId = String(r.id_estabelecimento || r.id || r.id_localizacao || r.id_estabelecimento_supabase || '');
+              const resp: any = await this.httpApi.getReviewsByLocation(locId);
+              const reviews = Array.isArray(resp) ? resp : (resp?.data || []);
+              let reviewsHtml = '';
+              if (reviews && reviews.length) {
+                const avg = Math.round((reviews.reduce((s: number, x: any) => s + (x.rating || 0), 0) / reviews.length) * 10) / 10;
+                const photos: string[] = [];
+                for (const rev of reviews) {
+                  if (Array.isArray(rev.photos)) {
+                    for (const p of rev.photos) {
+                      if (p) photos.push(p);
+                    }
+                  }
+                }
+                reviewsHtml += `<div style="margin-top:6px"><strong>${this.t('reviews')}:</strong> ${avg} / 5 (${reviews.length})</div>`;
+                if (photos.length) {
+                  reviewsHtml += '<div class="reviews-carousel" style="display:flex;gap:6px;margin-top:6px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;">';
+                  for (const ph of photos) {
+                    const src = (typeof ph === 'string' && ph.startsWith('data:')) ? ph : ph;
+                    reviewsHtml += `<img class="rev-thumb" src="${src}" style="scroll-snap-align:center;" />`;
+                  }
+                  reviewsHtml += '</div>';
+                }
+
+                const base = this.getLocationPopupHtml(r, title);
+                const updated = base.replace('<div style="margin-top:8px">', reviewsHtml + '<div style="margin-top:8px">');
+                ev.popup.setContent(updated);
+              }
+            } catch (revErr) {
+              console.warn('Could not load reviews for popup', revErr);
+            }
+
             const el = ev.popup.getElement();
             if (!el) return;
             const addBtn = el.querySelector('.add-review-btn');
@@ -512,6 +837,17 @@ export class FolderPage implements OnInit {
                 try { this.openReviewsListModal(r); } catch (e) { console.warn(e); }
               });
             }
+
+            try {
+              const thumbs = Array.from(el.querySelectorAll('.rev-thumb')) as any[];
+              thumbs.forEach((img: any) => {
+                img.addEventListener('click', (evt: any) => {
+                  evt.preventDefault(); evt.stopPropagation();
+                  try { img.classList.toggle('expanded'); } catch (e) {}
+                });
+              });
+            } catch (e) {}
+
           } catch (e) { console.warn('popupopen handler error', e); }
         });
         this.locationMarkers.push(marker);
@@ -524,7 +860,8 @@ export class FolderPage implements OnInit {
   getLocationPopupHtml(r: any, title: string) {
     const addLabel = this.t('add_review');
     const viewLabel = this.t('view_reviews');
-    return `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal + '<br/>' : ''}<div style="margin-top:8px"><button class="add-review-btn" data-loc="${r.id_estabelecimento || r.id}">${addLabel}</button> <button class="view-reviews-btn" data-loc="${r.id_estabelecimento || r.id}">${viewLabel}</button></div></div>`;
+    const buttonStyle = 'background:#ff8c00;color:#ffffff;border:none;padding:8px 12px;border-radius:18px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.14);margin-right:6px;';
+    return `<div><strong>${title}</strong><br/>${r.email ? 'Email: '+r.email+'<br/>' : ''}${r.telefone ? 'Tel: '+r.telefone+'<br/>' : ''}${r.nome_rua ? 'Rua: '+r.nome_rua+'<br/>' : ''}${r.cod_postal ? 'CP: '+r.cod_postal + '<br/>' : ''}<div style="margin-top:8px"><button class="add-review-btn" style="${buttonStyle}" data-loc="${r.id_estabelecimento || r.id}">${addLabel}</button><button class="view-reviews-btn" style="${buttonStyle}" data-loc="${r.id_estabelecimento || r.id}">${viewLabel}</button></div></div>`;
   }
 
   async openReviewModalForLocation(location: any) {
@@ -536,6 +873,7 @@ export class FolderPage implements OnInit {
     await modal.present();
     const res = await modal.onDidDismiss();
     if (res?.data?.saved) {
+      await this.refreshLocationMarkers();
     }
   }
 

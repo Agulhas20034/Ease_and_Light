@@ -35,8 +35,6 @@
   text-overflow: ellipsis;
 }
 
-/* Garantir tamanho e cor consistentes do título da empresa em todas as larguras
-   Evita que o título aumente de tamanho ou mude de cor em telas pequenas. */
 .company-title {
   font-size: 1rem !important;
   font-weight: 600;
@@ -55,7 +53,6 @@
   text-align: right;
 }
 
-/* On narrow screens stack the header content to avoid cramped layout */
 @media (max-width: 480px) {
   .company-meta {
     flex-direction: column;
@@ -64,7 +61,6 @@
   .company-right { text-align: left; margin-top: 6px; }
   .company-actions { flex-direction: column; }
   .company-title {
-    /* reaplicar valores para evitar regras responsivas do Ionic */
     font-size: 1rem !important;
     color: var(--ion-text-color, #000) !important;
   }

@@ -28,7 +28,6 @@ export class CriaRecolhaEstafetaPage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Carrega entregas com estado 3 (em transporte) e filtra por papel/estabelecimento
   async loadEntregas() {
     this.loading = true;
     try {
@@ -71,7 +70,6 @@ export class CriaRecolhaEstafetaPage implements OnInit {
     await t.present();
   }
 
-  // Ao clicar no botão converte entrega para recolha (tipo=1, estado=6)
   async convertToRecolha(entrega: any) {
     const id = entrega.id_entrega_recolha;
     const confirm = await this.alertCtrl.create({
@@ -84,6 +82,21 @@ export class CriaRecolhaEstafetaPage implements OnInit {
             const updates: any = { tipo: 1, estado: 6};
             await this.httpApi.updateEntregaRecolha(Number(id), updates);
             this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
+            try {
+              const raw = localStorage.getItem('currentUser');
+              const currentUser = raw ? JSON.parse(raw) : null;
+              const userId = Number(currentUser?.id_utilizador || currentUser?.id || currentUser?.id_user || 0);
+              if (userId) {
+                await this.httpApi.createNotification({
+                  userId,
+                  title: this.tKey('delivery_status_updated_notification') || 'Delivery status updated',
+                  description: this.tKey('delivery_converted_to_pickup') || 'The delivery was converted to a pickup successfully.',
+                  createdAt: new Date().toISOString()
+                });
+              }
+            } catch (notifyError) {
+              console.warn('Could not save notification', notifyError);
+            }
             this.entregas = (this.entregas || []).filter((e: any) => {
               const eid = e.id_entrega_recolha || e.id || e.id_entrega || e.id_recolha;
               return Number(eid) !== Number(id);

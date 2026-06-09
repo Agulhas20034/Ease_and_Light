@@ -24,14 +24,6 @@
 
         <ion-list id="profile-menu" *ngIf="currentUser">
 
-          <ion-list-header><ion-label>{{ t('profile') || 'Perfil' }}</ion-label></ion-list-header>
-          <ion-menu-toggle auto-hide="false">
-            <ion-item routerDirection="root" routerLink="/edita-info" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon aria-hidden="true" slot="start" ios="person-circle-outline" md="person-circle-sharp"></ion-icon>
-              <ion-label>{{ t('edit_profile') }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-
           <!-- Peregrino Section -->
           <div *ngIf="isProfileType('Peregrino') || isProfileType('Administrador')">
             <ion-list-header><ion-label>{{ t('pilgrims') || 'Peregrino' }}</ion-label></ion-list-header>
@@ -45,6 +37,24 @@
               <ion-item routerDirection="root" routerLink="/lista-mochilas" lines="none" detail="false" routerLinkActive="selected">
                 <ion-icon aria-hidden="true" slot="start" ios="bag-outline" md="bag-sharp"></ion-icon>
                 <ion-label>{{ t('my_backpacks') }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+            <ion-menu-toggle auto-hide="false">
+              <ion-item button lines="none" detail="false" (click)="openMyBackpackHistory()">
+                <ion-icon aria-hidden="true" slot="start" ios="time-outline" md="time-sharp"></ion-icon>
+                <ion-label>{{ t('my_backpack_history') || 'My Backpack History' }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+            <ion-menu-toggle auto-hide="false">
+              <ion-item routerDirection="root" routerLink="/delivery-company-reviews" lines="none" detail="false" routerLinkActive="selected">
+                <ion-icon aria-hidden="true" slot="start" ios="star-outline" md="star-sharp"></ion-icon>
+                <ion-label>{{ t('delivery_company_reviews') || 'Delivery Company Reviews' }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+            <ion-menu-toggle auto-hide="false">
+              <ion-item routerDirection="root" routerLink="/itinerario" lines="none" detail="false" routerLinkActive="selected">
+                <ion-icon aria-hidden="true" slot="start" ios="document-text-outline" md="document-text-sharp"></ion-icon>
+                <ion-label>{{ t('itinerary') || 'Itinerario' }}</ion-label>
               </ion-item>
             </ion-menu-toggle>
           </div>
@@ -129,6 +139,17 @@
             </ion-menu-toggle>
           </div>
 
+          <ion-list-header><ion-label>{{ t('account') || 'Account' }}</ion-label></ion-list-header>
+          <ion-menu-toggle auto-hide="false">
+            <ion-item routerDirection="root" routerLink="/edita-info" lines="none" detail="false" routerLinkActive="selected">
+              <ion-icon aria-hidden="true" slot="start" ios="person-circle-outline" md="person-circle-sharp"></ion-icon>
+              <ion-label>{{ t('edit_profile') }}</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-item button lines="none" detail="false" (click)="confirmDeactivateAccount()">
+            <ion-icon aria-hidden="true" slot="start" ios="person-remove-outline" md="person-remove-sharp"></ion-icon>
+            <ion-label>{{ t('deactivate_my_account') }}</ion-label>
+          </ion-item>
         </ion-list>
       </ion-content>
     </ion-menu>

@@ -28,6 +28,7 @@ const User = mongoose.model('User', userSchema);
 const reviewSchema = new mongoose.Schema({
   locationId: { type: String, required: true }, 
   userId: { type: Number, required: false },
+  reviewType: { type: String, default: 'location' },
   rating: { type: Number, required: true, min: 1, max: 5 },
   title: { type: String, default: '' },
   description: { type: String, default: '' },
@@ -36,6 +37,25 @@ const reviewSchema = new mongoose.Schema({
 });
 
 const Review = mongoose.model('Review', reviewSchema);
+
+const noteSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  title: { type: String, default: '' },
+  content: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
+const notificationSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Notification = mongoose.model('Notification', notificationSchema);
 
 class MongoService {
   async saveChatMessage(data) {
@@ -75,6 +95,39 @@ class MongoService {
 
   async getReviewsByLocation(locationId, limit = 50) {
     return await Review.find({ locationId }).sort({ createdAt: -1 }).limit(limit).lean();
+  }
+
+  async getAllReviews(limit = 1000) {
+    return await Review.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+  }
+
+  // Notes
+  async createNote(data) {
+    const noteData = { ...data, updatedAt: Date.now() };
+    const note = new Note(noteData);
+    return await note.save();
+  }
+
+  async getNotesByUser(userId, limit = 1000) {
+    return await Note.find({ userId }).sort({ updatedAt: -1 }).limit(limit).lean();
+  }
+
+  async updateNote(id, data) {
+    data.updatedAt = Date.now();
+    return await Note.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async deleteNote(id) {
+    return await Note.findByIdAndDelete(id);
+  }
+
+  async createNotification(data) {
+    const notification = new Notification(data);
+    return await notification.save();
+  }
+
+  async getNotificationsByUser(userId, limit = 1000) {
+    return await Notification.find({ userId }).sort({ createdAt: -1 }).limit(limit).lean();
   }
 }
 

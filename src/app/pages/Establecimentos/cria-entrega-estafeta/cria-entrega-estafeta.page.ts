@@ -28,7 +28,6 @@ export class CriaEntregaEstafetaPage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Carrega entregas/recolhas filtradas por tipo e estado e por estabelecimentos do utilizador
   async loadEntregas(event?: any) {
     this.loading = true;
     try {
@@ -39,11 +38,9 @@ export class CriaEntregaEstafetaPage implements OnInit {
       const all: any = await this.httpApi.getAllEntregasRecolhas();
       const rows = Array.isArray(all) ? all : (all?.data || []);
 
-      // Filtrar por tipo = recolha (1) e estado 1 ou 2
       let filtered = (rows || []).filter((r: any) => {
         const tipo = r.id_tipo_entrega_recolha ?? r.tipo ?? r.tipo_entrega;
         const estado = r.id_estado_entrega_recolha ?? r.estado ?? r.status;
-        // Garantir que existe veículo e estafeta associados
         const hasVeiculo = r.id_veiculo ?? r.id_veiculo_entrega ?? r.id_veiculo_e ?? r.veiculo_id ?? null;
         const hasEstafeta = r.id_estafeta ?? r.id_entregador ?? r.id_estafeta_e ?? r.id_estafeta_entrega ?? null;
         const hasBoth = (hasVeiculo !== null && hasVeiculo !== undefined) && (hasEstafeta !== null && hasEstafeta !== undefined);
@@ -78,7 +75,6 @@ export class CriaEntregaEstafetaPage implements OnInit {
     await t.present();
   }
 
-  // Inicia a transformação de recolha para entrega: define tipo=2 e estado=3
   async startEntrega(entrega: any) {
     const id = entrega.id_entrega_recolha || entrega.id || entrega.id_entrega || entrega.id_recolha;
     const confirm = await this.alertCtrl.create({
@@ -91,12 +87,28 @@ export class CriaEntregaEstafetaPage implements OnInit {
             const updates: any = { tipo: 2, estado: 3 };
             await this.httpApi.updateEntregaRecolha(Number(id), updates);
             this.showToast(this.tKey('update_success') || 'Atualizado', 'success');
+            try {
+              const ordem: any = await this.httpApi.getEntregaRecolha(Number(id));
+              const requesterId = Number(ordem?.id_user || ordem?.id_utilizador || ordem?.id_cliente || 0);
+              const raw = localStorage.getItem('currentUser');
+              const user = raw ? JSON.parse(raw) : null;
+              const courierName = user?.nome || user?.email || '';
+              if (requesterId) {
+                await this.httpApi.createNotification({
+                  userId: requesterId,
+                  title: this.tKey('picked_up_by_courier_title') || 'Backpack Picked Up',
+                  description: (this.tKey('picked_up_by_courier_message') || 'Your backpack has been picked up by {{courierName}} and is on its way.').replace('{{courierName}}', courierName || 'the courier'),
+                  createdAt: new Date().toISOString()
+                });
+              }
+            } catch (notifyErr) {
+              console.warn('Could not notify requester about pickup', notifyErr);
+            }
             this.entregas = (this.entregas || []).filter((e: any) => {
               const eid = e.id_entrega_recolha || e.id || e.id_entrega || e.id_recolha;
               return Number(eid) !== Number(id);
             });
             await this.loadEntregas();
-            // Após atualizar, redirecionar para o mapa inbox
             this.router.navigateByUrl('/folder/inbox');
           } catch (e) {
             console.error('Falha ao atualizar entrega', e);

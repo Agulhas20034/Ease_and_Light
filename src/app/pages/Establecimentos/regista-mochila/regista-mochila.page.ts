@@ -72,7 +72,6 @@ export class RegistaMochilaPage implements OnInit {
   }
 
   async submit() {
-    // Assegura que o proprietário está selecionado
     if (!this.selectedOwner) {
       if (this.selectedOwnerId) {
         this.selectedOwner = this.peregrinoUsers.find(u => u.id_utilizador === this.selectedOwnerId) || null;
@@ -98,7 +97,19 @@ export class RegistaMochilaPage implements OnInit {
     try {
       await this.httpApi.createMochila(rec);
       alert(this.t.translate('backpack_created'));
-      // reset
+      try {
+        const userId = Number(this.selectedOwner?.id_utilizador || this.selectedOwner?.id || this.selectedOwner?.id_user || 0);
+        if (userId) {
+          await this.httpApi.createNotification({
+            userId,
+            title: this.t.translate('backpack_registered_title') || 'Backpack Registered',
+            description: this.t.translate('backpack_registered_message').replace('{{locationName}}', (localStorage.getItem('currentLocationName') || 'the location')) || 'Your backpack was registered at the location.',
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (notifyErr) {
+        console.warn('Could not create backpack registered notification', notifyErr);
+      }
       this.selectedOwner = null;
       this.weight = null;
       this.color = '';

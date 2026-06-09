@@ -43,7 +43,11 @@ export class HttpApiService {
   }
 
   async register(email: string, password: string, nome: string, additionalData?: any): Promise<any> {
-    const response = await this.http.post(`${this.apiUrl}/api/auth/register`, { email, password, nome, ...additionalData }).toPromise() as any;
+    const payload: any = { email, password, nome, ...additionalData };
+    if (typeof payload.estado === 'undefined') {
+      payload.estado = 1;
+    }
+    const response = await this.http.post(`${this.apiUrl}/api/auth/register`, payload).toPromise() as any;
     return response?.data;
   }
 
@@ -52,7 +56,11 @@ export class HttpApiService {
   }
 
   async createUser(data: any): Promise<any> {
-    return this.create('users', data);
+    const payload: any = { ...data };
+    if (typeof payload.estado === 'undefined') {
+      payload.estado = 1;
+    }
+    return this.create('users', payload);
   }
 
   async updateUser(id: number, data: any): Promise<any> {
@@ -120,24 +128,23 @@ export class HttpApiService {
 
   // Entregas Recolhas
   async getAllEntregasRecolhas(): Promise<any> {
-    return this.getAll('entregas_recolhas');
+    return this.getAll('entregas-recolhas');
   }
 
   async getEntregaRecolha(id: number): Promise<any> {
-    const response = await this.http.get(`${this.apiUrl}/api/entregas_recolhas/${id}`).toPromise() as any;
-    return response?.data;
+    return this.get(`entregas-recolhas/${id}`);
   }
 
   async createEntregaRecolha(data: any): Promise<any> {
-    return this.create('entregas_recolhas', data);
+    return this.create('entregas-recolhas', data);
   }
 
   async updateEntregaRecolha(id: number, data: any): Promise<any> {
-    return this.update(`entregas_recolhas/${id}`, data);
+    return this.update(`entregas-recolhas/${id}`, data);
   }
 
   async deleteEntregaRecolha(id: number): Promise<any> {
-    return this.delete(`entregas_recolhas/${id}`);
+    return this.delete(`entregas-recolhas/${id}`);
   }
 
   // Mochilas
@@ -182,6 +189,42 @@ export class HttpApiService {
 
   async getReviewsByLocation(locationId: string): Promise<any> {
     const response = await this.http.get(`${this.apiUrl}/api/reviews/${encodeURIComponent(locationId)}`).toPromise() as any;
+    return response?.data;
+  }
+
+  async getAllReviews(): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/reviews`).toPromise() as any;
+    return response?.data || response;
+  }
+
+  // Notes (MongoDB)
+  async createNote(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/notes`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getNotesByUser(userId: number): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/notes/user/${encodeURIComponent(String(userId))}`).toPromise() as any;
+    return response?.data;
+  }
+
+  async updateNote(id: string, data: any): Promise<any> {
+    const response = await this.http.put(`${this.apiUrl}/api/notes/${encodeURIComponent(id)}`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async deleteNote(id: string): Promise<any> {
+    const response = await this.http.delete(`${this.apiUrl}/api/notes/${encodeURIComponent(id)}`).toPromise() as any;
+    return response?.data;
+  }
+
+  async createNotification(data: any): Promise<any> {
+    const response = await this.http.post(`${this.apiUrl}/api/notifications`, data).toPromise() as any;
+    return response?.data;
+  }
+
+  async getNotificationsByUser(userId: number): Promise<any> {
+    const response = await this.http.get(`${this.apiUrl}/api/notifications/user/${encodeURIComponent(String(userId))}`).toPromise() as any;
     return response?.data;
   }
 
@@ -270,6 +313,10 @@ export class HttpApiService {
 
   async getAllEstadoEntregaRecolha(): Promise<any> {
     return this.getAll('estado_entrega_recolha');
+  }
+
+  async getEstadoEntregaRecolha(id: number): Promise<any> {
+    return this.get(`estado_entrega_recolha/${id}`);
   }
 
   async createEstadoEntregaRecolha(data: any): Promise<any> {
@@ -439,14 +486,18 @@ export class HttpApiService {
 
   async getUsersByEstabelecimento(estabId: number): Promise<any[]> {
     try {
-      const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_estabelecimento=${estabId}`).toPromise() as any;
+      const response = await this.http.get(`${this.apiUrl}/api/users-estabelecimento/estabelecimento/${estabId}`).toPromise() as any;
       const relations = response?.data || [];
       const relationArray = Array.isArray(relations) ? relations : [];
       
+      if (relationArray.length === 0) {
+        return [];
+      }
+
       const allUsers = await this.getAllUsers();
-      const userIds = relationArray.map((r: any) => r.id_utilizador);
+      const userIds = relationArray.map((r: any) => Number(r.id_utilizador)).filter((v: any) => !Number.isNaN(v));
       
-      return allUsers.filter((u: any) => userIds.includes(u.id_utilizador));
+      return allUsers.filter((u: any) => userIds.includes(Number(u.id_utilizador ?? u.id ?? u.id_user ?? 0)));
     } catch (err) {
       console.error('Error fetching users by estabelecimento:', err);
       return [];
@@ -523,13 +574,13 @@ export class HttpApiService {
   
   
   async getUserEstabelecimentos(userId: number): Promise<any[]> {
-    const response = await this.http.get(`${this.apiUrl}/api/users_estabelecimento?id_utilizador=${userId}`).toPromise() as any;
+    const response = await this.http.get(`${this.apiUrl}/api/users-estabelecimento?id_utilizador=${userId}`).toPromise() as any;
     const data = response?.data || [];
     return Array.isArray(data) ? data : [];
   }
 
   async addUserEstabelecimento(userId: number, estabId: number): Promise<any> {
-    return this.create('users_estabelecimento', { id_utilizador: userId, id_estabelecimento: estabId });
+    return this.create('users-estabelecimento', { id_utilizador: userId, id_estabelecimento: estabId });
   }
 
   async isTelefoneTaken(telefone: string): Promise<boolean> {

@@ -11,7 +11,6 @@ import { TranslationService } from '../../../services/translations/translation.s
   standalone: false,
 })
 export class CriaLocalizacaoPage implements OnInit {
-  // Campos do formulário
   id_tipo_estabelecimento: any = null;
   hora_abertura = '';
   hora_fecho = '';
@@ -23,7 +22,7 @@ export class CriaLocalizacaoPage implements OnInit {
   lon: any = null;
   cod_postal = '';
   nif = '';
-  estado = 1; // por defeito 1
+  estado = 1; 
   tipos: any[] = [];
   loading = false;
 
@@ -38,7 +37,6 @@ export class CriaLocalizacaoPage implements OnInit {
     this.loadTipos();
   }
 
-  // carregar tipos de estabelecimento para o select
   async loadTipos() {
     try {
       const r: any = await this.httpApi.getAllTipoEstabelecimento();
@@ -48,7 +46,6 @@ export class CriaLocalizacaoPage implements OnInit {
     }
   }
 
-  // Criação da localizacao
   async createLocation() {
     this.loading = true;
     try {

@@ -202,6 +202,21 @@ export class InfoGrupoPage implements OnInit, OnDestroy {
       });
       this.scrollToBottom();
       this.loadMessages(false);
+      try {
+        const members = Array.isArray(this.group?.members) ? this.group.members : (this.group?.grupo_user || []);
+        for (const m of members) {
+          const memberId = Number(m?.id_utilizador || m?.id_user || m?.userId || 0);
+          if (!memberId || memberId === messageData.senderId) continue;
+          await this.httpApi.createNotification({
+            userId: memberId,
+            title: this.t.translate('group_message_title') || 'New Group Message',
+            description: (this.t.translate('group_message_message') || 'New message in {{groupName}} from {{senderName}}.').replace('{{groupName}}', this.group?.nome || 'Group').replace('{{senderName}}', messageData.senderName || 'Someone'),
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (notifyErr) {
+        console.warn('Could not persist group message notifications', notifyErr);
+      }
     } catch (e) {
       console.error('Erro ao enviar mensagem', e);
       this.showToast(this.t.translate('error_sending_message'), 'danger');
@@ -233,6 +248,17 @@ export class InfoGrupoPage implements OnInit, OnDestroy {
                 await this.httpApi.addMemberToGroup(this.groupId, data);
                 this.loadGroup(); 
                 this.showToast(this.t.translate('member_added'), 'success');
+                        try {
+                          const inviter = this.currentUser?.nome || this.currentUser?.email || 'Someone';
+                          await this.httpApi.createNotification({
+                            userId: Number(data),
+                            title: this.t.translate('group_invite_title') || 'Group Invite',
+                            description: (this.t.translate('group_invite_message') || '{{inviterName}} has invited you to join {{groupName}}.').replace('{{inviterName}}', inviter).replace('{{groupName}}', this.group?.nome || 'Group'),
+                            createdAt: new Date().toISOString()
+                          });
+                        } catch (notifyErr) {
+                          console.warn('Could not persist group invite notification', notifyErr);
+                        }
               } catch (e) {
                 console.error('Erro ao adicionar membro', e);
                 this.showToast(this.t.translate('error_adding_member'), 'danger');

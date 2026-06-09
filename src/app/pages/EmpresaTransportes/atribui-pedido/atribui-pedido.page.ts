@@ -50,7 +50,7 @@ export class AtribuiPedidoPage implements OnInit {
         }
       }
 
-      // carregar empresas se admin (ou para popular select)
+      // carregar empresas se admin 
       const raw = localStorage.getItem('currentUser');
       const user = raw ? JSON.parse(raw) : null;
       const role = user && (user.profileType || user.id_tipo) ? (user.profileType || user.id_tipo).toString() : '';
@@ -133,6 +133,39 @@ export class AtribuiPedidoPage implements OnInit {
             await this.httpApi.updateEntregaRecolha(Number(this.entregaId), updates);
             const to = await this.toastCtrl.create({ message: this.t.translate('update_success') || 'Atualizado', duration: 1500, color: 'success' });
             to.present();
+            try {
+              const ordem: any = await this.httpApi.getEntregaRecolha(Number(this.entregaId));
+              const requesterId = Number(ordem?.id_user || ordem?.id_utilizador || ordem?.id_cliente || ordem?.id_solicitante || 0);
+              const empresaId = Number(this.empresaId || ordem?.id_empresa || ordem?.empresa_id || 0);
+              const empresaRec: any = empresaId ? await this.httpApi.getEmpresaTransportes(empresaId) : null;
+              const companyName = empresaRec?.nome || empresaRec?.nome_empresa || empresaRec?.name || '';
+              if (requesterId) {
+                await this.httpApi.createNotification({
+                  userId: requesterId,
+                  title: this.t.translate('pickup_accepted_user_title') || 'Pickup Accepted',
+                  description: (this.t.translate('pickup_accepted_user_message') || 'The pickup for your backpack has been accepted by {{companyName}}.').replace('{{companyName}}', companyName || 'the company'),
+                  createdAt: new Date().toISOString()
+                });
+              }
+              const pickupLocId = Number(ordem?.id_estabelecimento_r || ordem?.id_localizacao_recolha || ordem?.id_estab_r || 0);
+              if (pickupLocId) {
+                const locUsers: any[] = await this.httpApi.getUsersByEstabelecimento(pickupLocId);
+                const assignedUsers = Array.isArray(locUsers) ? locUsers : [];
+                for (const lu of assignedUsers) {
+                  const uid = Number(lu?.id_utilizador || lu?.id || 0);
+                  if (uid) {
+                    await this.httpApi.createNotification({
+                      userId: uid,
+                      title: this.t.translate('pickup_accepted_location_title') || 'Pickup Accepted at Location',
+                      description: (this.t.translate('pickup_accepted_location_message') || 'The pickup at your location has been accepted by {{companyName}} for backpack {{backpackId}}.').replace('{{companyName}}', companyName || 'the company').replace('{{backpackId}}', String(ordem?.id_mochila || ordem?.id_mochila_fk || ordem?.id_mochila_id || ordem?.id_mochila || '')),
+                      createdAt: new Date().toISOString()
+                    });
+                  }
+                }
+              }
+            } catch (notifyErr) {
+              console.warn('Error sending accept notifications', notifyErr);
+            }
             this.router.navigateByUrl('/folder/inbox');
           } catch (e) {
             console.error('Erro ao atribuir pedido', e);

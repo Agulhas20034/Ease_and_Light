@@ -29,14 +29,12 @@ export class EditaEmpregadoPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Ler query param id do funcionário a editar
     this.act.queryParams.subscribe((p) => {
       if (p && p['id']) this.userId = Number(p['id']);
       if (this.userId) this.loadUser();
     });
   }
 
-  // Carrega os dados do utilizador para popular o formulário
   async loadUser() {
     if (!this.userId) return;
     this.loading = true;
@@ -70,7 +68,6 @@ export class EditaEmpregadoPage implements OnInit {
 
   tKey(k: string) { return this.t.translate(k); }
 
-  // Guarda alterações do empregado
   async save() {
     if (!this.userId) return;
     if (this.telefone && !this.isTelefoneValid()) {
@@ -86,7 +83,6 @@ export class EditaEmpregadoPage implements OnInit {
 
     this.loading = true;
     try {
-      // Verifica se o NIF já existe em outro utilizador (permitir manter o mesmo NIF do próprio utilizador)
       if (this.nif) {
         const taken = await this.httpApi.isNifTakenByOther(this.nif, this.userId);
         if (taken) {

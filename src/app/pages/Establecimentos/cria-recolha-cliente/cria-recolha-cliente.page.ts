@@ -11,19 +11,16 @@ import { Router } from '@angular/router';
   standalone: false,
 })
 export class CriaRecolhaClientePage implements OnInit {
-  // Dados carregados
-  public clients: any[] = []; // peregrinos
+  public clients: any[] = []; 
   public mochilas: any[] = [];
   public empresas: any[] = [];
   public estabelecimentos: any[] = [];
   public selectedEstabelecimento: any = null;
 
-  // Seleções do formulário
   public selectedClient: any = null;
   public selectedMochila: any = null;
   public selectedEmpresa: any = null;
   public dateTimeRecolha = new Date().toISOString();
-  // Entrega: lista de estabelecimentos para entrega (exclui recolha)
   public deliveryEstabelecimentos: any[] = [];
   public selectedDeliveryEstabelecimento: any = null;
 
@@ -42,10 +39,8 @@ export class CriaRecolhaClientePage implements OnInit {
     this.loadEstabelecimentos();
   }
 
-  // Traduz uma key
   tKey(k: string) { return this.t.translate(k); }
 
-  // Carrega utilizadores do tipo Peregrino (id_tipo = 5)
   async loadClients() {
     try {
       const peregrinoTipo = 5;
@@ -56,7 +51,6 @@ export class CriaRecolhaClientePage implements OnInit {
     }
   }
 
-  // Ao escolher cliente, carregar mochilas pertencentes a esse cliente
   async onClientChange() {
     this.mochilas = [];
     this.selectedMochila = null;
@@ -64,17 +58,15 @@ export class CriaRecolhaClientePage implements OnInit {
     try {
       const all = await this.httpApi.getAllMochilas();
       const uid = String(this.selectedClient.id_utilizador || this.selectedClient.id_user || '');
-      // mochilas pertencentes ao utilizador
       let userMochilas = (all || []).filter((m: any) => String(m.id_user ?? m.id_utilizador ?? '') === uid);
 
-      // remover mochilas que já estejam em entregas_recolhas com estado != 4
       try {
         const ents: any = await this.httpApi.getAllEntregasRecolhas();
         const entRows = Array.isArray(ents) ? ents : (ents?.data || []);
         const taken = new Set<string>();
         for (const er of (entRows || [])) {
           const estado = er.id_estado_entrega_recolha ?? er.estado ?? er.status;
-          if (Number(estado) !== 4) {
+          if (Number(estado) !== 4 && Number(estado) !== 7) {
             const mid = er.id_mochila ?? er.id_mochila_fk ?? er.id_mochila_id;
             if (mid !== undefined && mid !== null) taken.add(String(mid));
           }
@@ -90,7 +82,6 @@ export class CriaRecolhaClientePage implements OnInit {
     }
   }
 
-  // Carrega estabelecimentos conforme o tipo de utilizador
   async loadEstabelecimentos() {
     try {
       const raw = localStorage.getItem('currentUser');
@@ -102,7 +93,6 @@ export class CriaRecolhaClientePage implements OnInit {
         const rows = Array.isArray(data) ? data : (data?.data || []);
         this.estabelecimentos = rows || [];
       } else if (user && user.id_utilizador) {
-        // obter os estabelecimentos associados ao utilizador e buscar localizacoes
         const rels: any = await this.httpApi.getUserEstabelecimentos(Number(user.id_utilizador));
         const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
         const estabIds = relRows.map((r: any) => Number(r.id_estabelecimento)).filter((v: any) => !!v);
@@ -117,21 +107,18 @@ export class CriaRecolhaClientePage implements OnInit {
           }
         }
         this.estabelecimentos = result || [];
-        // Se for empregado e tiver uma só localização, preenche automaticamente
         if ((this.estabelecimentos || []).length === 1) {
           this.selectedEstabelecimento = this.estabelecimentos[0];
         }
       } else {
         this.estabelecimentos = [];
       }
-      // Atualizar lista de entregas com base no estabelecimento selecionado (se houver)
       await this.updateDeliveryEstabelecimentos();
     } catch (e) {
       console.error('Failed to load estabelecimentos', e);
     }
   }
 
-  // Carregar empresas de transporte para o dropdown
   async loadEmpresas() {
     try {
       const all = await this.httpApi.getAllEmpresaTransportes();
@@ -141,14 +128,12 @@ export class CriaRecolhaClientePage implements OnInit {
     }
   }
 
-  // Preenche a localização de recolha com a localização atual do dispositivo
 
   private async showToast(message: string, color = 'primary') {
     const t = await this.toastCtrl.create({ message, duration: 2000, color, position: 'bottom' });
     await t.present();
   }
 
-  // Validação simples do formulário
   valid(): boolean {
     if (!this.selectedClient) return false;
     if (!this.selectedMochila) return false;
@@ -157,7 +142,6 @@ export class CriaRecolhaClientePage implements OnInit {
     return true;
   }
 
-  // Submete a recolha ao backend (cria um registo em entregas_recolhas)
   async createRecolha() {
     if (!this.valid()) {
       this.showToast(this.tKey('provide_all_fields') || 'Preencha todos os campos', 'warning');
@@ -165,21 +149,18 @@ export class CriaRecolhaClientePage implements OnInit {
     }
     this.loading = true;
     try {
-      // definir timestamp no momento da submissão
       const now = new Date().toISOString();
-      // Possíveis nomes de colunas para recolha/entrega (variam conforme db schema)
       const pickupId = this.selectedEstabelecimento ? (this.selectedEstabelecimento.id_estabelecimento || this.selectedEstabelecimento.id) : null;
       const deliveryId = this.selectedDeliveryEstabelecimento ? (this.selectedDeliveryEstabelecimento.id_estabelecimento || this.selectedDeliveryEstabelecimento.id) : null;
       
-      // Construir Objeto Base
       const base: any = {
         id_mochila: this.selectedMochila.id_mochila || this.selectedMochila.id || null,
         id_empresa: this.selectedEmpresa ? (this.selectedEmpresa.id_empresa || this.selectedEmpresa.id) : null,
         data_hora_recolha: now,
         id_estabelecimento_r: pickupId,
         id_estabelecimento_e: deliveryId,
-        tipo: 1, // tipo = Recolha
-        estado: 1 // estado = Pendente
+        tipo: 1, 
+        estado: 1 
       };
 
       console.log('Creating collection with payload base', base, 'pickupId', pickupId, 'deliveryId', deliveryId);
@@ -192,23 +173,66 @@ export class CriaRecolhaClientePage implements OnInit {
           
         } catch (err: any) {
           lastErr = err;
-          // Se for erro de coluna desconhecida, tentamos o próximo candidato
           if (err?.code === 'PGRST204' && String(err?.message || '').includes('Could not find')) {
             
           }
-          // erro diferente -> não faz sentido tentar mais
         }
       
       if (!created) throw lastErr || new Error('Falha ao criar recolha');
       this.showToast(this.tKey('create_collection_client') || 'Recolha criada', 'success');
-      // remove mochila selecionada da lista local e recarregar mochilas do cliente
+      try {
+        const raw = localStorage.getItem('currentUser');
+        const currentUser = raw ? JSON.parse(raw) : null;
+        const userId = Number(currentUser?.id_utilizador || currentUser?.id || currentUser?.id_user || 0);
+        if (userId) {
+          const userName = currentUser?.nome || currentUser?.email || 'A user';
+          const backpackId = this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '';
+          const locationName = this.selectedEstabelecimento?.nome || this.selectedEstabelecimento?.nome_rua || this.selectedEstabelecimento?.name || (localStorage.getItem('currentLocationName') || 'the location');
+          await this.httpApi.createNotification({
+            userId,
+            title: this.tKey('collection_registered_notification') || 'Collection Registered',
+            description: `${userName} requested a collection for backpack ${backpackId} at ${locationName}.`,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.warn('Could not save notification', e);
+      }
+      try {
+        const empresaId = this.selectedEmpresa ? (this.selectedEmpresa.id_empresa || this.selectedEmpresa.id) : null;
+        if (empresaId) {
+          const rels: any = await this.httpApi.fetchAll('users_empresa_transportes');
+          const relRows = Array.isArray(rels) ? rels : (rels?.data || []);
+          const assigned = relRows.filter((r: any) => Number(r.id_empresa) === Number(empresaId));
+          const allUsers: any = await this.httpApi.getAllUsers();
+          const userRows = Array.isArray(allUsers) ? allUsers : (allUsers?.data || []);
+          const raw2 = localStorage.getItem('currentUser');
+          const currentUser2 = raw2 ? JSON.parse(raw2) : null;
+          const requesterName = currentUser2?.nome || currentUser2?.email || 'A user';
+          const backpackId = this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '';
+          const locationName = this.selectedEstabelecimento?.nome || this.selectedEstabelecimento?.nome_rua || this.selectedEstabelecimento?.name || (localStorage.getItem('currentLocationName') || 'the location');
+          for (const a of assigned) {
+            const u = userRows.find((usr: any) => Number(usr.id_utilizador) === Number(a.id_utilizador));
+            const uid = Number(u?.id_utilizador || u?.id || u?.id_user || 0);
+            if (uid) {
+              await this.httpApi.createNotification({
+                userId: uid,
+                title: this.tKey('collection_created_company_title') || 'New Collection Request',
+                description: `${requesterName} requested a collection for backpack ${backpackId} at ${locationName}.`,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+      } catch (notifyCompanyErr) {
+        console.warn('Could not notify company users about collection', notifyCompanyErr);
+      }
       try {
         const mid = String(this.selectedMochila?.id_mochila ?? this.selectedMochila?.id ?? '');
         this.mochilas = (this.mochilas || []).filter((m: any) => String(m.id_mochila ?? m.id ?? '') !== mid);
         this.selectedMochila = null;
         await this.onClientChange();
       } catch (e) {
-        // ignore
       }
       this.router.navigateByUrl('/folder/inbox');
     } catch (e: any) {
@@ -219,7 +243,6 @@ export class CriaRecolhaClientePage implements OnInit {
     }
   }
 
-  // Atualiza lista de estabelecimentos de entrega (todas exceto a de recolha selecionada)
   async updateDeliveryEstabelecimentos() {
     try {
       const all: any = await this.httpApi.getAllLocalizacoes();
@@ -238,7 +261,6 @@ export class CriaRecolhaClientePage implements OnInit {
     }
   }
 
-  // Quando muda o estabelecimento de recolha, atualiza as opções de entrega
   async onEstabelecimentoChange() {
     await this.updateDeliveryEstabelecimentos();
   }

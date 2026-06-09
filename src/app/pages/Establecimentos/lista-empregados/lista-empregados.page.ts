@@ -25,7 +25,6 @@ export class ListaEmpregadosPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Lê query param 'id' para filtrar pelos empregados de um estabelecimento específico
     this.route.queryParams.subscribe((p) => {
       if (p && p['id']) {
         this.estabId = Number(p['id']);
@@ -37,8 +36,6 @@ export class ListaEmpregadosPage implements OnInit {
     });
   }
 
-  // Carrega os empregados: se estivermos numa página específica de estabelecimento,
-  // carrega apenas os ligados a esse estabelecimento, senão carrega todos do tipo 6.
   async loadUsers() {
     this.loading = true;
     try {
@@ -59,12 +56,10 @@ export class ListaEmpregadosPage implements OnInit {
     }
   }
 
-  // Navega para edição do funcionário
   editUser(user: any) {
     this.router.navigate(['/edita-empregado'], { queryParams: { id: user.id_utilizador } });
   }
 
-  // Alterna estado do funcionário (ativo/desativado)
   async toggleUser(user: any) {
     const confirm = await this.alertCtrl.create({
       header: this.t.translate('confirm'),
@@ -91,7 +86,6 @@ export class ListaEmpregadosPage implements OnInit {
     await confirm.present();
   }
 
-  // Navega para cria-empregado, passando o estabelecimento atual (se houver)
   createUser() {
     const params: any = {};
     if (this.estabId) params.id = this.estabId;

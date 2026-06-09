@@ -65,6 +65,13 @@
       <ion-label>{{ t.translate('status') }}: </ion-label>
       <ion-note slot="end">{{ (estado === 1) ? t.translate('active') : t.translate('inactive') }}</ion-note>
     </ion-item>
+
+    <ion-item>
+      <ion-label>{{ t.translate('account_state') || 'Account state' }}</ion-label>
+      <ion-button fill="outline" color="secondary" slot="end" (click)="toggleEstado()">
+        {{ estado === 1 ? (t.translate('set_inactive') || 'Set inactive') : (t.translate('set_active') || 'Set active') }}
+      </ion-button>
+    </ion-item>
   </ion-list>
 
   <ion-footer>

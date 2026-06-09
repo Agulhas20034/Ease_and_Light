@@ -287,6 +287,10 @@ export class GereGrupoPage implements OnInit {
     this.router.navigate(['/cria-grupo']);
   }
 
+  goToReviewsPercurso() {
+    this.router.navigate(['/reviews-percurso']);
+  }
+
   private async annotateGroupOngoingRoutes(groups: any[]) {
     try {
       const grupoPercursos = await this.httpApi.getAll('grupo-percurso');
@@ -468,12 +472,7 @@ export class GereGrupoPage implements OnInit {
       this.showToast(this.t.translate('route_started'), 'success');
       
       setTimeout(() => {
-        this.router.navigate(['/mapa'], { 
-          queryParams: { 
-            routeId: route.id_percurso,
-            groupId: group.id_grupo 
-          }
-        });
+        this.router.navigate(['/folder/inbox']);
       }, 1500);
       
     } catch (error) {
