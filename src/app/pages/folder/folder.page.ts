@@ -241,10 +241,10 @@ export class FolderPage implements OnInit {
           continue;
         }
 
-        const lat = Number((estabelecimento.lat ?? estabelecimento.latitude ?? estabelecimento.latitud ?? estabelecimento.lat) || 0);
-        const lon = Number((estabelecimento.lon ?? estabelecimento.longitude ?? estabelecimento.longitud ?? estabelecimento.lng ?? estabelecimento.lon) || 0);
-        if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
-          console.warn('[FolderPage] invalid estabelecimento coordinates', estabelecimentoId, estabelecimento);
+        const lat = this.normalizeCoordinate(estabelecimento.lat ?? estabelecimento.latitude ?? estabelecimento.latitud ?? estabelecimento.lat, 'lat');
+        const lon = this.normalizeCoordinate(estabelecimento.lon ?? estabelecimento.longitude ?? estabelecimento.longitud ?? estabelecimento.lng ?? estabelecimento.lon, 'lon');
+        if (lat === null || lon === null) {
+          console.warn('[FolderPage] invalid estabelecimento coordinates', estabelecimentoId, estabelecimento, { lat, lon });
           continue;
         }
 
@@ -359,72 +359,182 @@ export class FolderPage implements OnInit {
     }
   }
 
+  private getDistance(p1: [number, number], p2: [number, number]): number {
+    const lat1 = p1[0], lon1 = p1[1];
+    const lat2 = p2[0], lon2 = p2[1];
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private isValidRoutePoint(point: [number, number]): boolean {
+    if (!point || point.length !== 2) {
+      return false;
+    }
+    const [lat, lon] = point;
+    return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+  }
+
+  private normalizeCoordinate(value: any, type: 'lat' | 'lon'): number | null {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    if (typeof value === 'string') {
+      value = value.trim().replace(',', '.');
+    }
+    const num = Number(value);
+    if (!Number.isFinite(num)) {
+      return null;
+    }
+    const max = type === 'lat' ? 90 : 180;
+    if (Math.abs(num) <= max) {
+      return num;
+    }
+    return this.rescaleCoordinate(num, max);
+  }
+
+  private rescaleCoordinate(value: number, max: number): number | null {
+    const absValue = Math.abs(value);
+    if (absValue === 0) {
+      return null;
+    }
+    const scales = [1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13];
+    for (const scale of scales) {
+      const scaled = value / scale;
+      if (Math.abs(scaled) <= max) {
+        return scaled;
+      }
+    }
+    return null;
+  }
   private async getStreetRouteCoordinates(points: Array<[number, number]>): Promise<Array<[number, number]>> {
     if (!points || points.length < 2) {
       return points;
     }
 
-    const normalizeRouteEndpoints = (routeCoords: Array<[number, number]>, originalPoints: Array<[number, number]>): Array<[number, number]> => {
-      if (!routeCoords.length || !originalPoints.length) return routeCoords;
-      const normalized = [...routeCoords];
-      const [firstInput] = originalPoints;
-      if (firstInput && (normalized[0][0] !== firstInput[0] || normalized[0][1] !== firstInput[1])) {
-        normalized.unshift(firstInput);
+    const validPoints = points.filter((point) => {
+      const valid = this.isValidRoutePoint(point);
+      if (!valid) {
+        console.warn('[FolderPage] Skipping invalid route point', point);
       }
-      const lastInput = originalPoints[originalPoints.length - 1];
-      if (lastInput && (normalized[normalized.length - 1][0] !== lastInput[0] || normalized[normalized.length - 1][1] !== lastInput[1])) {
-        normalized.push(lastInput);
-      }
-      return normalized;
-    };
+      return valid;
+    });
 
-    const fetchOsrmRoute = async (coords: Array<[number, number]>): Promise<Array<[number, number]>> => {
-      const coordsString = coords.map(([lat, lon]) => `${lon},${lat}`).join(';');
-      const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
-      const response = await fetch(url, { mode: 'cors' });
-      if (!response.ok) {
-        throw new Error(`OSRM returned ${response.status}`);
-      }
-      const data = await response.json();
-      const route = data?.routes?.[0];
-      if (!route?.geometry?.coordinates || !Array.isArray(route.geometry.coordinates)) {
-        throw new Error('OSRM returned invalid route geometry');
-      }
-      const mapped = (route.geometry.coordinates as Array<[number, number]>).map(([lon, lat]) => [lat, lon] as [number, number]);
-      return normalizeRouteEndpoints(mapped, coords);
-    };
-
-    console.log('[FolderPage] Street routing request for points:', points);
-    try {
-      return await fetchOsrmRoute(points);
-    } catch (error) {
-      console.warn('[FolderPage] OSRM full-route failed:', error);
-      const streetCoords: Array<[number, number]> = [];
-      for (let i = 0; i < points.length - 1; i++) {
-        const segment = [points[i], points[i + 1]] as Array<[number, number]>;
-        try {
-          const segmentRoute = await fetchOsrmRoute(segment);
-          if (segmentRoute.length) {
-            if (streetCoords.length && streetCoords[streetCoords.length - 1][0] === segmentRoute[0][0] && streetCoords[streetCoords.length - 1][1] === segmentRoute[0][1]) {
-              streetCoords.push(...(segmentRoute.slice(1) as Array<[number, number]>));
-            } else {
-              streetCoords.push(...(segmentRoute as Array<[number, number]>));
-            }
-          }
-        } catch (segError) {
-          console.warn('[FolderPage] OSRM segment failed, using direct point for segment', segment, segError);
-          if (!streetCoords.length || streetCoords[streetCoords.length - 1][0] !== points[i][0] || streetCoords[streetCoords.length - 1][1] !== points[i][1]) {
-            streetCoords.push(points[i]);
-          }
-          streetCoords.push(points[i + 1]);
-        }
-      }
-      if (streetCoords.length) {
-        return streetCoords;
-      }
-      console.warn('[FolderPage] Street routing failed completely, falling back to straight line');
+    if (validPoints.length < 2) {
+      console.warn('[FolderPage] Not enough valid points for street routing, using direct coordinates', points);
       return points;
     }
+
+    console.log('[FolderPage] Street routing request for points:', validPoints);
+
+  
+    const useSegmentRouting = validPoints.length > 2;
+
+    if (!useSegmentRouting) {
+      const attemptFullRoute = async (): Promise<Array<[number, number]> | null> => {
+        const coordsString = validPoints.map(([lat, lon]) => `${lon},${lat}`).join(';');
+        
+        const osrmServers = [
+          `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`,
+          `https://routing.openstreetmap.de/routed-car/route/v1/driving/${coordsString}?overview=full&geometries=geojson`,
+          `https://vroom.openstreetmap.de/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+        ];
+
+        for (const url of osrmServers) {
+          try {
+            const response = await fetch(url, { mode: 'cors' });
+            if (!response.ok) continue;
+            
+            const data = await response.json();
+            const route = data?.routes?.[0];
+            if (route?.geometry?.coordinates && Array.isArray(route.geometry.coordinates)) {
+              const mapped = (route.geometry.coordinates as Array<[number, number]>).map(([lon, lat]) => [lat, lon] as [number, number]);
+              console.log('[FolderPage] Full route found via OSRM with', mapped.length, 'points');
+              return mapped;
+            }
+          } catch (e) {
+            console.warn('[FolderPage] OSRM server failed:', url, e);
+          }
+        }
+        return null;
+      };
+
+      try {
+        const fullRoute = await attemptFullRoute();
+        if (fullRoute && fullRoute.length > 2) {
+          return fullRoute;
+        }
+      } catch (e) {
+        console.warn('[FolderPage] Full route attempt failed:', e);
+      }
+    }
+
+    console.log('[FolderPage] Using segment-by-segment routing');
+    const segmentRoute = async (from: [number, number], to: [number, number]): Promise<Array<[number, number]>> => {
+      const coordsString = `${from[1]},${from[0]};${to[1]},${to[0]}`;
+      console.log('[FolderPage] Routing segment from', from, 'to', to, 'with URL params:', coordsString);
+      
+      const osrmServers = [
+        `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`,
+        `https://routing.openstreetmap.de/routed-car/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+      ];
+
+      for (const url of osrmServers) {
+        try {
+          const response = await fetch(url, { mode: 'cors' });
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          const route = data?.routes?.[0];
+          if (route?.geometry?.coordinates) {
+            const segmentResult = (route.geometry.coordinates as Array<[number, number]>).map(([lon, lat]) => [lat, lon] as [number, number]);
+            console.log('[FolderPage] Segment routed successfully with', segmentResult.length, 'points');
+            return segmentResult;
+          }
+        } catch (e) {
+        }
+      }
+      
+      console.log('[FolderPage] Segment routing failed, using direct line');
+      return [from, to];
+    };
+
+    const allSegments: Array<[number, number]> = [];
+    for (let i = 0; i < validPoints.length - 1; i++) {
+      console.log('[FolderPage] Processing segment', i, 'of', validPoints.length - 1);
+      const segment = await segmentRoute(validPoints[i], validPoints[i + 1]);
+      
+      if (segment.length === 0) {
+        if (allSegments.length === 0 || 
+            allSegments[allSegments.length - 1][0] !== validPoints[i][0] || 
+            allSegments[allSegments.length - 1][1] !== validPoints[i][1]) {
+          allSegments.push(validPoints[i]);
+        }
+        allSegments.push(validPoints[i + 1]);
+      } else {
+        for (let j = 0; j < segment.length; j++) {
+          if (j === 0 && allSegments.length > 0) {
+            const lastPoint = allSegments[allSegments.length - 1];
+            if (Math.abs(lastPoint[0] - segment[j][0]) < 0.00001 && Math.abs(lastPoint[1] - segment[j][1]) < 0.00001) {
+              continue;
+            }
+          }
+          allSegments.push(segment[j]);
+        }
+      }
+    }
+
+    if (allSegments.length < 2) {
+      console.warn('[FolderPage] Routing failed, using direct points');
+      return validPoints;
+    }
+
+    return allSegments;
   }
 
   private getRouteStopPopupHtml(stop: any, canRemove: boolean, canEnd: boolean) {
@@ -667,9 +777,9 @@ export class FolderPage implements OnInit {
       const data: any = await this.httpApi.getAllLocalizacoes();
       const rows = Array.isArray(data) ? data : (data?.data || []);
       for (const r of rows) {
-        const lat = Number(r.lat || r.latitude || r.latitud || 0);
-        const lon = Number(r.lon || r.longitude || r.longitud || r.lon || 0);
-        if (!this.map || !lat || !lon || isNaN(lat) || isNaN(lon)) continue;
+        const lat = this.normalizeCoordinate(r.lat ?? r.latitude ?? r.latitud ?? 0, 'lat');
+        const lon = this.normalizeCoordinate(r.lon ?? r.longitude ?? r.longitud ?? r.lon ?? 0, 'lon');
+        if (!this.map || lat === null || lon === null) continue;
         const title = (r.nome || r.nome_rua || r.nome_estabelecimento || r.descr || r.descricao || r.name || `Estab ${r.id_estabelecimento || ''}`);
         const marker = L.marker([lat, lon]).addTo(this.map!);
         const popupHtml = this.getLocationPopupHtml(r, title);

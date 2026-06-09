@@ -33,6 +33,8 @@
     "@ionic/angular": "^8.0.0",
     "@supabase/supabase-js": "^2.86.0",
     "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "ionic": "^5.4.16",
     "ionicons": "^7.0.0",
     "leaflet": "^1.9.4",
     "rxjs": "~7.8.0",
