@@ -215,7 +215,7 @@ export class GereGrupoPage implements OnInit {
   private async performDeleteGroup(group: any) {
     this.loading = true;
     try {
-      await this.httpApi.updateGroupUserStatus(group.id_grupo, 4);
+      await this.httpApi.deleteGrupo(group.id_grupo);
       this.showToast(this.t.translate('group_deleted'), 'success');
       this.loadGroups();
     } catch (e) {

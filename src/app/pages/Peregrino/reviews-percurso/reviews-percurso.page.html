@@ -7,8 +7,9 @@
 <ion-content>
   <ion-tabs (ionChange)="tabChanged($event)">
     <ion-tab tab="view-routes">
-      <ion-list *ngIf="routes.length > 0">
-        <ion-item *ngFor="let route of routes">
+      <div class="scroll-list">
+        <ion-list *ngIf="routes.length > 0">
+          <ion-item *ngFor="let route of routes">
           <ion-label>
             <h2>{{ route.nome || route.name }}</h2>
             <p>{{ route.descr || route.description }}</p>
@@ -18,15 +19,17 @@
             {{ t.translate('preview_route') }}
           </ion-button>
         </ion-item>
-      </ion-list>
+        </ion-list>
+      </div>
       <ion-text *ngIf="routes.length === 0" color="medium">
         <p style="text-align: center; padding: 20px;">{{ t.translate('no_routes_available') }}</p>
       </ion-text>
     </ion-tab>
 
     <ion-tab tab="view-route-reviews">
-      <ion-list *ngIf="routes.length > 0">
-        <ion-item *ngFor="let route of routes"
+      <div class="scroll-list">
+        <ion-list *ngIf="routes.length > 0">
+          <ion-item *ngFor="let route of routes"
                   button
                   [disabled]="!hasRouteReviews(getRouteId(route))"
                   (click)="selectReviewRoute(getRouteId(route))">
@@ -42,7 +45,8 @@
           </ion-label>
           <ion-icon slot="end" name="chevron-forward" *ngIf="hasRouteReviews(getRouteId(route))"></ion-icon>
         </ion-item>
-      </ion-list>
+        </ion-list>
+      </div>
 
       <ion-text *ngIf="routes.length === 0" color="medium">
         <p style="text-align: center; padding: 20px;">{{ t.translate('no_routes_available') }}</p>
@@ -67,9 +71,10 @@
               </ion-title>
             </ion-toolbar>
           </ion-header>
-          <ion-content>
-            <ion-list>
-                  <ion-item *ngFor="let rev of selectedRouteReviews; let i = index">
+          <div class="modal-content">
+            <div class="modal-scroll">
+              <ion-list>
+                <ion-item *ngFor="let rev of selectedRouteReviews; let i = index">
                     <ion-label>
                       <h3>{{ rev.title || t.translate('no_title') }}</h3>
                       <p>{{ rev.description }}</p>
@@ -86,8 +91,9 @@
                       </div>
                     </ion-label>
                   </ion-item>
-            </ion-list>
-          </ion-content>
+              </ion-list>
+            </div>
+          </div>
         </ng-template>
       </ion-modal>
 
@@ -119,9 +125,9 @@
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content>
+      <div class="modal-content">
         <div id="preview-map" style="width: 100%; height: 100%;"></div>
-      </ion-content>
+      </div>
     </ng-template>
   </ion-modal>
 

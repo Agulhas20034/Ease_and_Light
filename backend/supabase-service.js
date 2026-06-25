@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 class SupabaseService {
   constructor() {
@@ -302,7 +303,17 @@ class SupabaseService {
 
   async createGrupo(rec) { return this.insertOne('grupo', rec); }
   async updateGrupo(id, updates) { return this.updateByPk('grupo', 'id_grupo', { id, updates }); }
-  async deleteGrupo(id) { return this.deleteByPk('grupo', 'id_grupo', id); }
+  async deleteGrupo(id) {
+    try {
+      await this.deleteByPk('grupo_user', { id_grupo: Number(id) });
+    } catch (e) {
+    }
+    try {
+      await this.deleteByPk('grupo_percurso', 'id_grupo', id);
+    } catch (e) {
+    }
+    return this.deleteByPk('grupo', 'id_grupo', id);
+  }
 
   // Group-specific methods
   async getGroupsByUser(userId) {

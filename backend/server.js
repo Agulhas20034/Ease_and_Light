@@ -704,6 +704,15 @@ app.get('/api/grupo-user', async (req, res) => {
   }
 });
 
+app.put('/api/grupo-user/group/:id_grupo', async (req, res) => {
+  try {
+    const result = await apiService.updateAllGrupoUsersByGroup(req.params.id_grupo, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 app.put('/api/grupo-user/:id_grupo/:id_user', async (req, res) => {
   try {
     const result = await apiService.updateGrupoUser(req.params.id_grupo, req.params.id_user, req.body);
@@ -719,15 +728,6 @@ app.delete('/api/grupo-user/:id_grupo/:id_user', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.put('/api/grupo-user/group/:id_grupo', async (req, res) => {
-  try {
-    const result = await apiService.updateAllGrupoUsersByGroup(req.params.id_grupo, req.body);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
   }
 });
 

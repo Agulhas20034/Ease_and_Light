@@ -32,3 +32,17 @@
 	box-shadow: 0 8px 30px rgba(0,0,0,0.5);
 }
 
+.scroll-list {
+	max-height: 60vh;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 4px 8px;
+}
+
+.modal-scroll {
+	max-height: 50vh;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 8px 12px;
+}
+
